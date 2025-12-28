@@ -3,7 +3,24 @@
     <div class="container">
       <div class="header">
         <h1>Clientes</h1>
-        <button @click="goToNewClient" class="btn btn-primary">Novo Cliente</button>
+        <div class="header-actions">
+          <button @click="showBackupConfirmation" class="btn btn-secondary">Backup do Banco</button>
+          <button @click="goToNewClient" class="btn btn-primary">Novo Cliente</button>
+        </div>
+      </div>
+      
+      <!-- Modal de Confirmação de Backup -->
+      <div v-if="showBackupModal" class="modal-overlay" @click="closeBackupModal">
+        <div class="modal-content" @click.stop>
+          <h2>Confirmar Backup</h2>
+          <p>Deseja realizar o backup do banco de dados?</p>
+          <div class="modal-actions">
+            <button @click="closeBackupModal" class="btn btn-secondary">Cancelar</button>
+            <button @click="performBackup" class="btn btn-primary" :disabled="backupLoading">
+              {{ backupLoading ? 'Fazendo backup...' : 'Sim, fazer backup' }}
+            </button>
+          </div>
+        </div>
       </div>
       
       <div v-if="!loading && !error" class="search-container">
@@ -64,6 +81,7 @@
 
 <script>
 import { personService } from '../services/personService'
+import { backupService } from '../services/backupService'
 
 export default {
   name: 'ClientList',
@@ -72,7 +90,9 @@ export default {
       clients: [],
       loading: false,
       error: null,
-      searchQuery: ''
+      searchQuery: '',
+      showBackupModal: false,
+      backupLoading: false
     }
   },
   computed: {
@@ -130,6 +150,39 @@ export default {
       } catch (err) {
         alert('Erro ao excluir cliente: ' + (err.response?.data?.message || err.message))
       }
+    },
+    showBackupConfirmation() {
+      this.showBackupModal = true
+    },
+    closeBackupModal() {
+      if (!this.backupLoading) {
+        this.showBackupModal = false
+      }
+    },
+    async performBackup() {
+      this.backupLoading = true
+      try {
+        const blob = await backupService.createBackup()
+        
+        // Criar link para download
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+        link.href = url
+        link.download = `backup_wa_db_${timestamp}.sql`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        this.showBackupModal = false
+        alert('Backup realizado com sucesso!')
+      } catch (err) {
+        alert('Erro ao realizar backup: ' + (err.response?.data?.message || err.message))
+        console.error(err)
+      } finally {
+        this.backupLoading = false
+      }
     }
   }
 }
@@ -150,6 +203,12 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .header h1 {
@@ -266,6 +325,46 @@ export default {
 .search-input::placeholder {
   color: #9e9e9e;
   font-style: italic;
+}
+
+/* Modal de Confirmação */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 90%;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.modal-content p {
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
 }
 </style>
 
