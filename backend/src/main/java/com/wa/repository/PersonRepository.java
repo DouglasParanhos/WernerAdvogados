@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface PersonRepository extends JpaRepository<Person, Long> {
-    @Query("SELECT DISTINCT p FROM Person p LEFT JOIN FETCH p.address LEFT JOIN FETCH p.matriculations")
+    @Query("SELECT DISTINCT p FROM Person p LEFT JOIN FETCH p.address LEFT JOIN FETCH p.matriculations ORDER BY p.fullname")
     List<Person> findAllWithRelations();
     
     @Query("SELECT DISTINCT p FROM Person p LEFT JOIN FETCH p.address LEFT JOIN FETCH p.matriculations WHERE p.id = :id")
