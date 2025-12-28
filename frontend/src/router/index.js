@@ -3,6 +3,7 @@ import ClientList from '../views/ClientList.vue'
 import ClientDetails from '../views/ClientDetails.vue'
 import ClientForm from '../views/ClientForm.vue'
 import ProcessForm from '../views/ProcessForm.vue'
+import ProcessDetails from '../views/ProcessDetails.vue'
 
 const routes = [
   {
@@ -34,6 +35,11 @@ const routes = [
     path: '/processes/:id/edit',
     name: 'ProcessEdit',
     component: ProcessForm
+  },
+  {
+    path: '/processes/:id',
+    name: 'ProcessDetails',
+    component: ProcessDetails
   }
 ]
 

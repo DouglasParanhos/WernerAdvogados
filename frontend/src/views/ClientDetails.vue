@@ -113,11 +113,11 @@
               <h4>Processos ({{ matriculation.processes.length }})</h4>
               <div v-for="process in matriculation.processes" :key="process.id" class="process-card">
                 <div class="process-header">
-                  <strong>{{ process.numero }}</strong>
+                  <strong @click="goToProcessDetails(process.id)" class="process-link">{{ process.numero }}</strong>
                   <div>
-                    <button @click="openDocumentModal(process)" class="btn btn-sm btn-primary">Gerar Documento</button>
-                    <button @click="goToEditProcess(process.id)" class="btn btn-sm btn-secondary">Editar</button>
-                    <button @click="deleteProcess(process.id)" class="btn btn-sm btn-danger">Excluir</button>
+                    <button @click.stop="openDocumentModal(process)" class="btn btn-sm btn-primary">Gerar Documento</button>
+                    <button @click.stop="goToEditProcess(process.id)" class="btn btn-sm btn-secondary">Editar</button>
+                    <button @click.stop="deleteProcess(process.id)" class="btn btn-sm btn-danger">Excluir</button>
                   </div>
                 </div>
                 <div class="process-info">
@@ -218,6 +218,9 @@ export default {
     },
     goToNewProcess() {
       this.$router.push({ path: '/processes/new', query: { personId: this.client.id } })
+    },
+    goToProcessDetails(id) {
+      this.$router.push(`/processes/${id}`)
     },
     goToEditProcess(id) {
       this.$router.push(`/processes/${id}/edit`)
@@ -382,6 +385,16 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
+}
+
+.process-link {
+  cursor: pointer;
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.process-link:hover {
+  color: #0056b3;
 }
 
 .process-info {
