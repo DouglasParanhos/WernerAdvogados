@@ -3,7 +3,7 @@
     <div class="container">
       <div class="header">
         <button @click="goBack" class="btn btn-secondary">← Voltar</button>
-        <div>
+        <div class="header-actions">
           <button @click="goToEdit" class="btn btn-secondary">Editar Processo</button>
         </div>
       </div>
@@ -298,6 +298,12 @@ export default {
   margin-bottom: 2rem;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .section {
   background: white;
   border-radius: 8px;
@@ -438,52 +444,7 @@ export default {
   color: #6c757d;
 }
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #545b62;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-}
-
-.btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-}
+/* Estilos de botões importados de styles/buttons.css */
 
 .loading, .error {
   text-align: center;

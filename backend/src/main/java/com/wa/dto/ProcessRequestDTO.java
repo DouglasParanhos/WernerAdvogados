@@ -28,6 +28,8 @@ public class ProcessRequestDTO {
     private Double previsaoHonorariosContratuais;
     private Double previsaoHonorariosSucumbenciais;
     private LocalDateTime distribuidoEm;
+    private String tipoProcesso;
+    private String status;
     
     @NotNull(message = "ID da matrícula é obrigatório")
     private Long matriculationId;

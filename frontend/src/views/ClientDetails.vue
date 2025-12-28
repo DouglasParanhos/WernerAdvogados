@@ -114,7 +114,7 @@
               <div v-for="process in matriculation.processes" :key="process.id" class="process-card">
                 <div class="process-header">
                   <strong @click="goToProcessDetails(process.id)" class="process-link">{{ process.numero }}</strong>
-                  <div>
+                  <div class="process-actions">
                     <button @click.stop="openDocumentModal(process)" class="btn btn-sm btn-primary">Gerar Documento</button>
                     <button @click.stop="goToEditProcess(process.id)" class="btn btn-sm btn-secondary">Editar</button>
                     <button @click.stop="deleteProcess(process.id)" class="btn btn-sm btn-danger">Excluir</button>
@@ -125,7 +125,37 @@
                   <div><strong>Vara:</strong> {{ process.vara }}</div>
                   <div><strong>Sistema:</strong> {{ process.sistema }}</div>
                   <div v-if="process.tipoProcesso"><strong>Tipo:</strong> {{ process.tipoProcesso }}</div>
-                  <div v-if="process.status"><strong>Status:</strong> {{ process.status }}</div>
+                  <div class="status-field">
+                    <strong>Status:</strong>
+                    <span v-if="editingStatusId !== process.id" class="status-display">
+                      <span v-if="process.status">{{ process.status }}</span>
+                      <span v-else class="no-status">Sem status</span>
+                      <button 
+                        @click.stop="startEditStatus(process)" 
+                        class="status-edit-btn"
+                        title="Editar status"
+                      >
+                        ✏️
+                      </button>
+                    </span>
+                    <div v-else class="status-edit">
+                      <input
+                        type="text"
+                        v-model="editingStatus"
+                        @keyup.enter="saveStatus(process.id)"
+                        @keyup.esc="cancelEditStatus"
+                        @input="filterStatusSuggestions"
+                        class="status-input"
+                        :list="`status-suggestions-${process.id}`"
+                        ref="statusInput"
+                      />
+                      <datalist :id="`status-suggestions-${process.id}`">
+                        <option v-for="suggestion in filteredStatusSuggestions" :key="suggestion" :value="suggestion" />
+                      </datalist>
+                      <button @click.stop="saveStatus(process.id)" class="status-save-btn" title="Salvar">✓</button>
+                      <button @click.stop="cancelEditStatus" class="status-cancel-btn" title="Cancelar">✕</button>
+                    </div>
+                  </div>
                   <div v-if="process.valor"><strong>Valor:</strong> {{ formatCurrency(process.valor) }}</div>
                   <div v-if="process.distribuidoEm"><strong>Distribuído em:</strong> {{ formatDate(process.distribuidoEm) }}</div>
                 </div>
@@ -182,11 +212,16 @@ export default {
       error: null,
       showDocumentModal: false,
       selectedProcess: null,
-      showClientDocumentModal: false
+      showClientDocumentModal: false,
+      editingStatusId: null,
+      editingStatus: '',
+      statusSuggestions: [],
+      filteredStatusSuggestions: []
     }
   },
   async mounted() {
     await this.loadClient()
+    await this.loadStatusSuggestions()
   },
   methods: {
     async loadClient() {
@@ -260,6 +295,56 @@ export default {
     },
     closeClientDocumentModal() {
       this.showClientDocumentModal = false
+    },
+    async loadStatusSuggestions() {
+      try {
+        this.statusSuggestions = await processService.getDistinctStatuses()
+        this.filteredStatusSuggestions = this.statusSuggestions
+      } catch (err) {
+        console.error('Erro ao carregar sugestões de status:', err)
+      }
+    },
+    startEditStatus(process) {
+      this.editingStatusId = process.id
+      this.editingStatus = process.status || ''
+      this.filteredStatusSuggestions = this.statusSuggestions
+      this.$nextTick(() => {
+        if (this.$refs.statusInput) {
+          this.$refs.statusInput.focus()
+        }
+      })
+    },
+    filterStatusSuggestions() {
+      const query = this.editingStatus.toLowerCase()
+      if (!query) {
+        this.filteredStatusSuggestions = this.statusSuggestions
+      } else {
+        this.filteredStatusSuggestions = this.statusSuggestions.filter(status =>
+          status.toLowerCase().includes(query)
+        )
+      }
+    },
+    async saveStatus(processId) {
+      try {
+        const updatedProcess = await processService.updateStatus(processId, this.editingStatus)
+        // Atualizar o processo na lista
+        this.client.matriculations.forEach(mat => {
+          if (mat.processes) {
+            const index = mat.processes.findIndex(p => p.id === processId)
+            if (index !== -1) {
+              mat.processes[index] = updatedProcess
+            }
+          }
+        })
+        this.cancelEditStatus()
+      } catch (err) {
+        alert('Erro ao atualizar status: ' + (err.response?.data?.message || err.message))
+      }
+    },
+    cancelEditStatus() {
+      this.editingStatusId = null
+      this.editingStatus = ''
+      this.filteredStatusSuggestions = this.statusSuggestions
     }
   }
 }
@@ -383,6 +468,12 @@ export default {
   margin-bottom: 0.75rem;
 }
 
+.process-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .process-link {
   cursor: pointer;
   color: #007bff;
@@ -400,6 +491,86 @@ export default {
   font-size: 0.9rem;
 }
 
+.status-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.no-status {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.status-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.status-edit-btn:hover {
+  opacity: 1;
+}
+
+.status-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.status-input {
+  flex: 1;
+  padding: 0.375rem 0.5rem;
+  border: 1.5px solid #007bff;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  min-width: 150px;
+}
+
+.status-input:focus {
+  outline: none;
+  border-color: #003d7a;
+  box-shadow: 0 0 0 2px rgba(0, 61, 122, 0.1);
+}
+
+.status-save-btn,
+.status-cancel-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.status-save-btn {
+  color: #28a745;
+}
+
+.status-save-btn:hover {
+  background-color: #f0f9f4;
+}
+
+.status-cancel-btn {
+  color: #dc3545;
+}
+
+.status-cancel-btn:hover {
+  background-color: #fff5f5;
+}
+
 .no-processes, .empty-state {
   text-align: center;
   padding: 2rem;
@@ -407,10 +578,6 @@ export default {
 }
 
 /* Estilos de botões importados de styles/buttons.css */
-
-.btn-sm {
-  margin-left: 0.5rem;
-}
 
 .loading, .error {
   text-align: center;

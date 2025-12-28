@@ -24,6 +24,16 @@ export const processService = {
   
   async delete(id) {
     await api.delete(`/processes/${id}`)
+  },
+  
+  async updateStatus(id, status) {
+    const response = await api.patch(`/processes/${id}/status`, { status })
+    return response.data
+  },
+  
+  async getDistinctStatuses() {
+    const response = await api.get('/processes/status/distinct')
+    return response.data
   }
 }
 

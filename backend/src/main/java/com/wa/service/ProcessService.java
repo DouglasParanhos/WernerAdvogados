@@ -54,6 +54,8 @@ public class ProcessService {
         process.setPrevisaoHonorariosContratuais(request.getPrevisaoHonorariosContratuais());
         process.setPrevisaoHonorariosSucumbenciais(request.getPrevisaoHonorariosSucumbenciais());
         process.setDistribuidoEm(request.getDistribuidoEm());
+        process.setTipoProcesso(request.getTipoProcesso() != null ? request.getTipoProcesso() : "");
+        process.setStatus(request.getStatus());
         process.setMatriculation(matriculation);
         
         process = processRepository.save(process);
@@ -76,6 +78,12 @@ public class ProcessService {
         process.setPrevisaoHonorariosContratuais(request.getPrevisaoHonorariosContratuais());
         process.setPrevisaoHonorariosSucumbenciais(request.getPrevisaoHonorariosSucumbenciais());
         process.setDistribuidoEm(request.getDistribuidoEm());
+        if (request.getTipoProcesso() != null) {
+            process.setTipoProcesso(request.getTipoProcesso());
+        }
+        if (request.getStatus() != null) {
+            process.setStatus(request.getStatus());
+        }
         process.setMatriculation(matriculation);
         
         process = processRepository.save(process);
@@ -87,6 +95,24 @@ public class ProcessService {
         Process process = processRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Processo não encontrado com ID: " + id));
         processRepository.delete(process);
+    }
+    
+    public List<String> getDistinctStatuses() {
+        return processRepository.findAll().stream()
+                .map(Process::getStatus)
+                .filter(status -> status != null && !status.trim().isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+    
+    @Transactional
+    public ProcessDTO updateStatus(Long id, String status) {
+        Process process = processRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Processo não encontrado com ID: " + id));
+        process.setStatus(status != null && status.trim().isEmpty() ? null : status);
+        process = processRepository.save(process);
+        return convertToDTO(processRepository.findByIdWithMoviments(process.getId()).orElse(process));
     }
     
     private ProcessDTO convertToDTO(Process process) {

@@ -46,5 +46,16 @@ public class ProcessController {
         processService.delete(id);
         return ResponseEntity.noContent().build();
     }
+    
+    @GetMapping("/status/distinct")
+    public ResponseEntity<List<String>> getDistinctStatuses() {
+        return ResponseEntity.ok(processService.getDistinctStatuses());
+    }
+    
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ProcessDTO> updateStatus(@PathVariable Long id, @RequestBody java.util.Map<String, String> request) {
+        String status = request.get("status");
+        return ResponseEntity.ok(processService.updateStatus(id, status));
+    }
 }
 
