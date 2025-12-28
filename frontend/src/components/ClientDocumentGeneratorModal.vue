@@ -226,29 +226,7 @@ export default {
   gap: 0.5rem;
 }
 
-.template-btn {
-  padding: 0.75rem 1rem;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  text-align: left;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.template-btn:hover:not(:disabled) {
-  background: #0056b3;
-}
-
-.template-btn:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-}
+/* Estilos de template-btn importados de styles/buttons.css */
 
 .spinner {
   width: 1rem;
@@ -271,21 +249,10 @@ export default {
   color: #6c757d;
 }
 
+/* Estilos de botões importados de styles/buttons.css */
+
 .btn {
   padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #545b62;
 }
 </style>
 

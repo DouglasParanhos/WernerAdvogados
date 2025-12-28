@@ -6,6 +6,18 @@
         <button @click="goToNewClient" class="btn btn-primary">Novo Cliente</button>
       </div>
       
+      <div v-if="!loading && !error" class="search-container">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="Buscar cliente por nome..." 
+            class="search-input"
+          />
+        </div>
+      </div>
+      
       <div v-if="loading" class="loading">Carregando...</div>
       <div v-if="error" class="error">{{ error }}</div>
       
@@ -23,7 +35,7 @@
           </thead>
           <tbody>
             <tr 
-              v-for="client in clients" 
+              v-for="client in filteredClients" 
               :key="client.id"
               @click="goToClientDetails(client.id)"
               class="table-row"
@@ -38,8 +50,10 @@
                 <button @click="deleteClient(client.id)" class="btn btn-sm btn-danger">Excluir</button>
               </td>
             </tr>
-            <tr v-if="clients.length === 0">
-              <td colspan="6" class="empty-state">Nenhum cliente encontrado</td>
+            <tr v-if="filteredClients.length === 0">
+              <td colspan="6" class="empty-state">
+                {{ searchQuery ? 'Nenhum cliente encontrado com esse nome' : 'Nenhum cliente encontrado' }}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -57,7 +71,20 @@ export default {
     return {
       clients: [],
       loading: false,
-      error: null
+      error: null,
+      searchQuery: ''
+    }
+  },
+  computed: {
+    filteredClients() {
+      if (!this.searchQuery.trim()) {
+        return this.clients
+      }
+      const query = this.searchQuery.toLowerCase().trim()
+      return this.clients.filter(client => {
+        const fullname = (client.fullname || '').toLowerCase()
+        return fullname.includes(query)
+      })
     }
   },
   async mounted() {
@@ -130,48 +157,7 @@ export default {
   color: #333;
 }
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #545b62;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-}
-
-.btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  margin-right: 0.5rem;
-}
+/* Estilos de botões importados de styles/buttons.css */
 
 .table-container {
   background: white;
@@ -225,6 +211,61 @@ export default {
 
 .error {
   color: #dc3545;
+}
+
+.search-container {
+  margin-bottom: 2rem;
+}
+
+.search-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 500px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  color: #6c757d;
+  pointer-events: none;
+  z-index: 1;
+  transition: color 0.2s;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 3rem;
+  font-size: 1rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #333;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:hover {
+  border-color: #c0c0c0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-wrapper:focus-within .search-icon {
+  color: #007bff;
+}
+
+.search-input::placeholder {
+  color: #9e9e9e;
+  font-style: italic;
 }
 </style>
 

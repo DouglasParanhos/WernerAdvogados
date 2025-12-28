@@ -3,7 +3,7 @@
     <div class="container">
       <div class="header">
         <button @click="goBack" class="btn btn-secondary">← Voltar</button>
-        <div>
+        <div class="header-actions">
           <button @click="openClientDocumentModal" class="btn btn-primary">Gerar Documento do Cliente</button>
           <button @click="goToEdit" class="btn btn-secondary">Editar</button>
           <button @click="deleteClient" class="btn btn-danger">Excluir</button>
@@ -99,9 +99,9 @@
           <div v-for="matriculation in client.matriculations" :key="matriculation.id" class="matriculation-card">
             <div class="matriculation-header">
               <h3>Matrícula: {{ matriculation.numero }}</h3>
-              <span class="badge">Cargo: {{ matriculation.cargo }}</span>
             </div>
             <div class="matriculation-info">
+              <div><strong>Cargo:</strong> {{ matriculation.cargo }}</div>
               <div><strong>Início ERJ:</strong> {{ formatDate(matriculation.inicioErj) }}</div>
               <div><strong>Data Aposentadoria:</strong> {{ formatDate(matriculation.dataAposentadoria) }}</div>
               <div><strong>Nível Atual:</strong> {{ matriculation.nivelAtual }}</div>
@@ -282,6 +282,12 @@ export default {
   margin-bottom: 2rem;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .section {
   background: white;
   border-radius: 8px;
@@ -335,23 +341,13 @@ export default {
 }
 
 .matriculation-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 1rem;
 }
 
 .matriculation-header h3 {
   font-size: 1.25rem;
   color: #333;
-}
-
-.badge {
-  background: #007bff;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
+  margin: 0;
 }
 
 .matriculation-info {
@@ -410,56 +406,10 @@ export default {
   color: #6c757d;
 }
 
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #545b62;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-}
+/* Estilos de botões importados de styles/buttons.css */
 
 .btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
   margin-left: 0.5rem;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
 }
 
 .loading, .error {

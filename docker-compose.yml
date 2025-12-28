@@ -12,7 +12,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+<<<<<<< HEAD
       - ./werneradv20250511.sql:/docker-entrypoint-initdb.d/init.sql
+=======
+      - ./work_material/werneradv20250511.sql:/docker-entrypoint-initdb.d/init.sql
+>>>>>>> a66f3f2 (feat: padronizaÃ§Ã£o de botÃµes e melhorias de UI - PadronizaÃ§Ã£o de estilos de botÃµes (primÃ¡rio azul escuro, secundÃ¡rio e perigo apenas bordas) - CriaÃ§Ã£o de arquivo CSS global para botÃµes (styles/buttons.css) - Melhoria do campo de busca com Ã­cone e estilo moderno - Ajuste na exibiÃ§Ã£o do campo cargo nas matrÃ­culas - EspaÃ§amento entre botÃµes no header de detalhes do cliente)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
