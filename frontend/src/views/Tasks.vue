@@ -21,6 +21,16 @@
               <option value="Thiago">Thiago</option>
             </select>
           </div>
+          <button @click="exportToExcel" class="btn-export" title="Exportar para Excel">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="10 9 9 9 8 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Exportar Excel
+          </button>
           <button @click="showNewTaskModal = true" class="btn-icon-add" title="Nova Tarefa">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
@@ -70,6 +80,13 @@
               <div class="task-footer">
                 <span class="task-responsavel">{{ task.responsavel }}</span>
               </div>
+            </div>
+            
+            <!-- Botão Carregar Mais para tarefas COMPLETA -->
+            <div v-if="column.status === 'COMPLETA' && hasMoreCompleted() && !showAllCompleted" class="load-more-container">
+              <button @click="showAllCompleted = true" class="btn-load-more">
+                Carregar Mais
+              </button>
             </div>
           </div>
         </div>
@@ -146,6 +163,7 @@ export default {
       showEditTaskModal: false,
       draggedTask: null,
       filterResponsavel: '',
+      showAllCompleted: false,
       taskForm: {
         id: null,
         titulo: '',
@@ -178,13 +196,49 @@ export default {
       }
     },
     getTasksByStatus(status) {
-      return this.tasks
+      let filtered = this.tasks
         .filter(task => {
           const matchesStatus = task.status === status
           const matchesFilter = !this.filterResponsavel || task.responsavel === this.filterResponsavel
           return matchesStatus && matchesFilter
         })
-        .sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+      
+      // Para tarefas COMPLETA, ordenar por data de modificação (mais recentes primeiro)
+      if (status === 'COMPLETA') {
+        filtered = filtered.sort((a, b) => {
+          const dateA = new Date(a.modifiedOn || a.createdOn || 0)
+          const dateB = new Date(b.modifiedOn || b.createdOn || 0)
+          return dateB - dateA // Mais recentes primeiro
+        })
+        
+        // Limitar a 10 se não estiver mostrando todas
+        if (!this.showAllCompleted) {
+          filtered = filtered.slice(0, 10)
+        }
+      } else {
+        // Para outras colunas, ordenar: PRAZO primeiro, depois por ordem
+        filtered = filtered.sort((a, b) => {
+          // Tarefas PRAZO sempre no topo
+          const aIsPrazo = a.tipoTarefa === 'PRAZO'
+          const bIsPrazo = b.tipoTarefa === 'PRAZO'
+          
+          if (aIsPrazo && !bIsPrazo) return -1
+          if (!aIsPrazo && bIsPrazo) return 1
+          
+          // Se ambas são PRAZO ou nenhuma é, ordenar por ordem
+          return (a.ordem || 0) - (b.ordem || 0)
+        })
+      }
+      
+      return filtered
+    },
+    hasMoreCompleted() {
+      const completed = this.tasks.filter(task => {
+        const matchesStatus = task.status === 'COMPLETA'
+        const matchesFilter = !this.filterResponsavel || task.responsavel === this.filterResponsavel
+        return matchesStatus && matchesFilter
+      })
+      return completed.length > 10 && !this.showAllCompleted
     },
     getTaskTypeColor(tipo) {
       const colors = {
@@ -288,6 +342,57 @@ export default {
     },
     goToHome() {
       this.$router.push('/')
+    },
+    exportToExcel() {
+      try {
+        if (!this.tasks || this.tasks.length === 0) {
+          alert('Não há tarefas para exportar.')
+          return
+        }
+        
+        // Preparar dados para exportação
+        const data = this.tasks.map(task => ({
+          'Título': task.titulo || '',
+          'Descrição': task.descricao || '',
+          'Tipo': this.getTaskTypeLabel(task.tipoTarefa),
+          'Status': task.status === 'PARA_INICIAR' ? 'Para Iniciar' : 
+                   task.status === 'EM_ANDAMENTO' ? 'Em Andamento' : 'Completa',
+          'Responsável': task.responsavel || '',
+          'Criado em': task.createdOn ? new Date(task.createdOn).toLocaleString('pt-BR') : '',
+          'Modificado em': task.modifiedOn ? new Date(task.modifiedOn).toLocaleString('pt-BR') : ''
+        }))
+        
+        // Criar CSV
+        const headers = Object.keys(data[0])
+        const csvContent = [
+          headers.join(','),
+          ...data.map(row => 
+            headers.map(header => {
+              const value = row[header] || ''
+              // Escapar vírgulas e aspas
+              return `"${String(value).replace(/"/g, '""')}"`
+            }).join(',')
+          )
+        ].join('\n')
+        
+        // Adicionar BOM para Excel reconhecer UTF-8
+        const BOM = '\uFEFF'
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+        
+        // Criar link para download
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+        link.href = url
+        link.download = `tarefas_${timestamp}.csv`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } catch (err) {
+        alert('Erro ao exportar tarefas: ' + err.message)
+        console.error(err)
+      }
     }
   }
 }
@@ -412,6 +517,37 @@ h1 {
 .btn-icon-add svg {
   width: 24px;
   height: 24px;
+}
+
+.btn-export {
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.btn-export:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-export:active {
+  transform: translateY(0);
+}
+
+.btn-export svg {
+  width: 18px;
+  height: 18px;
 }
 
 .board-container {
@@ -551,6 +687,30 @@ h1 {
   font-size: 0.875rem;
   color: #4a5568;
   font-weight: 500;
+}
+
+.load-more-container {
+  padding: 1rem;
+  text-align: center;
+}
+
+.btn-load-more {
+  background: #e2e8f0;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.btn-load-more:hover {
+  background: #cbd5e0;
+  border-color: #a0aec0;
+  color: #2d3748;
 }
 
 .modal-overlay {

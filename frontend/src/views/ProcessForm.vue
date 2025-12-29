@@ -225,10 +225,16 @@ export default {
       }
     },
     goBack() {
+      // Se tiver personId na query, voltar para a página do cliente
       if (this.personId) {
         this.$router.push(`/clients/${this.personId}`)
       } else {
-        this.$router.push('/')
+        // Caso contrário, usar o histórico do navegador
+        if (window.history.length > 1) {
+          this.$router.back()
+        } else {
+          this.$router.push('/')
+        }
       }
     }
   }

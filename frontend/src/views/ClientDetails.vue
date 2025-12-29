@@ -275,7 +275,7 @@ export default {
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
     },
     goBack() {
-      this.$router.push('/clients')
+      this.$router.back()
     },
     goToEdit() {
       this.$router.push(`/clients/${this.client.id}/edit`)
@@ -287,7 +287,10 @@ export default {
       this.$router.push(`/processes/${id}`)
     },
     goToEditProcess(id) {
-      this.$router.push(`/processes/${id}/edit`)
+      this.$router.push({ 
+        path: `/processes/${id}/edit`,
+        query: { personId: this.client.id }
+      })
     },
     async deleteClient() {
       if (!confirm('Tem certeza que deseja excluir este cliente?')) {

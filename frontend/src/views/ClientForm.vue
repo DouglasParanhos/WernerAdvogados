@@ -677,7 +677,7 @@ export default {
       this.loadClient()
     },
     goBack() {
-      this.$router.push('/')
+      this.$router.back()
     }
   }
 }
