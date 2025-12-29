@@ -49,6 +49,17 @@
             </div>
             
             <div class="form-group">
+              <label>Tipo de Processo *</label>
+              <select v-model="form.tipoProcesso" required>
+                <option value="">Selecione o tipo</option>
+                <option value="PISO">PISO</option>
+                <option value="NE">NE</option>
+                <option value="INTERNIVEIS">INTERNIVEIS</option>
+              </select>
+              <span v-if="errors.tipoProcesso" class="error-text">{{ errors.tipoProcesso }}</span>
+            </div>
+            
+            <div class="form-group">
               <label>Valor</label>
               <input v-model="form.valor" type="number" step="0.01" />
             </div>
@@ -96,6 +107,7 @@ export default {
         comarca: '',
         vara: '',
         sistema: '',
+        tipoProcesso: '',
         valor: null,
         previsaoHonorariosContratuais: null,
         previsaoHonorariosSucumbenciais: null,
@@ -151,6 +163,7 @@ export default {
           comarca: process.comarca || '',
           vara: process.vara || '',
           sistema: process.sistema || '',
+          tipoProcesso: process.tipoProcesso || '',
           valor: process.valor || null,
           previsaoHonorariosContratuais: process.previsaoHonorariosContratuais || null,
           previsaoHonorariosSucumbenciais: process.previsaoHonorariosSucumbenciais || null,
@@ -175,6 +188,7 @@ export default {
           comarca: this.form.comarca,
           vara: this.form.vara,
           sistema: this.form.sistema,
+          tipoProcesso: this.form.tipoProcesso,
           valor: this.form.valor || null,
           previsaoHonorariosContratuais: this.form.previsaoHonorariosContratuais || null,
           previsaoHonorariosSucumbenciais: this.form.previsaoHonorariosSucumbenciais || null,

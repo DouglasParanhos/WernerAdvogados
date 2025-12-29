@@ -58,7 +58,9 @@ public class PersonService {
     public PersonDTO create(PersonRequestDTO request) {
         Person person = new Person();
         person.setFullname(request.getFullname());
-        person.setEmail(request.getEmail());
+        // Converte string vazia para null para evitar violação de constraint UNIQUE
+        person.setEmail(request.getEmail() != null && !request.getEmail().trim().isEmpty() 
+            ? request.getEmail().trim() : null);
         person.setCpf(request.getCpf());
         person.setRg(request.getRg());
         person.setEstadoCivil(request.getEstadoCivil());
@@ -94,7 +96,9 @@ public class PersonService {
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
         
         person.setFullname(request.getFullname());
-        person.setEmail(request.getEmail());
+        // Converte string vazia para null para evitar violação de constraint UNIQUE
+        person.setEmail(request.getEmail() != null && !request.getEmail().trim().isEmpty() 
+            ? request.getEmail().trim() : null);
         person.setCpf(request.getCpf());
         person.setRg(request.getRg());
         person.setEstadoCivil(request.getEstadoCivil());

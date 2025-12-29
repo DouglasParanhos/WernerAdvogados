@@ -39,9 +39,9 @@
               <label>Sistema:</label>
               <span>{{ process.sistema }}</span>
             </div>
-            <div class="info-item" v-if="process.tipoProcesso">
+            <div class="info-item">
               <label>Tipo:</label>
-              <span>{{ process.tipoProcesso }}</span>
+              <span>{{ process.tipoProcesso || '-' }}</span>
             </div>
             <div class="info-item" v-if="process.status">
               <label>Status:</label>

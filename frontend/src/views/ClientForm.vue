@@ -459,7 +459,7 @@ export default {
       try {
         const data = {
           fullname: this.form.fullname,
-          email: this.form.email,
+          email: this.form.email && this.form.email.trim() ? this.form.email.trim() : null,
           cpf: this.form.cpf,
           rg: this.form.rg,
           estadoCivil: this.form.estadoCivil,

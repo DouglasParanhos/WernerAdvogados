@@ -78,9 +78,7 @@ public class ProcessService {
         process.setPrevisaoHonorariosContratuais(request.getPrevisaoHonorariosContratuais());
         process.setPrevisaoHonorariosSucumbenciais(request.getPrevisaoHonorariosSucumbenciais());
         process.setDistribuidoEm(request.getDistribuidoEm());
-        if (request.getTipoProcesso() != null) {
-            process.setTipoProcesso(request.getTipoProcesso());
-        }
+        process.setTipoProcesso(request.getTipoProcesso());
         if (request.getStatus() != null) {
             process.setStatus(request.getStatus());
         }
