@@ -78,7 +78,14 @@
             <h3>Nova Movimentação</h3>
             <div class="form-group">
               <label>Data:</label>
-              <input type="datetime-local" v-model="newMoviment.date" class="form-control" />
+              <input 
+                type="text" 
+                v-model="newMoviment.date" 
+                class="form-control"
+                placeholder="dd/mm/aaaa"
+                @input="formatDateInput($event, 'newMoviment.date')"
+                maxlength="10"
+              />
             </div>
             <div class="form-group">
               <label>Descrição:</label>
@@ -120,7 +127,14 @@
               <div v-else class="moviment-edit-form">
                 <div class="form-group">
                   <label>Data:</label>
-                  <input type="datetime-local" v-model="editingMoviment.date" class="form-control" />
+                  <input 
+                    type="text" 
+                    v-model="editingMoviment.date" 
+                    class="form-control"
+                    placeholder="dd/mm/aaaa"
+                    @input="formatDateInput($event, 'editingMoviment.date')"
+                    maxlength="10"
+                  />
                 </div>
                 <div class="form-group">
                   <label>Descrição:</label>
@@ -195,13 +209,10 @@ export default {
     formatDate(date) {
       if (!date) return '-'
       const d = new Date(date)
-      return d.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+      const day = String(d.getDate()).padStart(2, '0')
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const year = d.getFullYear()
+      return `${day}/${month}/${year}`
     },
     formatCurrency(value) {
       if (!value) return '-'
@@ -213,6 +224,101 @@ export default {
     goToEdit() {
       this.$router.push(`/processes/${this.process.id}/edit`)
     },
+    formatDateInput(event, fieldPath) {
+      // Aplica máscara dd/mm/aaaa enquanto o usuário digita
+      let value = event.target.value.replace(/\D/g, '') // Remove tudo que não é dígito
+      
+      if (value.length > 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2)
+      }
+      if (value.length > 5) {
+        value = value.substring(0, 5) + '/' + value.substring(5, 9)
+      }
+      
+      // Atualiza o modelo Vue baseado no caminho do campo
+      const parts = fieldPath.split('.')
+      if (parts.length === 2) {
+        // Ex: newMoviment.date
+        if (!this[parts[0]]) {
+          this[parts[0]] = {}
+        }
+        this.$set(this[parts[0]], parts[1], value)
+      } else if (parts.length === 3) {
+        // Ex: editingMoviment.date
+        if (!this[parts[0]]) {
+          this[parts[0]] = {}
+        }
+        if (!this[parts[0]][parts[1]]) {
+          this.$set(this[parts[0]], parts[1], {})
+        }
+        this.$set(this[parts[0]][parts[1]], parts[2], value)
+      }
+      
+      // Atualiza o valor no campo
+      event.target.value = value
+    },
+    convertDateToISO(dateString) {
+      // Converte de dd/mm/aaaa para ISO (yyyy-MM-dd)
+      if (!dateString) return null
+      
+      // Remove espaços e caracteres especiais
+      const cleanDate = dateString.trim()
+      
+      // Verifica se está no formato dd/mm/aaaa
+      const datePattern = /^(\d{2})\/(\d{2})\/(\d{4})$/
+      const match = cleanDate.match(datePattern)
+      
+      if (match) {
+        const day = match[1]
+        const month = match[2]
+        const year = match[3]
+        
+        // Valida a data
+        const date = new Date(`${year}-${month}-${day}`)
+        if (!isNaN(date.getTime()) && 
+            date.getDate() == day && 
+            date.getMonth() + 1 == month && 
+            date.getFullYear() == year) {
+          // Retorna no formato yyyy-MM-dd (sem hora)
+          return `${year}-${month}-${day}`
+        }
+      }
+      
+      // Se não estiver no formato esperado, tenta parsear como está
+      console.warn('Data em formato inválido:', dateString)
+      return null
+    },
+    formatDateForInput(dateString) {
+      // Converte de formato ISO (yyyy-MM-dd ou yyyy-MM-ddTHH:mm:ss) para dd/mm/aaaa
+      if (!dateString) return ''
+      try {
+        let date
+        if (typeof dateString === 'string') {
+          // Remove a parte de hora se existir
+          const dateOnly = dateString.split('T')[0].split(' ')[0]
+          const parts = dateOnly.split('-')
+          if (parts.length === 3) {
+            // Formato yyyy-MM-dd
+            return `${parts[2]}/${parts[1]}/${parts[0]}`
+          }
+          // Tenta parsear como data ISO
+          date = new Date(dateString)
+        } else {
+          date = new Date(dateString)
+        }
+        
+        if (date && !isNaN(date.getTime())) {
+          const day = String(date.getDate()).padStart(2, '0')
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const year = date.getFullYear()
+          return `${day}/${month}/${year}`
+        }
+        return ''
+      } catch (error) {
+        console.error('Erro ao formatar data:', dateString, error)
+        return ''
+      }
+    },
     async saveNewMoviment() {
       if (!this.newMoviment.descricao || !this.newMoviment.date) {
         alert('Por favor, preencha todos os campos')
@@ -221,8 +327,13 @@ export default {
       
       this.saving = true
       try {
-        // Converter para formato ISO
-        const dateISO = new Date(this.newMoviment.date).toISOString()
+        // Converter de dd/mm/aaaa para formato ISO
+        const dateISO = this.convertDateToISO(this.newMoviment.date)
+        if (!dateISO) {
+          alert('Data inválida. Use o formato dd/mm/aaaa')
+          this.saving = false
+          return
+        }
         await movimentService.create({
           ...this.newMoviment,
           date: dateISO
@@ -245,17 +356,11 @@ export default {
     },
     startEditMoviment(moviment) {
       this.editingMovimentId = moviment.id
-      // Converter data para formato datetime-local
-      const date = new Date(moviment.date)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
+      // Converter data para formato dd/mm/aaaa
       this.editingMoviment = {
         id: moviment.id,
         descricao: moviment.descricao,
-        date: `${year}-${month}-${day}T${hours}:${minutes}`,
+        date: this.formatDateForInput(moviment.date),
         processId: moviment.processId
       }
     },
@@ -267,8 +372,13 @@ export default {
       
       this.saving = true
       try {
-        // Converter para formato ISO
-        const dateISO = new Date(this.editingMoviment.date).toISOString()
+        // Converter de dd/mm/aaaa para formato ISO
+        const dateISO = this.convertDateToISO(this.editingMoviment.date)
+        if (!dateISO) {
+          alert('Data inválida. Use o formato dd/mm/aaaa')
+          this.saving = false
+          return
+        }
         await movimentService.update(this.editingMoviment.id, {
           ...this.editingMoviment,
           date: dateISO

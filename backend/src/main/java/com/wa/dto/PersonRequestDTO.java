@@ -1,6 +1,5 @@
 package com.wa.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -16,8 +15,6 @@ public class PersonRequestDTO {
     @NotBlank(message = "Nome completo é obrigatório")
     private String fullname;
     
-    @NotBlank(message = "Email é obrigatório")
-    @Email(message = "Email inválido")
     private String email;
     
     @NotBlank(message = "CPF é obrigatório")
@@ -48,5 +45,8 @@ public class PersonRequestDTO {
     private Long addressId;
     
     private AddressDTO address;
+    
+    private MatriculationRequestDTO matriculation1;
+    private MatriculationRequestDTO matriculation2;
 }
 

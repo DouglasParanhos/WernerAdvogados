@@ -2,9 +2,11 @@ package com.wa.service;
 
 import com.wa.dto.AddressDTO;
 import com.wa.dto.MatriculationDTO;
+import com.wa.dto.MatriculationRequestDTO;
 import com.wa.dto.PersonDTO;
 import com.wa.dto.PersonRequestDTO;
 import com.wa.model.Address;
+import com.wa.model.Matriculation;
 import com.wa.model.Person;
 import com.wa.repository.AddressRepository;
 import com.wa.repository.MatriculationRepository;
@@ -79,6 +81,10 @@ public class PersonService {
         }
         
         person = personRepository.save(person);
+        
+        // Processar matrículas
+        processMatriculations(person, request);
+        
         return convertToDTO(personRepository.findByIdWithRelations(person.getId()).orElse(person));
     }
     
@@ -114,7 +120,85 @@ public class PersonService {
         }
         
         person = personRepository.save(person);
+        
+        // Processar matrículas
+        processMatriculations(person, request);
+        
         return convertToDTO(personRepository.findByIdWithRelations(person.getId()).orElse(person));
+    }
+    
+    private void processMatriculations(Person person, PersonRequestDTO request) {
+        // Buscar matrículas existentes da pessoa
+        List<Matriculation> existingMatriculations = matriculationRepository.findByPersonId(person.getId());
+        
+        // Processar primeira matrícula
+        if (request.getMatriculation1() != null) {
+            MatriculationRequestDTO mat1 = request.getMatriculation1();
+            if (isMatriculationValid(mat1)) {
+                Matriculation matriculation1;
+                if (!existingMatriculations.isEmpty()) {
+                    // Atualizar primeira matrícula existente
+                    matriculation1 = existingMatriculations.get(0);
+                    updateMatriculationFromDTO(matriculation1, mat1);
+                } else {
+                    // Criar nova matrícula
+                    matriculation1 = convertToMatriculationEntity(mat1);
+                    matriculation1.setPerson(person);
+                }
+                matriculationRepository.save(matriculation1);
+            }
+        }
+        
+        // Processar segunda matrícula
+        if (request.getMatriculation2() != null) {
+            MatriculationRequestDTO mat2 = request.getMatriculation2();
+            if (isMatriculationValid(mat2)) {
+                Matriculation matriculation2;
+                if (existingMatriculations.size() > 1) {
+                    // Atualizar segunda matrícula existente
+                    matriculation2 = existingMatriculations.get(1);
+                    updateMatriculationFromDTO(matriculation2, mat2);
+                } else {
+                    // Criar nova matrícula
+                    matriculation2 = convertToMatriculationEntity(mat2);
+                    matriculation2.setPerson(person);
+                }
+                matriculationRepository.save(matriculation2);
+            }
+        } else if (existingMatriculations.size() > 1) {
+            // Se não há segunda matrícula no request mas existe uma, remover
+            matriculationRepository.delete(existingMatriculations.get(1));
+        }
+    }
+    
+    private void updateMatriculationFromDTO(Matriculation mat, MatriculationRequestDTO dto) {
+        mat.setNumero(dto.getNumero());
+        mat.setInicioErj(dto.getInicioErj());
+        mat.setCargo(dto.getCargo());
+        mat.setDataAposentadoria(dto.getDataAposentadoria());
+        mat.setNivelAtual(dto.getNivelAtual());
+        mat.setTrienioAtual(dto.getTrienioAtual());
+        mat.setReferencia(dto.getReferencia());
+    }
+    
+    private boolean isMatriculationValid(MatriculationRequestDTO mat) {
+        return mat.getNumero() != null && !mat.getNumero().trim().isEmpty() &&
+               mat.getCargo() != null && !mat.getCargo().trim().isEmpty() &&
+               mat.getNivelAtual() != null && !mat.getNivelAtual().trim().isEmpty() &&
+               mat.getTrienioAtual() != null && !mat.getTrienioAtual().trim().isEmpty() &&
+               mat.getReferencia() != null && !mat.getReferencia().trim().isEmpty();
+    }
+    
+    private Matriculation convertToMatriculationEntity(MatriculationRequestDTO dto) {
+        Matriculation mat = new Matriculation();
+        mat.setNumero(dto.getNumero());
+        mat.setInicioErj(dto.getInicioErj());
+        mat.setCargo(dto.getCargo());
+        mat.setDataAposentadoria(dto.getDataAposentadoria());
+        mat.setNivelAtual(dto.getNivelAtual());
+        mat.setTrienioAtual(dto.getTrienioAtual());
+        mat.setReferencia(dto.getReferencia());
+        return mat;
     }
     
     @Transactional

@@ -20,9 +20,6 @@ public class StatisticsDTO {
     // Processos por comarca
     private List<CountByTypeDTO> processesByComarca;
     
-    // Processos por vara
-    private List<CountByTypeDTO> processesByVara;
-    
     // Processos por status
     private List<CountByTypeDTO> processesByStatus;
     
