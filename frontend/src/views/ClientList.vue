@@ -2,7 +2,15 @@
   <div class="client-list">
     <div class="container">
       <div class="header">
-        <h1>Clientes</h1>
+        <div class="header-left">
+          <button @click="goToHome" class="btn-home" title="Voltar para Home">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <h1>Clientes</h1>
+        </div>
         <div class="header-actions">
           <button @click="showBackupConfirmation" class="btn btn-secondary">Backup do Banco</button>
           <button @click="goToNewClient" class="btn btn-primary">Novo Cliente</button>
@@ -63,8 +71,20 @@
               <td>{{ client.telefone }}</td>
               <td>{{ getProcessCount(client) }}</td>
               <td @click.stop>
-                <button @click="goToEditClient(client.id)" class="btn btn-sm btn-secondary">Editar</button>
-                <button @click="deleteClient(client.id)" class="btn btn-sm btn-danger">Excluir</button>
+                <div class="action-buttons">
+                  <button @click="goToEditClient(client.id)" class="icon-btn edit-btn" title="Editar cliente">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <button @click="deleteClient(client.id)" class="icon-btn delete-btn" title="Excluir cliente">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="filteredClients.length === 0">
@@ -130,6 +150,9 @@ export default {
       return client.matriculations.reduce((total, mat) => {
         return total + (mat.processes ? mat.processes.length : 0)
       }, 0)
+    },
+    goToHome() {
+      this.$router.push('/')
     },
     goToClientDetails(id) {
       this.$router.push(`/clients/${id}`)
@@ -203,6 +226,38 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-home {
+  background: transparent;
+  border: 1.5px solid #6c757d;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+}
+
+.btn-home:hover {
+  background-color: #f8f9fa;
+  color: #003d7a;
+  border-color: #003d7a;
+}
+
+.btn-home svg {
+  width: 20px;
+  height: 20px;
 }
 
 .header-actions {
@@ -365,6 +420,47 @@ export default {
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.edit-btn {
+  color: #6c757d;
+}
+
+.edit-btn:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.delete-btn {
+  color: #dc3545;
+}
+
+.delete-btn:hover {
+  background-color: #fff5f5;
+  color: #c82333;
 }
 </style>
 

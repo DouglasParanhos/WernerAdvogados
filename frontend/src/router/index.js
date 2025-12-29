@@ -1,13 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import Home from '../views/Home.vue'
 import ClientList from '../views/ClientList.vue'
 import ClientDetails from '../views/ClientDetails.vue'
 import ClientForm from '../views/ClientForm.vue'
+import ProcessList from '../views/ProcessList.vue'
 import ProcessForm from '../views/ProcessForm.vue'
 import ProcessDetails from '../views/ProcessDetails.vue'
 
 const routes = [
   {
     path: '/',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/clients',
     name: 'ClientList',
     component: ClientList
   },
@@ -25,6 +32,11 @@ const routes = [
     path: '/clients/:id/edit',
     name: 'ClientEdit',
     component: ClientForm
+  },
+  {
+    path: '/processes',
+    name: 'ProcessList',
+    component: ProcessList
   },
   {
     path: '/processes/new',

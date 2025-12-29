@@ -111,7 +111,12 @@
             
             <div v-if="matriculation.processes && matriculation.processes.length > 0" class="processes-list">
               <h4>Processos ({{ matriculation.processes.length }})</h4>
-              <div v-for="process in matriculation.processes" :key="process.id" class="process-card">
+              <div 
+                v-for="process in matriculation.processes" 
+                :key="process.id" 
+                class="process-card"
+                :class="{ 'archived-process': isArchived(process) }"
+              >
                 <div class="process-header">
                   <strong @click="goToProcessDetails(process.id)" class="process-link">{{ process.numero }}</strong>
                   <div class="process-actions">
@@ -345,6 +350,10 @@ export default {
       this.editingStatusId = null
       this.editingStatus = ''
       this.filteredStatusSuggestions = this.statusSuggestions
+    },
+    isArchived(process) {
+      const status = (process.status || '').toLowerCase()
+      return status.includes('arquivado')
     }
   }
 }
@@ -459,6 +468,12 @@ export default {
   border-radius: 6px;
   padding: 1rem;
   margin-bottom: 0.75rem;
+  transition: opacity 0.2s;
+}
+
+.process-card.archived-process {
+  opacity: 0.5;
+  background-color: #f8f9fa;
 }
 
 .process-header {

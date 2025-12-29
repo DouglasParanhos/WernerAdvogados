@@ -23,13 +23,13 @@ public class ProcessService {
     private final MatriculationRepository matriculationRepository;
     
     public List<ProcessDTO> findAll() {
-        return processRepository.findAll().stream()
+        return processRepository.findAllWithRelations().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
     
     public List<ProcessDTO> findByPersonId(Long personId) {
-        return processRepository.findByPersonId(personId).stream()
+        return processRepository.findByPersonIdWithRelations(personId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -128,7 +128,10 @@ public class ProcessService {
         dto.setDistribuidoEm(process.getDistribuidoEm());
         dto.setTipoProcesso(process.getTipoProcesso());
         dto.setStatus(process.getStatus());
-        dto.setMatriculationId(process.getMatriculation().getId());
+        
+        if (process.getMatriculation() != null) {
+            dto.setMatriculationId(process.getMatriculation().getId());
+        }
         
         if (process.getMoviments() != null) {
             dto.setMoviments(process.getMoviments().stream()
