@@ -4,7 +4,14 @@
       <div class="header">
         <button @click="goBack" class="btn btn-secondary">← Voltar</button>
         <div class="header-actions">
-          <button @click="goToEdit" class="btn btn-secondary">Editar Processo</button>
+          <div class="action-buttons">
+            <button @click="goToEdit" class="icon-btn edit-btn" title="Editar processo">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       
@@ -90,8 +97,20 @@
                 <div class="moviment-header">
                   <div class="moviment-date">{{ formatDate(moviment.date) }}</div>
                   <div class="moviment-actions">
-                    <button @click="startEditMoviment(moviment)" class="btn btn-sm btn-secondary">Editar</button>
-                    <button @click="deleteMoviment(moviment.id)" class="btn btn-sm btn-danger">Excluir</button>
+                    <div class="action-buttons">
+                      <button @click="startEditMoviment(moviment)" class="icon-btn edit-btn" title="Editar movimentação">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                      <button @click="deleteMoviment(moviment.id)" class="icon-btn delete-btn" title="Excluir movimentação">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div class="moviment-description">{{ moviment.descricao }}</div>
@@ -430,6 +449,48 @@ export default {
 .moviment-actions {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.edit-btn {
+  color: #6c757d;
+}
+
+.edit-btn:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.delete-btn {
+  color: #dc3545;
+}
+
+.delete-btn:hover {
+  background-color: #fff5f5;
+  color: #c82333;
 }
 
 .moviment-edit-form {

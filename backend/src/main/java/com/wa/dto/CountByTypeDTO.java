@@ -1,0 +1,18 @@
+package com.wa.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CountByTypeDTO {
+    private String type;
+    private Long count;
+}
+
+
+
+
+

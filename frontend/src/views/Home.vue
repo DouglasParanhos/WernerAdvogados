@@ -154,8 +154,7 @@ export default {
       this.$router.push('/tasks')
     },
     goToStatistics() {
-      // Placeholder - pode ser implementado futuramente
-      alert('Funcionalidade de Estatísticas em desenvolvimento')
+      this.$router.push('/statistics')
     }
   }
 }

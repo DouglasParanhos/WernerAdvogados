@@ -7,6 +7,7 @@ import ProcessList from '../views/ProcessList.vue'
 import ProcessForm from '../views/ProcessForm.vue'
 import ProcessDetails from '../views/ProcessDetails.vue'
 import Tasks from '../views/Tasks.vue'
+import Statistics from '../views/Statistics.vue'
 
 const routes = [
   {
@@ -58,6 +59,11 @@ const routes = [
     path: '/tasks',
     name: 'Tasks',
     component: Tasks
+  },
+  {
+    path: '/statistics',
+    name: 'Statistics',
+    component: Statistics
   }
 ]
 
