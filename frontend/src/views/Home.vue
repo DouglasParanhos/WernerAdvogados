@@ -151,8 +151,7 @@ export default {
       this.$router.push('/processes')
     },
     goToTasks() {
-      // Placeholder - pode ser implementado futuramente
-      alert('Funcionalidade de Tarefas em desenvolvimento')
+      this.$router.push('/tasks')
     },
     goToStatistics() {
       // Placeholder - pode ser implementado futuramente
@@ -205,21 +204,21 @@ export default {
 .logo-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .logo-img {
-  width: 250px;
+  width: 380px;
   height: auto;
-  max-height: 250px;
+  max-height: 380px;
   object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
   animation: logoFloat 3s ease-in-out infinite;
 }
 
 .logo-placeholder {
-  width: 250px;
-  height: 250px;
+  width: 380px;
+  height: 380px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,7 +244,7 @@ export default {
   font-size: 3rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: #1a1a1a;
+  color: #2d3748;
   text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
   letter-spacing: -0.5px;
 }

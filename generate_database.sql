@@ -52,6 +52,14 @@ CREATE SEQUENCE IF NOT EXISTS public.moviment_moviment_id_seq
     NO MAXVALUE
     CACHE 1;
 
+CREATE SEQUENCE IF NOT EXISTS public.task_task_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
 -- ============================================
 -- TABLES
 -- ============================================
@@ -139,6 +147,18 @@ CREATE TABLE IF NOT EXISTS public.moviment (
     modified_on timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS public.task (
+    task_id bigint NOT NULL,
+    titulo character varying(255) NOT NULL,
+    descricao character varying(1000),
+    tipo_tarefa character varying(50) NOT NULL,
+    status character varying(50) NOT NULL,
+    responsavel character varying(50) NOT NULL,
+    ordem integer,
+    created_on timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    modified_on timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 -- ============================================
 -- SEQUENCE OWNERSHIP
 -- ============================================
@@ -149,6 +169,7 @@ ALTER SEQUENCE public.person_person_id_seq OWNED BY public.person.person_id;
 ALTER SEQUENCE public.matriculation_matriculation_id_seq OWNED BY public.matriculation.matriculation_id;
 ALTER SEQUENCE public.process_process_id_seq OWNED BY public.process.process_id;
 ALTER SEQUENCE public.moviment_moviment_id_seq OWNED BY public.moviment.moviment_id;
+ALTER SEQUENCE public.task_task_id_seq OWNED BY public.task.task_id;
 
 -- ============================================
 -- COLUMN DEFAULTS
@@ -160,6 +181,7 @@ ALTER TABLE ONLY public.person ALTER COLUMN person_id SET DEFAULT nextval('publi
 ALTER TABLE ONLY public.matriculation ALTER COLUMN matriculation_id SET DEFAULT nextval('public.matriculation_matriculation_id_seq'::regclass);
 ALTER TABLE ONLY public.process ALTER COLUMN process_id SET DEFAULT nextval('public.process_process_id_seq'::regclass);
 ALTER TABLE ONLY public.moviment ALTER COLUMN moviment_id SET DEFAULT nextval('public.moviment_moviment_id_seq'::regclass);
+ALTER TABLE ONLY public.task ALTER COLUMN task_id SET DEFAULT nextval('public.task_task_id_seq'::regclass);
 
 -- ============================================
 -- PRIMARY KEYS
@@ -182,6 +204,9 @@ ALTER TABLE ONLY public.process
 
 ALTER TABLE ONLY public.moviment
     ADD CONSTRAINT moviment_pkey PRIMARY KEY (moviment_id);
+
+ALTER TABLE ONLY public.task
+    ADD CONSTRAINT task_pkey PRIMARY KEY (task_id);
 
 -- ============================================
 -- UNIQUE CONSTRAINTS
