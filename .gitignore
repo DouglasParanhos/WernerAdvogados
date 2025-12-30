@@ -1,0 +1,30 @@
+# Arquivos sensíveis com senhas
+infra/generate_users/users.config
+infra/generate_users/insert_users.sql
+
+# Arquivos gerados
+*.sql
+!**/example*.sql
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+

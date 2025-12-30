@@ -1,0 +1,12 @@
+# Arquivo de configuração de usuários
+# Copie este arquivo para users.config e preencha as senhas
+# O arquivo users.config está no .gitignore e não será versionado
+
+# Formato: username:password:role
+# Exemplo:
+# username1:senha_segura_123:USER
+# username2:outra_senha_segura:USER
+
+liz.werner:YOUR_PASSWORD_HERE:USER
+angelo.masullo:YOUR_PASSWORD_HERE:USER
+
