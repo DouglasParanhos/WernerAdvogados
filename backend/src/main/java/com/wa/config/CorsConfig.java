@@ -21,7 +21,7 @@ public class CorsConfig {
         config.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173", "http://localhost:5000"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        config.setExposedHeaders(Arrays.asList("Content-Disposition", "Content-Type", "Content-Length"));
+        config.setExposedHeaders(Arrays.asList("Content-Disposition", "Content-Type", "Content-Length", "Authorization"));
         config.setMaxAge(3600L); // Cache preflight por 1 hora
         
         source.registerCorsConfiguration("/**", config);
