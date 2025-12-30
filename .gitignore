@@ -6,6 +6,27 @@ infra/generate_users/insert_users.sql
 *.sql
 !**/example*.sql
 
+# Maven / Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+.mvn/
+mvnw
+mvnw.cmd
+
+# Node.js / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+build/
+*.log
+
 # Python
 __pycache__/
 *.py[cod]
