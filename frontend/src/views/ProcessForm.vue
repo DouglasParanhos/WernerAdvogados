@@ -9,6 +9,19 @@
       <div v-if="loading" class="loading">Carregando...</div>
       <div v-if="error" class="error">{{ error }}</div>
       
+      <!-- Modal de Sucesso -->
+      <Teleport to="body">
+        <div v-if="showSuccessModal" class="modal-overlay" @click="closeSuccessModal">
+          <div class="modal-content" @click.stop>
+            <h2>Sucesso!</h2>
+            <p>{{ successMessage }}</p>
+            <div class="modal-actions">
+              <button @click="closeSuccessModal" class="btn btn-primary">OK</button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
+      
       <form v-if="!loading" @submit.prevent="save" class="form">
         <div class="section">
           <h2>Dados do Processo</h2>
@@ -53,15 +66,20 @@
               <select v-model="form.tipoProcesso" required>
                 <option value="">Selecione o tipo</option>
                 <option value="PISO">PISO</option>
-                <option value="NE">NE</option>
+                <option value="NOVAESCOLA">NOVAESCOLA</option>
                 <option value="INTERNIVEIS">INTERNIVEIS</option>
               </select>
               <span v-if="errors.tipoProcesso" class="error-text">{{ errors.tipoProcesso }}</span>
             </div>
             
             <div class="form-group">
+              <label>Status</label>
+              <input v-model="form.status" type="text" />
+            </div>
+            
+            <div class="form-group">
               <label>Valor</label>
-              <input v-model="form.valor" type="number" step="0.01" />
+              <input v-model="form.valor" type="number" step="0.01" @input="calculateHonorariosContratuais" />
             </div>
             
             <div class="form-group">
@@ -108,6 +126,7 @@ export default {
         vara: '',
         sistema: '',
         tipoProcesso: '',
+        status: '',
         valor: null,
         previsaoHonorariosContratuais: null,
         previsaoHonorariosSucumbenciais: null,
@@ -117,7 +136,10 @@ export default {
       errors: {},
       loading: false,
       saving: false,
-      error: null
+      error: null,
+      showSuccessModal: false,
+      successMessage: '',
+      processPersonId: null
     }
   },
   computed: {
@@ -164,10 +186,24 @@ export default {
           vara: process.vara || '',
           sistema: process.sistema || '',
           tipoProcesso: process.tipoProcesso || '',
+          status: process.status || '',
           valor: process.valor || null,
           previsaoHonorariosContratuais: process.previsaoHonorariosContratuais || null,
           previsaoHonorariosSucumbenciais: process.previsaoHonorariosSucumbenciais || null,
           distribuidoEm: process.distribuidoEm || ''
+        }
+        // Se não tiver personId na query, tentar buscar da matrícula do processo
+        if (!this.personId && process.matriculationId) {
+          try {
+            const matriculation = await matriculationService.getById(process.matriculationId)
+            if (matriculation && matriculation.personId) {
+              // Armazenar o personId para usar depois
+              this.processPersonId = matriculation.personId
+              console.log('processPersonId carregado:', this.processPersonId)
+            }
+          } catch (err) {
+            console.error('Erro ao buscar matrícula:', err)
+          }
         }
       } catch (err) {
         this.error = 'Erro ao carregar processo: ' + (err.response?.data?.message || err.message)
@@ -182,37 +218,43 @@ export default {
       this.error = null
       
       try {
+        // Calcular honorários contratuais se estiver vazio
+        let honorariosContratuais = this.form.previsaoHonorariosContratuais
+        if (!honorariosContratuais && this.form.valor && this.form.tipoProcesso) {
+          if (this.form.tipoProcesso === 'PISO') {
+            honorariosContratuais = this.form.valor * 0.30
+          } else if (this.form.tipoProcesso === 'NOVAESCOLA' || this.form.tipoProcesso === 'INTERNIVEIS') {
+            honorariosContratuais = this.form.valor * 0.20
+          }
+        }
+        
         const data = {
           matriculationId: this.form.matriculationId,
           numero: this.form.numero,
           comarca: this.form.comarca,
           vara: this.form.vara,
           sistema: this.form.sistema,
-          tipoProcesso: this.form.tipoProcesso,
+          tipoProcesso: this.form.tipoProcesso || null,
+          status: this.form.status || null,
           valor: this.form.valor || null,
-          previsaoHonorariosContratuais: this.form.previsaoHonorariosContratuais || null,
+          previsaoHonorariosContratuais: honorariosContratuais || null,
           previsaoHonorariosSucumbenciais: this.form.previsaoHonorariosSucumbenciais || null,
           distribuidoEm: this.form.distribuidoEm || null
         }
         
         if (this.isEdit) {
           await processService.update(this.processId, data)
+          this.successMessage = 'Processo atualizado com sucesso!'
         } else {
           await processService.create(data)
+          this.successMessage = 'Processo cadastrado com sucesso!'
         }
         
-        // Redirecionar para a página do cliente se tiver personId
-        if (this.personId) {
-          this.$router.push(`/clients/${this.personId}`)
-        } else {
-          // Se não tiver personId, tentar pegar da matrícula selecionada
-          const selectedMat = this.matriculations.find(m => m.id === this.form.matriculationId)
-          if (selectedMat && selectedMat.personId) {
-            this.$router.push(`/clients/${selectedMat.personId}`)
-          } else {
-            this.$router.push('/')
-          }
-        }
+        // Garantir que o modal apareça - NÃO redirecionar automaticamente
+        this.saving = false // Parar o loading primeiro
+        await this.$nextTick() // Aguardar atualização do DOM
+        this.showSuccessModal = true
+        // NÃO fazer router.push aqui - apenas mostrar o modal
       } catch (err) {
         if (err.response?.data?.message) {
           this.error = err.response.data.message
@@ -220,21 +262,41 @@ export default {
           this.error = 'Erro ao salvar processo: ' + err.message
         }
         console.error(err)
-      } finally {
         this.saving = false
       }
     },
+    calculateHonorariosContratuais() {
+      // Calcular automaticamente se honorários contratuais estiver vazio
+      if (!this.form.previsaoHonorariosContratuais && this.form.valor && this.form.tipoProcesso) {
+        if (this.form.tipoProcesso === 'PISO') {
+          this.form.previsaoHonorariosContratuais = this.form.valor * 0.30
+        } else if (this.form.tipoProcesso === 'NOVAESCOLA' || this.form.tipoProcesso === 'INTERNIVEIS') {
+          this.form.previsaoHonorariosContratuais = this.form.valor * 0.20
+        }
+      }
+    },
+    closeSuccessModal() {
+      console.log('Fechando modal, processPersonId:', this.processPersonId, 'personId:', this.personId)
+      this.showSuccessModal = false
+      // Após fechar o modal, voltar para a página do cliente se tiver personId
+      const personId = this.personId || this.processPersonId
+      if (personId) {
+        this.$router.push(`/clients/${personId}`)
+      } else {
+        // Se não tiver personId, tentar pegar da matrícula selecionada
+        const selectedMat = this.matriculations.find(m => m.id === this.form.matriculationId)
+        if (selectedMat && selectedMat.personId) {
+          this.$router.push(`/clients/${selectedMat.personId}`)
+        } else {
+          this.$router.push('/processes')
+        }
+      }
+    },
     goBack() {
-      // Se tiver personId na query, voltar para a página do cliente
       if (this.personId) {
         this.$router.push(`/clients/${this.personId}`)
       } else {
-        // Caso contrário, usar o histórico do navegador
-        if (window.history.length > 1) {
-          this.$router.back()
-        } else {
-          this.$router.push('/')
-        }
+        this.$router.push('/')
       }
     }
   }
@@ -334,7 +396,38 @@ export default {
   border-top: 1px solid #dee2e6;
 }
 
-/* Estilos de botões importados de styles/buttons.css */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
 
 .loading, .error {
   text-align: center;
@@ -348,6 +441,70 @@ export default {
   padding: 1rem;
   border-radius: 4px;
   margin-bottom: 1rem;
+}
+
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999 !important;
+  animation: fadeIn 0.2s ease;
+  pointer-events: auto !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease;
+  position: relative;
+  z-index: 10000;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #28a745;
+}
+
+.modal-content p {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
 }
 </style>
 

@@ -2,290 +2,234 @@
   <div class="statistics">
     <div class="container">
       <div class="header">
-        <div class="header-left">
-          <button @click="goToHome" class="btn-home" title="Voltar para Home">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-          <h1>Estatísticas</h1>
-        </div>
-        <button @click="loadStatistics" class="btn btn-secondary btn-icon-only" :disabled="loading" title="Atualizar">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.48L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        <button @click="goBack" class="btn btn-secondary">← Voltar</button>
+        <h1>Estatísticas</h1>
+        <button @click="loadStatistics" class="btn btn-primary" :disabled="loading" style="margin-left: auto;">
+          {{ loading ? 'Atualizando...' : '🔄 Atualizar' }}
         </button>
       </div>
-
+      
       <div v-if="loading" class="loading">Carregando estatísticas...</div>
       <div v-if="error" class="error">{{ error }}</div>
-
-      <div v-if="!loading && !error && statistics" class="statistics-content">
-        <!-- Resumo em uma linha -->
-        <div class="summary-row">
-          <div class="summary-item">
-            <div class="summary-icon processes-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="summary-label">Processos</span>
-            <span class="summary-value">{{ statistics.totalProcesses || 0 }}</span>
+      
+      <div v-if="!loading && !error && statistics" class="content">
+        <!-- Cards de Estatísticas Gerais com Cores Diferentes -->
+        <div class="stats-grid">
+          <div class="stat-card stat-card-blue">
+            <div class="stat-icon">👥</div>
+            <h2>Clientes</h2>
+            <div class="stat-value">{{ statistics.totalClients || 0 }}</div>
           </div>
-          <div class="summary-item">
-            <div class="summary-icon tasks-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="summary-label">Tarefas</span>
-            <span class="summary-value">{{ statistics.totalTasks || 0 }}</span>
+          
+          <div class="stat-card stat-card-green">
+            <div class="stat-icon">📋</div>
+            <h2>Processos</h2>
+            <div class="stat-value">{{ statistics.totalProcesses || 0 }}</div>
           </div>
-          <div class="summary-item">
-            <div class="summary-icon clients-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="summary-label">Clientes</span>
-            <span class="summary-value">{{ statistics.totalClients || 0 }}</span>
+          
+          <div class="stat-card stat-card-orange">
+            <div class="stat-icon">📑</div>
+            <h2>Matrículas</h2>
+            <div class="stat-value">{{ statistics.totalMatriculations || 0 }}</div>
           </div>
-          <div class="summary-item">
-            <div class="summary-icon money-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <line x1="12" y1="1" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="summary-label">Honorários Esperados</span>
-            <span class="summary-value">{{ formatCurrency(statistics.totalHonorariosEsperados || 0) }}</span>
-          </div>
-          <div class="summary-item">
-            <div class="summary-icon value-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <line x1="1" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <span class="summary-label">Valor Total dos Processos</span>
-            <span class="summary-value">{{ formatCurrency(statistics.totalValorProcessos || 0) }}</span>
+          
+          <div class="stat-card stat-card-red">
+            <div class="stat-icon">📝</div>
+            <h2>Movimentações</h2>
+            <div class="stat-value">{{ statistics.totalMoviments || 0 }}</div>
           </div>
         </div>
-
-        <!-- Bloco: Processos -->
-        <div class="statistics-block">
-          <h2 class="block-title">Processos</h2>
-          <div class="charts-grid">
-            <!-- Processos por Tipo - Gráfico Pizza -->
-            <div class="chart-card">
-              <h3>Processos por Tipo</h3>
-              <div class="chart-container">
-                <div v-if="statistics.processesByType && statistics.processesByType.length > 0" class="pie-chart-wrapper">
-                  <svg class="pie-chart" viewBox="0 0 200 200">
-                    <circle
-                      cx="100"
-                      cy="100"
-                      r="80"
-                      fill="none"
-                      stroke="#e0e0e0"
-                      stroke-width="40"
-                    />
-                    <g v-for="(item, index) in processesByTypeWithPercentages" :key="item.type">
-                      <circle
-                        :cx="100"
-                        :cy="100"
-                        :r="80"
-                        fill="none"
-                        :stroke="getPieColor(index)"
-                        :stroke-width="40"
-                        :stroke-dasharray="getPieDashArray(item.percentage)"
-                        :stroke-dashoffset="getPieOffset(index)"
-                        transform="rotate(-90 100 100)"
-                        class="pie-segment"
-                      />
-                    </g>
-                  </svg>
-                  <div class="pie-legend">
-                    <div 
-                      v-for="(item, index) in statistics.processesByType" 
-                      :key="item.type"
-                      class="legend-item"
-                    >
-                      <span class="legend-color" :style="{ backgroundColor: getPieColor(index) }"></span>
-                      <span class="legend-label">{{ item.type }}</span>
-                      <span class="legend-value">{{ item.count }} ({{ getPercentage(item.count, statistics.totalProcesses).toFixed(1) }}%)</span>
-                    </div>
-                  </div>
-                </div>
-                <div v-else class="no-data">Nenhum dado disponível</div>
-              </div>
-            </div>
-
-            <!-- Processos por Comarca -->
-            <div class="chart-card">
-              <h3>Processos por Comarca</h3>
-              <div class="chart-container">
-                <div v-if="statistics.processesByComarca && statistics.processesByComarca.length > 0" class="bar-chart">
-                  <div 
-                    v-for="(item, index) in statistics.processesByComarca" 
-                    :key="item.type"
-                    class="bar-item"
-                  >
-                    <div class="bar-label">{{ item.type }}</div>
-                    <div class="bar-wrapper">
-                      <div 
-                        class="bar" 
-                        :style="{ width: getPercentage(item.count, statistics.totalProcesses) + '%', backgroundColor: getBarColor(index) }"
-                      ></div>
-                      <span class="bar-value">{{ item.count }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div v-else class="no-data">Nenhum dado disponível</div>
-              </div>
-            </div>
-
-            <!-- Processos por Status -->
-            <div class="chart-card">
-              <h3>Processos por Status</h3>
-              <div class="chart-container">
-                <div v-if="statistics.processesByStatus && statistics.processesByStatus.length > 0" class="bar-chart">
-                  <div 
-                    v-for="(item, index) in statistics.processesByStatus" 
-                    :key="item.type"
-                    class="bar-item"
-                  >
-                    <div class="bar-label">{{ item.type }}</div>
-                    <div class="bar-wrapper">
-                      <div 
-                        class="bar" 
-                        :style="{ width: getPercentage(item.count, statistics.totalProcesses) + '%', backgroundColor: getBarColor(index) }"
-                      ></div>
-                      <span class="bar-value">{{ item.count }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div v-else class="no-data">Nenhum dado disponível</div>
+        
+        <!-- Processos por Tipo -->
+        <div v-if="statistics.processesByType && statistics.processesByType.length > 0" class="section">
+          <h2 class="section-title">Processos por Tipo</h2>
+          <div class="type-cards-grid">
+            <div v-for="item in statistics.processesByType" :key="item.type" 
+                 :class="['type-card', getTypeCardClass(item.type)]">
+              <div class="type-card-icon">{{ getTypeIcon(item.type) }}</div>
+              <div class="type-card-content">
+                <h3>{{ item.type || 'Não especificado' }}</h3>
+                <div class="type-card-value">{{ item.count }}</div>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Bloco: Tarefas -->
-        <div class="statistics-block">
-          <h2 class="block-title">Tarefas</h2>
-          <div class="charts-grid">
-            <!-- Tarefas por Status -->
-            <div class="chart-card">
-              <h3>Tarefas por Status</h3>
-              <div class="chart-container">
-                <div v-if="statistics.tasksByStatus && statistics.tasksByStatus.length > 0" class="bar-chart">
-                  <div 
-                    v-for="(item, index) in statistics.tasksByStatus" 
-                    :key="item.type"
-                    class="bar-item"
-                  >
-                    <div class="bar-label">{{ item.type }}</div>
-                    <div class="bar-wrapper">
-                      <div 
-                        class="bar" 
-                        :style="{ width: getPercentage(item.count, statistics.totalTasks) + '%', backgroundColor: getBarColor(index) }"
-                      ></div>
-                      <span class="bar-value">{{ item.count }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div v-else class="no-data">Nenhum dado disponível</div>
-              </div>
+        
+        <!-- Processos por Comarca - Separado por Tipo -->
+        <div v-if="statistics.processesByComarca && statistics.processesByComarca.length > 0" class="section">
+          <h2 class="section-title">Processos por Comarca</h2>
+          
+          <!-- Gráfico PISO -->
+          <div v-if="comarcaDataPISO.length > 0" class="chart-container chart-piso">
+            <div class="chart-header">
+              <h3 class="chart-title">📊 PISO</h3>
             </div>
-
-            <!-- Tarefas por Tipo -->
-            <div class="chart-card">
-              <h3>Tarefas por Tipo</h3>
-              <div class="chart-container">
-                <div v-if="statistics.tasksByType && statistics.tasksByType.length > 0" class="bar-chart">
-                  <div 
-                    v-for="(item, index) in statistics.tasksByType" 
-                    :key="item.type"
-                    class="bar-item"
-                  >
-                    <div class="bar-label">{{ item.type }}</div>
-                    <div class="bar-wrapper">
-                      <div 
-                        class="bar" 
-                        :style="{ width: getPercentage(item.count, statistics.totalTasks) + '%', backgroundColor: getBarColor(index) }"
-                      ></div>
-                      <span class="bar-value">{{ item.count }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div v-else class="no-data">Nenhum dado disponível</div>
-              </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Comarca</th>
+                    <th>Quantidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in comarcaDataPISO" :key="item.comarca" class="row-piso">
+                    <td><strong>{{ item.comarca || 'Não especificado' }}</strong></td>
+                    <td class="count-cell">{{ item.count }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-
-            <!-- Tarefas por Responsável -->
-            <div class="chart-card">
-              <h3>Tarefas por Responsável</h3>
-              <div class="chart-container">
-                <div v-if="statistics.tasksByResponsavel && statistics.tasksByResponsavel.length > 0" class="bar-chart">
-                  <div 
-                    v-for="(item, index) in statistics.tasksByResponsavel" 
-                    :key="item.type"
-                    class="bar-item"
-                  >
-                    <div class="bar-label">{{ item.type }}</div>
-                    <div class="bar-wrapper">
-                      <div 
-                        class="bar" 
-                        :style="{ width: getPercentage(item.count, statistics.totalTasks) + '%', backgroundColor: getBarColor(index) }"
-                      ></div>
-                      <span class="bar-value">{{ item.count }}</span>
-                    </div>
-                  </div>
-                </div>
-                <div v-else class="no-data">Nenhum dado disponível</div>
-              </div>
+          </div>
+          
+          <!-- Gráfico NOVAESCOLA -->
+          <div v-if="comarcaDataNOVAESCOLA.length > 0" class="chart-container chart-novaescola">
+            <div class="chart-header">
+              <h3 class="chart-title">📊 NOVAESCOLA</h3>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Comarca</th>
+                    <th>Quantidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in comarcaDataNOVAESCOLA" :key="item.comarca" class="row-novaescola">
+                    <td><strong>{{ item.comarca || 'Não especificado' }}</strong></td>
+                    <td class="count-cell">{{ item.count }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Gráfico INTERNIVEIS -->
+          <div v-if="comarcaDataINTERNIVEIS.length > 0" class="chart-container chart-interniveis">
+            <div class="chart-header">
+              <h3 class="chart-title">📊 INTERNIVEIS</h3>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Comarca</th>
+                    <th>Quantidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in comarcaDataINTERNIVEIS" :key="item.comarca" class="row-interniveis">
+                    <td><strong>{{ item.comarca || 'Não especificado' }}</strong></td>
+                    <td class="count-cell">{{ item.count }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-
-        <!-- Bloco: Honorários -->
-        <div class="statistics-block">
-          <h2 class="block-title">Honorários</h2>
-          <div class="charts-grid">
-            <!-- Honorários por Tipo -->
-            <div class="chart-card chart-card-full">
-              <h3>Honorários Esperados por Tipo de Processo</h3>
-              <div class="chart-container">
-                <div v-if="statistics.honorariosByType && statistics.honorariosByType.length > 0" class="table-chart">
-                  <table class="stats-table">
-                    <thead>
-                      <tr>
-                        <th>Tipo de Processo</th>
-                        <th>Quantidade</th>
-                        <th>Honorários Contratuais</th>
-                        <th>Honorários Sucumbenciais</th>
-                        <th>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="item in statistics.honorariosByType" :key="item.tipoProcesso">
-                        <td>{{ item.tipoProcesso }}</td>
-                        <td>{{ item.quantidadeProcessos }}</td>
-                        <td>{{ formatCurrency(item.totalHonorariosContratuais || 0) }}</td>
-                        <td>{{ formatCurrency(item.totalHonorariosSucumbenciais || 0) }}</td>
-                        <td class="total-cell">{{ formatCurrency(item.totalHonorarios || 0) }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+        
+        <!-- Processos por Status - Separado por Tipo -->
+        <div v-if="statistics.processesByStatus && statistics.processesByStatus.length > 0" class="section">
+          <h2 class="section-title">Processos por Status</h2>
+          
+          <!-- Gráfico PISO -->
+          <div v-if="statusDataPISO.length > 0" class="chart-container chart-piso">
+            <div class="chart-header">
+              <h3 class="chart-title">📊 PISO</h3>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Quantidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in statusDataPISO" :key="item.status" class="row-piso">
+                    <td><strong>{{ item.status || 'Sem status' }}</strong></td>
+                    <td class="count-cell">{{ item.count }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Gráfico NOVAESCOLA -->
+          <div v-if="statusDataNOVAESCOLA.length > 0" class="chart-container chart-novaescola">
+            <div class="chart-header">
+              <h3 class="chart-title">📊 NOVAESCOLA</h3>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Quantidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in statusDataNOVAESCOLA" :key="item.status" class="row-novaescola">
+                    <td><strong>{{ item.status || 'Sem status' }}</strong></td>
+                    <td class="count-cell">{{ item.count }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Gráfico INTERNIVEIS -->
+          <div v-if="statusDataINTERNIVEIS.length > 0" class="chart-container chart-interniveis">
+            <div class="chart-header">
+              <h3 class="chart-title">📊 INTERNIVEIS</h3>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Quantidade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in statusDataINTERNIVEIS" :key="item.status" class="row-interniveis">
+                    <td><strong>{{ item.status || 'Sem status' }}</strong></td>
+                    <td class="count-cell">{{ item.count }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Honorários por Tipo -->
+        <div v-if="statistics.honorariosByType && statistics.honorariosByType.length > 0" class="section">
+          <h2 class="section-title">Honorários por Tipo de Processo</h2>
+          <div class="honorarios-grid">
+            <div v-for="item in statistics.honorariosByType" :key="item.tipoProcesso" 
+                 :class="['honorarios-card', getTypeCardClass(item.tipoProcesso)]">
+              <div class="honorarios-header">
+                <div class="honorarios-icon">{{ getTypeIcon(item.tipoProcesso) }}</div>
+                <h3>{{ item.tipoProcesso || 'Não especificado' }}</h3>
+              </div>
+              <div class="honorarios-body">
+                <div class="honorarios-stat">
+                  <span class="honorarios-label">Quantidade de Processos:</span>
+                  <span class="honorarios-value">{{ item.quantidadeProcessos }}</span>
                 </div>
-                <div v-else class="no-data">Nenhum dado disponível</div>
+                <div class="honorarios-stat">
+                  <span class="honorarios-label">Honorários Contratuais:</span>
+                  <span class="honorarios-value currency">{{ formatCurrency(item.totalHonorariosContratuais) }}</span>
+                </div>
+                <div class="honorarios-stat">
+                  <span class="honorarios-label">Honorários Sucumbenciais:</span>
+                  <span class="honorarios-value currency">{{ formatCurrency(item.totalHonorariosSucumbenciais) }}</span>
+                </div>
+                <div class="honorarios-total">
+                  <span class="honorarios-total-label">Total:</span>
+                  <span class="honorarios-total-value">{{ formatCurrency(item.totalHonorarios) }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -307,28 +251,145 @@ export default {
       error: null
     }
   },
-  computed: {
-    processesByTypeWithPercentages() {
-      if (!this.statistics || !this.statistics.processesByType || !this.statistics.totalProcesses) {
-        return []
-      }
-      
-      let cumulativePercentage = 0
-      return this.statistics.processesByType.map(item => {
-        const percentage = (item.count / this.statistics.totalProcesses) * 100
-        const result = {
-          type: item.type,
-          count: item.count,
-          percentage: percentage,
-          cumulativePercentage: cumulativePercentage
-        }
-        cumulativePercentage += percentage
-        return result
-      })
-    }
-  },
   async mounted() {
     await this.loadStatistics()
+  },
+  computed: {
+    comarcaDataPISO() {
+      if (!this.statistics?.processesByComarca || !Array.isArray(this.statistics.processesByComarca)) {
+        return []
+      }
+      const result = []
+      this.statistics.processesByComarca.forEach(comarca => {
+        if (comarca && comarca.byType && Array.isArray(comarca.byType)) {
+          const tipoData = comarca.byType.find(t => {
+            const tType = (t?.type || '').toUpperCase()
+            return tType === 'PISO'
+          })
+          if (tipoData && tipoData.count > 0) {
+            result.push({
+              comarca: comarca.comarca || 'Não especificado',
+              count: Number(tipoData.count) || 0
+            })
+          }
+        }
+      })
+      return result.sort((a, b) => (b.count || 0) - (a.count || 0))
+    },
+    comarcaDataNOVAESCOLA() {
+      if (!this.statistics?.processesByComarca || !Array.isArray(this.statistics.processesByComarca)) {
+        return []
+      }
+      const result = []
+      this.statistics.processesByComarca.forEach(comarca => {
+        if (comarca && comarca.byType && Array.isArray(comarca.byType)) {
+          const tipoData = comarca.byType.find(t => {
+            const tType = (t?.type || '').toUpperCase()
+            return tType === 'NOVAESCOLA'
+          })
+          if (tipoData && tipoData.count > 0) {
+            result.push({
+              comarca: comarca.comarca || 'Não especificado',
+              count: Number(tipoData.count) || 0
+            })
+          }
+        }
+      })
+      return result.sort((a, b) => (b.count || 0) - (a.count || 0))
+    },
+    comarcaDataINTERNIVEIS() {
+      if (!this.statistics?.processesByComarca || !Array.isArray(this.statistics.processesByComarca)) {
+        return []
+      }
+      const result = []
+      this.statistics.processesByComarca.forEach(comarca => {
+        if (comarca && comarca.byType && Array.isArray(comarca.byType)) {
+          const tipoData = comarca.byType.find(t => {
+            const tType = (t?.type || '').toUpperCase()
+            return tType === 'INTERNIVEIS'
+          })
+          if (tipoData && tipoData.count > 0) {
+            result.push({
+              comarca: comarca.comarca || 'Não especificado',
+              count: Number(tipoData.count) || 0
+            })
+          }
+        }
+      })
+      return result.sort((a, b) => (b.count || 0) - (a.count || 0))
+    },
+    statusDataPISO() {
+      if (!this.statistics?.processesByStatus || !Array.isArray(this.statistics.processesByStatus)) {
+        return []
+      }
+      const result = []
+      this.statistics.processesByStatus.forEach(status => {
+        if (status && status.byType && Array.isArray(status.byType)) {
+          const tipoData = status.byType.find(t => {
+            const tType = (t?.type || '').toUpperCase()
+            return tType === 'PISO'
+          })
+          if (tipoData && tipoData.count > 0) {
+            result.push({
+              status: status.status || 'Sem status',
+              count: Number(tipoData.count) || 0
+            })
+          }
+        }
+      })
+      return result.sort((a, b) => (b.count || 0) - (a.count || 0))
+    },
+    statusDataNOVAESCOLA() {
+      if (!this.statistics?.processesByStatus || !Array.isArray(this.statistics.processesByStatus)) {
+        return []
+      }
+      const result = []
+      this.statistics.processesByStatus.forEach(status => {
+        if (status && status.byType && Array.isArray(status.byType)) {
+          const tipoData = status.byType.find(t => {
+            const tType = (t?.type || '').toUpperCase()
+            return tType === 'NOVAESCOLA'
+          })
+          if (tipoData && tipoData.count > 0) {
+            result.push({
+              status: status.status || 'Sem status',
+              count: Number(tipoData.count) || 0
+            })
+          }
+        }
+      })
+      return result.sort((a, b) => (b.count || 0) - (a.count || 0))
+    },
+    statusDataINTERNIVEIS() {
+      if (!this.statistics?.processesByStatus || !Array.isArray(this.statistics.processesByStatus)) {
+        return []
+      }
+      const result = []
+      this.statistics.processesByStatus.forEach(status => {
+        if (status && status.byType && Array.isArray(status.byType)) {
+          const tipoData = status.byType.find(t => {
+            const tType = (t?.type || '').toUpperCase()
+            return tType === 'INTERNIVEIS'
+          })
+          if (tipoData && tipoData.count > 0) {
+            result.push({
+              status: status.status || 'Sem status',
+              count: Number(tipoData.count) || 0
+            })
+          }
+        }
+      })
+      return result.sort((a, b) => (b.count || 0) - (a.count || 0))
+    }
+  },
+  watch: {
+    // Recarregar estatísticas quando a rota mudar (usuário voltar para esta página)
+    '$route'(to, from) {
+      // Só recarregar se realmente mudou para a rota de estatísticas
+      if (to.name === 'Statistics') {
+        this.loadStatistics()
+      }
+    }
   },
   methods: {
     async loadStatistics() {
@@ -336,6 +397,8 @@ export default {
       this.error = null
       try {
         this.statistics = await statisticsService.getStatistics()
+        // Forçar atualização reativa
+        await this.$nextTick()
       } catch (err) {
         this.error = 'Erro ao carregar estatísticas: ' + (err.response?.data?.message || err.message)
         console.error(err)
@@ -343,45 +406,84 @@ export default {
         this.loading = false
       }
     },
-    goToHome() {
-      this.$router.push('/')
-    },
     formatCurrency(value) {
-      if (!value && value !== 0) return 'R$ 0,00'
-      return new Intl.NumberFormat('pt-BR', { 
-        style: 'currency', 
-        currency: 'BRL' 
-      }).format(value)
+      if (!value) return 'R$ 0,00'
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
     },
-    getPercentage(value, total) {
-      if (!total || total === 0) return 0
-      return (value / total) * 100
+    getTypeRowClass(tipo) {
+      if (!tipo) return ''
+      const tipoUpper = tipo.toUpperCase()
+      if (tipoUpper === 'PISO') return 'row-piso'
+      if (tipoUpper === 'NOVAESCOLA') return 'row-novaescola'
+      if (tipoUpper === 'INTERNIVEIS') return 'row-interniveis'
+      return ''
     },
-    getPieColor(index) {
-      const colors = ['#5a6b7a', '#6b7d8f', '#7a8b9a']
-      return colors[index % colors.length]
-    },
-    getPieDashArray(percentage) {
-      const circumference = 2 * Math.PI * 80 // r = 80
-      const dashLength = (percentage * circumference) / 100
-      return `${dashLength} ${circumference}`
-    },
-    getPieOffset(index) {
-      if (index === 0) return 0
-      const circumference = 2 * Math.PI * 80 // r = 80
-      let offset = 0
-      for (let i = 0; i < index; i++) {
-        offset += (this.processesByTypeWithPercentages[i].percentage * circumference) / 100
+    getComarcaDataByType(tipo) {
+      if (!this.statistics?.processesByComarca || !Array.isArray(this.statistics.processesByComarca)) {
+        return []
       }
-      return -offset
+      const result = []
+      const tipoUpper = (tipo || '').toUpperCase()
+      
+      this.statistics.processesByComarca.forEach(comarca => {
+        if (comarca && comarca.byType && Array.isArray(comarca.byType)) {
+          const tipoData = comarca.byType.find(t => {
+            const tType = (t?.type || '').toUpperCase()
+            return tType === tipoUpper
+          })
+          if (tipoData && tipoData.count > 0) {
+            result.push({
+              comarca: comarca.comarca || 'Não especificado',
+              count: Number(tipoData.count) || 0
+            })
+          }
+        }
+      })
+      
+      return result.sort((a, b) => (b.count || 0) - (a.count || 0))
     },
-    getBarColor(index) {
-      const colors = [
-        '#5a6b7a', '#6b7d8f', '#7a8b9a', '#8a9aab', '#9aabbc',
-        '#4a5a6a', '#5a6a7a', '#6a7a8a', '#7a8a9a', '#8a9aaa',
-        '#3a4a5a', '#4a5a6a', '#5a6a7a', '#6a7a8a', '#7a8a9a'
-      ]
-      return colors[index % colors.length]
+    getStatusDataByType(tipo) {
+      if (!this.statistics?.processesByStatus || !Array.isArray(this.statistics.processesByStatus)) {
+        return []
+      }
+      const result = []
+      const tipoUpper = (tipo || '').toUpperCase()
+      
+      this.statistics.processesByStatus.forEach(status => {
+        if (status && status.byType && Array.isArray(status.byType)) {
+          const tipoData = status.byType.find(t => {
+            const tType = (t?.type || '').toUpperCase()
+            return tType === tipoUpper
+          })
+          if (tipoData && tipoData.count > 0) {
+            result.push({
+              status: status.status || 'Sem status',
+              count: Number(tipoData.count) || 0
+            })
+          }
+        }
+      })
+      
+      return result.sort((a, b) => (b.count || 0) - (a.count || 0))
+    },
+    getTypeCardClass(tipo) {
+      if (!tipo) return ''
+      const tipoUpper = tipo.toUpperCase()
+      if (tipoUpper === 'PISO') return 'type-card-piso'
+      if (tipoUpper === 'NOVAESCOLA') return 'type-card-novaescola'
+      if (tipoUpper === 'INTERNIVEIS') return 'type-card-interniveis'
+      return ''
+    },
+    getTypeIcon(tipo) {
+      if (!tipo) return '📋'
+      const tipoUpper = tipo.toUpperCase()
+      if (tipoUpper === 'PISO') return '🏢'
+      if (tipoUpper === 'NOVAESCOLA') return '🏫'
+      if (tipoUpper === 'INTERNIVEIS') return '📚'
+      return '📋'
+    },
+    goBack() {
+      this.$router.push('/')
     }
   }
 }
@@ -389,9 +491,9 @@ export default {
 
 <style scoped>
 .statistics {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #e8eef5 0%, #d8e0e8 50%, #c8d0d8 100%);
   padding: 2rem;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
 }
 
 .container {
@@ -401,408 +503,652 @@ export default {
 
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  background: white;
-  padding: 1.5rem 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.header-left {
-  display: flex;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-.btn-home {
-  background: none;
+.btn-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
   border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #4a5a6a;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border-top: 5px solid;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+}
+
+.stat-card-blue {
+  border-top-color: #003d7a;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+}
+
+.stat-card-green {
+  border-top-color: #28a745;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9f4 100%);
+}
+
+.stat-card-orange {
+  border-top-color: #ff9800;
+  background: linear-gradient(135deg, #ffffff 0%, #fff8f0 100%);
+}
+
+.stat-card-red {
+  border-top-color: #dc3545;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.stat-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.stat-card h2 {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-card-blue .stat-value {
+  color: #003d7a;
+}
+
+.stat-card-green .stat-value {
+  color: #28a745;
+}
+
+.stat-card-orange .stat-value {
+  color: #ff9800;
+}
+
+.stat-card-red .stat-value {
+  color: #dc3545;
+}
+
+.section {
+  background: white;
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-bottom: 2.5rem;
+}
+
+.section-title {
+  font-size: 2rem;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  font-weight: 700;
+  padding-bottom: 1rem;
+  border-bottom: 4px solid #003d7a;
+  background: linear-gradient(135deg, #003d7a 0%, #0056b3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.chart-container {
+  margin-bottom: 2.5rem;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.chart-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 3px solid;
+}
+
+.chart-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.chart-piso {
+  background: linear-gradient(135deg, #fff8f0 0%, #ffffff 100%);
+  border: 2px solid #ff9800;
+}
+
+.chart-piso .chart-header {
+  background: linear-gradient(135deg, #ff9800 0%, #ff6f00 100%);
+  border-bottom-color: #ff6f00;
+}
+
+.chart-piso .chart-title {
+  color: white;
+}
+
+.chart-piso thead {
+  background: linear-gradient(135deg, #ff9800 0%, #ff6f00 100%);
+}
+
+.chart-novaescola {
+  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+  border: 2px solid #2196f3;
+}
+
+.chart-novaescola .chart-header {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  border-bottom-color: #1976d2;
+}
+
+.chart-novaescola .chart-title {
+  color: white;
+}
+
+.chart-novaescola thead {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+}
+
+.chart-interniveis {
+  background: linear-gradient(135deg, #f0f9f4 0%, #ffffff 100%);
+  border: 2px solid #28a745;
+}
+
+.chart-interniveis .chart-header {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  border-bottom-color: #1e7e34;
+}
+
+.chart-interniveis .chart-title {
+  color: white;
+}
+
+.chart-interniveis thead {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.section h2 {
+  font-size: 1.75rem;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  font-weight: 700;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid #e8ecf1;
+}
+
+.table-container {
+  overflow-x: auto;
   border-radius: 8px;
 }
 
-.btn-home:hover {
-  background: #f0f4f8;
-  transform: scale(1.1);
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
 }
 
-.btn-home svg {
-  width: 24px;
-  height: 24px;
+thead {
+  background: linear-gradient(135deg, #003d7a 0%, #0056b3 100%);
 }
 
-h1 {
-  font-size: 1.75rem;
-  color: #2a3a4a;
-  margin: 0;
+thead th {
+  padding: 1.25rem 1rem;
+  text-align: left;
   font-weight: 600;
+  color: white;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+tbody tr {
+  transition: all 0.2s ease;
+}
+
+tbody tr:hover {
+  background: #f8f9fa;
+}
+
+td {
+  padding: 1rem;
+  border-bottom: 1px solid #e8ecf1;
+  color: #333;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.comarca-cell,
+.status-cell {
+  font-weight: 600;
+  background: #f8f9fa;
+  vertical-align: middle;
+}
+
+.row-piso {
+  background: linear-gradient(90deg, #fff8f0 0%, #ffffff 100%);
+  border-left: 5px solid #ff9800;
+}
+
+.row-piso:hover {
+  background: linear-gradient(90deg, #fff0e0 0%, #fff8f0 100%);
+  transform: translateX(4px);
+  box-shadow: 2px 0 8px rgba(255, 152, 0, 0.2);
+}
+
+.row-piso td {
+  font-weight: 500;
+}
+
+.row-piso .count-cell {
+  font-weight: 700;
+  color: #ff6f00;
+  font-size: 1.1rem;
+}
+
+.row-novaescola {
+  background: linear-gradient(90deg, #f0f9ff 0%, #ffffff 100%);
+  border-left: 5px solid #2196f3;
+}
+
+.row-novaescola:hover {
+  background: linear-gradient(90deg, #e0f2ff 0%, #f0f9ff 100%);
+  transform: translateX(4px);
+  box-shadow: 2px 0 8px rgba(33, 150, 243, 0.2);
+}
+
+.row-novaescola td {
+  font-weight: 500;
+}
+
+.row-novaescola .count-cell {
+  font-weight: 700;
+  color: #1976d2;
+  font-size: 1.1rem;
+}
+
+.row-interniveis {
+  background: linear-gradient(90deg, #f0f9f4 0%, #ffffff 100%);
+  border-left: 5px solid #28a745;
+}
+
+.row-interniveis:hover {
+  background: linear-gradient(90deg, #e0f2e8 0%, #f0f9f4 100%);
+  transform: translateX(4px);
+  box-shadow: 2px 0 8px rgba(40, 167, 69, 0.2);
+}
+
+.row-interniveis td {
+  font-weight: 500;
+}
+
+.row-interniveis .count-cell {
+  font-weight: 700;
+  color: #1e7e34;
+  font-size: 1.1rem;
+}
+
+.count-cell {
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+}
+
+.error {
+  color: #dc3545;
+  background: #fff5f5;
+  border-radius: 8px;
+  border: 2px solid #fecaca;
 }
 
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
-  font-size: 0.95rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.2s;
-  font-weight: 500;
 }
 
 .btn-secondary {
-  background: #5a6b7a;
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
   color: white;
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
 }
 
-.btn-icon-only {
-  padding: 0.75rem;
-  width: 40px;
-  height: 40px;
-  justify-content: center;
-}
-
-.btn-icon-only svg {
-  width: 20px;
-  height: 20px;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #4a5a6a;
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
 }
 
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.loading, .error {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.1rem;
-  color: #4a5a6a;
-}
-
-.error {
-  color: #c62828;
-  background: #ffebee;
-  border-radius: 8px;
-  margin: 1rem 0;
-}
-
-.statistics-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-/* Resumo em uma linha */
-.summary-row {
-  display: flex;
-  gap: 1rem;
-  background: white;
-  padding: 1.25rem 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  flex-wrap: wrap;
-  justify-content: space-around;
-}
-
-.summary-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 120px;
-}
-
-.summary-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.summary-icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-.summary-icon.processes-icon {
-  background: linear-gradient(135deg, #5a6b7a, #6b7d8f);
-  color: white;
-}
-
-.summary-icon.tasks-icon {
-  background: linear-gradient(135deg, #6b7d8f, #7a8b9a);
-  color: white;
-}
-
-.summary-icon.clients-icon {
-  background: linear-gradient(135deg, #7a8b9a, #8a9aab);
-  color: white;
-}
-
-.summary-icon.money-icon {
-  background: linear-gradient(135deg, #8a9aab, #9aabbc);
-  color: white;
-}
-
-.summary-icon.value-icon {
-  background: linear-gradient(135deg, #4a5a6a, #5a6b7a);
-  color: white;
-}
-
-.summary-label {
-  font-size: 0.85rem;
-  color: #6b7d8f;
-  font-weight: 500;
-  text-align: center;
-}
-
-.summary-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2a3a4a;
-  white-space: nowrap;
-}
-
-/* Blocos de estatísticas */
-.statistics-block {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.block-title {
-  font-size: 1.5rem;
-  color: #2a3a4a;
-  margin: 0 0 1.5rem 0;
-  font-weight: 600;
-  border-bottom: 2px solid #e0e8f0;
-  padding-bottom: 0.75rem;
-}
-
-.charts-grid {
+.type-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
 }
 
-.chart-card {
-  background: #f8fafc;
-  border-radius: 10px;
-  padding: 1.5rem;
-  border: 1px solid #e0e8f0;
-}
-
-.chart-card-full {
-  grid-column: 1 / -1;
-}
-
-.chart-card h3 {
-  margin: 0 0 1.25rem 0;
-  font-size: 1.15rem;
-  color: #3a4a5a;
-  font-weight: 600;
-}
-
-.chart-container {
-  min-height: 200px;
-}
-
-/* Gráfico Pizza */
-.pie-chart-wrapper {
+.type-card {
+  border-radius: 16px;
+  padding: 2rem;
   display: flex;
-  gap: 2rem;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.pie-chart {
-  width: 200px;
-  height: 200px;
-  flex-shrink: 0;
-}
-
-.pie-segment {
+  gap: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   transition: all 0.3s ease;
+  border: 3px solid;
 }
 
-.pie-legend {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+.type-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+.type-card-icon {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.type-card-content {
   flex: 1;
-  min-width: 200px;
 }
 
-.legend-item {
+.type-card-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-card-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.type-card-piso {
+  background: linear-gradient(135deg, #fff8f0 0%, #ffffff 100%);
+  border-color: #ff9800;
+}
+
+.type-card-piso .type-card-content h3 {
+  color: #ff6f00;
+}
+
+.type-card-piso .type-card-value {
+  color: #ff9800;
+}
+
+.type-card-novaescola {
+  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+  border-color: #2196f3;
+}
+
+.type-card-novaescola .type-card-content h3 {
+  color: #1976d2;
+}
+
+.type-card-novaescola .type-card-value {
+  color: #2196f3;
+}
+
+.type-card-interniveis {
+  background: linear-gradient(135deg, #f0f9f4 0%, #ffffff 100%);
+  border-color: #28a745;
+}
+
+.type-card-interniveis .type-card-content h3 {
+  color: #1e7e34;
+}
+
+.type-card-interniveis .type-card-value {
+  color: #28a745;
+}
+
+.honorarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.honorarios-card {
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  border: 3px solid;
+  background: white;
+}
+
+.honorarios-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+.honorarios-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid;
 }
 
-.legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  flex-shrink: 0;
+.honorarios-icon {
+  font-size: 3rem;
+  line-height: 1;
 }
 
-.legend-label {
-  flex: 1;
-  color: #4a5a6a;
-  font-weight: 500;
+.honorarios-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.legend-value {
-  color: #6b7d8f;
-  font-weight: 600;
-}
-
-/* Gráfico de Barras */
-.bar-chart {
+.honorarios-body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.bar-item {
+.honorarios-stat {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.bar-label {
-  font-size: 0.9rem;
-  color: #5a6b7a;
-  font-weight: 500;
-}
-
-.bar-wrapper {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  position: relative;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
 }
 
-.bar {
-  height: 28px;
-  border-radius: 4px;
-  transition: width 0.5s ease;
-  min-width: 4px;
-}
-
-.bar-value {
+.honorarios-label {
   font-weight: 600;
-  color: #3a4a5a;
-  min-width: 40px;
-  text-align: right;
+  color: #555;
   font-size: 0.9rem;
 }
 
-/* Tabela */
-.table-chart {
-  overflow-x: auto;
+.honorarios-value {
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
-.stats-table {
-  width: 100%;
-  border-collapse: collapse;
+.honorarios-value.currency {
+  font-size: 1.2rem;
 }
 
-.stats-table th {
-  background: #e8f0f8;
+.honorarios-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #3a4a5a;
-  border-bottom: 2px solid #d0d8e0;
-  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  border: 2px solid;
 }
 
-.stats-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e0e8f0;
-  color: #5a6b7a;
-  font-size: 0.9rem;
+.honorarios-total-label {
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.stats-table tr:hover {
-  background: #f0f4f8;
+.honorarios-total-value {
+  font-weight: 700;
+  font-size: 1.5rem;
 }
 
-.total-cell {
-  font-weight: 600;
-  color: #4a5a6a;
+.honorarios-card-piso {
+  border-color: #ff9800;
+  background: linear-gradient(135deg, #fff8f0 0%, #ffffff 100%);
 }
 
-.no-data {
-  text-align: center;
-  padding: 3rem;
-  color: #8a9aab;
-  font-style: italic;
+.honorarios-card-piso .honorarios-header {
+  border-bottom-color: #ff9800;
 }
 
-@media (max-width: 768px) {
-  .statistics {
-    padding: 1rem;
-  }
+.honorarios-card-piso .honorarios-header h3 {
+  color: #ff6f00;
+}
 
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: flex-start;
-  }
+.honorarios-card-piso .honorarios-value {
+  color: #ff9800;
+}
 
-  .summary-row {
-    flex-direction: column;
-    gap: 1rem;
-  }
+.honorarios-card-piso .honorarios-total {
+  background: linear-gradient(135deg, #ff9800 0%, #ff6f00 100%);
+  border-color: #ff6f00;
+  color: white;
+}
 
-  .summary-item {
-    flex-direction: row;
-    justify-content: space-between;
-    width: 100%;
-  }
+.honorarios-card-piso .honorarios-total-label,
+.honorarios-card-piso .honorarios-total-value {
+  color: white;
+}
 
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
+.honorarios-card-novaescola {
+  border-color: #2196f3;
+  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+}
 
-  .chart-card {
-    padding: 1.25rem;
-  }
+.honorarios-card-novaescola .honorarios-header {
+  border-bottom-color: #2196f3;
+}
 
-  .pie-chart-wrapper {
-    flex-direction: column;
-  }
+.honorarios-card-novaescola .honorarios-header h3 {
+  color: #1976d2;
+}
 
-  .stats-table {
-    font-size: 0.85rem;
-  }
+.honorarios-card-novaescola .honorarios-value {
+  color: #2196f3;
+}
 
-  .stats-table th,
-  .stats-table td {
-    padding: 0.5rem;
-  }
+.honorarios-card-novaescola .honorarios-total {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  border-color: #1976d2;
+  color: white;
+}
+
+.honorarios-card-novaescola .honorarios-total-label,
+.honorarios-card-novaescola .honorarios-total-value {
+  color: white;
+}
+
+.honorarios-card-interniveis {
+  border-color: #28a745;
+  background: linear-gradient(135deg, #f0f9f4 0%, #ffffff 100%);
+}
+
+.honorarios-card-interniveis .honorarios-header {
+  border-bottom-color: #28a745;
+}
+
+.honorarios-card-interniveis .honorarios-header h3 {
+  color: #1e7e34;
+}
+
+.honorarios-card-interniveis .honorarios-value {
+  color: #28a745;
+}
+
+.honorarios-card-interniveis .honorarios-total {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  border-color: #1e7e34;
+  color: white;
+}
+
+.honorarios-card-interniveis .honorarios-total-label,
+.honorarios-card-interniveis .honorarios-total-value {
+  color: white;
 }
 </style>
