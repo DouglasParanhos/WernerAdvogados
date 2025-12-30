@@ -13,7 +13,11 @@ public class HonorariosByTypeDTO {
     private Double totalHonorariosSucumbenciais;
     private Double totalHonorarios;
     private Long quantidadeProcessos;
+    private Double totalAcoes;
 }
+
+
+
 
 
 

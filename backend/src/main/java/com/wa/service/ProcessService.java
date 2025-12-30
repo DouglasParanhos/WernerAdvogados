@@ -51,8 +51,25 @@ public class ProcessService {
         process.setVara(request.getVara());
         process.setSistema(request.getSistema());
         process.setValor(request.getValor());
-        process.setPrevisaoHonorariosContratuais(request.getPrevisaoHonorariosContratuais());
-        process.setPrevisaoHonorariosSucumbenciais(request.getPrevisaoHonorariosSucumbenciais());
+        
+        // Calcular honorários contratuais automaticamente se estiver vazio
+        Double honorariosContratuais = request.getPrevisaoHonorariosContratuais();
+        if (honorariosContratuais == null && request.getValor() != null && request.getTipoProcesso() != null) {
+            if ("PISO".equalsIgnoreCase(request.getTipoProcesso())) {
+                honorariosContratuais = request.getValor() * 0.30;
+            } else if ("NOVAESCOLA".equalsIgnoreCase(request.getTipoProcesso()) || 
+                       "INTERNIVEIS".equalsIgnoreCase(request.getTipoProcesso())) {
+                honorariosContratuais = request.getValor() * 0.20;
+            }
+        }
+        process.setPrevisaoHonorariosContratuais(honorariosContratuais);
+        
+        // Calcular honorários sucumbenciais automaticamente se estiver vazio (10% do valor da ação)
+        Double honorariosSucumbenciais = request.getPrevisaoHonorariosSucumbenciais();
+        if (honorariosSucumbenciais == null && request.getValor() != null) {
+            honorariosSucumbenciais = request.getValor() * 0.10;
+        }
+        process.setPrevisaoHonorariosSucumbenciais(honorariosSucumbenciais);
         process.setDistribuidoEm(request.getDistribuidoEm());
         process.setTipoProcesso(request.getTipoProcesso() != null ? request.getTipoProcesso() : "");
         process.setStatus(request.getStatus());
@@ -75,8 +92,25 @@ public class ProcessService {
         process.setVara(request.getVara());
         process.setSistema(request.getSistema());
         process.setValor(request.getValor());
-        process.setPrevisaoHonorariosContratuais(request.getPrevisaoHonorariosContratuais());
-        process.setPrevisaoHonorariosSucumbenciais(request.getPrevisaoHonorariosSucumbenciais());
+        
+        // Calcular honorários contratuais automaticamente se estiver vazio
+        Double honorariosContratuais = request.getPrevisaoHonorariosContratuais();
+        if (honorariosContratuais == null && request.getValor() != null && request.getTipoProcesso() != null) {
+            if ("PISO".equalsIgnoreCase(request.getTipoProcesso())) {
+                honorariosContratuais = request.getValor() * 0.30;
+            } else if ("NOVAESCOLA".equalsIgnoreCase(request.getTipoProcesso()) || 
+                       "INTERNIVEIS".equalsIgnoreCase(request.getTipoProcesso())) {
+                honorariosContratuais = request.getValor() * 0.20;
+            }
+        }
+        process.setPrevisaoHonorariosContratuais(honorariosContratuais);
+        
+        // Calcular honorários sucumbenciais automaticamente se estiver vazio (10% do valor da ação)
+        Double honorariosSucumbenciais = request.getPrevisaoHonorariosSucumbenciais();
+        if (honorariosSucumbenciais == null && request.getValor() != null) {
+            honorariosSucumbenciais = request.getValor() * 0.10;
+        }
+        process.setPrevisaoHonorariosSucumbenciais(honorariosSucumbenciais);
         process.setDistribuidoEm(request.getDistribuidoEm());
         process.setTipoProcesso(request.getTipoProcesso());
         if (request.getStatus() != null) {
