@@ -127,6 +127,28 @@
           <h2>Estatísticas</h2>
           <p>Visualizar relatórios e métricas</p>
         </button>
+        
+        <button @click="goToCalculations" class="menu-card calculations-card">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="url(#iconGradient5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 9h6M9 15h6M9 12h6" stroke="url(#iconGradient5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 9h18M3 15h18" stroke="url(#iconGradient5)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="7" cy="7" r="1" fill="url(#iconGradient5)"/>
+              <circle cx="7" cy="12" r="1" fill="url(#iconGradient5)"/>
+              <circle cx="7" cy="17" r="1" fill="url(#iconGradient5)"/>
+              <defs>
+                <linearGradient id="iconGradient5" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#003d7a;stop-opacity:1" />
+                  <stop offset="50%" style="stop-color:#5a7ba8;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#9db4d4;stop-opacity:1" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h2>Cálculos</h2>
+          <p>Gerar cálculos judiciais e planilhas</p>
+        </button>
       </div>
     </div>
   </div>
@@ -155,6 +177,9 @@ export default {
     },
     goToStatistics() {
       this.$router.push('/statistics')
+    },
+    goToCalculations() {
+      this.$router.push('/calculations')
     }
   }
 }

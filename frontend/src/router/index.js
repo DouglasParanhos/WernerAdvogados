@@ -24,6 +24,8 @@ import ProcessForm from '../views/ProcessForm.vue'
 import ProcessDetails from '../views/ProcessDetails.vue'
 import Tasks from '../views/Tasks.vue'
 import Statistics from '../views/Statistics.vue'
+import Calculations from '../views/Calculations.vue'
+import NovaEscolaCalculation from '../views/NovaEscolaCalculation.vue'
 
 const routes = [
   // Public routes with PublicLayout
@@ -183,6 +185,18 @@ const routes = [
     path: '/statistics',
     name: 'Statistics',
     component: Statistics,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/calculations',
+    name: 'Calculations',
+    component: Calculations,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/calculations/novaescola',
+    name: 'NovaEscolaCalculation',
+    component: NovaEscolaCalculation,
     meta: { requiresAuth: true }
   }
 ]
