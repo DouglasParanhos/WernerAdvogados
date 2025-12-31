@@ -64,9 +64,9 @@ export default {
     }
   },
   mounted() {
-    // Se já estiver autenticado, redirecionar para home
+    // Se já estiver autenticado, redirecionar para dashboard
     if (authService.isAuthenticated()) {
-      router.push('/')
+      router.push('/dashboard')
     }
   },
   methods: {
@@ -95,7 +95,7 @@ export default {
       
       try {
         await authService.login(this.username, this.password)
-        router.push('/')
+        router.push('/dashboard')
       } catch (error) {
         if (error.response && error.response.status === 401) {
           this.errorMessage = 'Credenciais inválidas. Verifique seu usuário e senha.'
@@ -116,33 +116,67 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #d0d8e0 0%, #e8eef5 50%, #c0c8d0 100%);
+  background-attachment: fixed;
   padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 .login-card {
-  background: white;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid rgba(0, 61, 122, 0.1);
+  border-radius: 16px;
   padding: 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.05);
   width: 100%;
   max-width: 400px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #003d7a, #5a7ba8, #9db4d4);
+  border-radius: 16px 16px 0 0;
 }
 
 .login-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
   margin-bottom: 8px;
   text-align: center;
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
+  letter-spacing: -0.5px;
 }
 
 .login-subtitle {
-  font-size: 16px;
-  color: #666;
+  font-size: 1rem;
+  color: #4a5568;
   margin-bottom: 32px;
   text-align: center;
   font-weight: 400;
+  letter-spacing: 0.5px;
 }
 
 .login-form {
@@ -160,35 +194,38 @@ export default {
 .form-group label {
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: #1a1a1a;
 }
 
 .form-input {
   padding: 12px 16px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid rgba(0, 61, 122, 0.1);
   border-radius: 8px;
   font-size: 16px;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  background: white;
+  color: #1a1a1a;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #003d7a;
+  box-shadow: 0 0 0 3px rgba(0, 61, 122, 0.1);
 }
 
 .form-input.error {
-  border-color: #e74c3c;
+  border-color: #dc3545;
 }
 
 .error-message {
-  color: #e74c3c;
+  color: #dc3545;
   font-size: 12px;
 }
 
 .error-alert {
-  background-color: #fee;
+  background-color: #fff5f5;
   border: 1px solid #fcc;
-  color: #c33;
+  color: #c82333;
   padding: 12px;
   border-radius: 8px;
   font-size: 14px;
@@ -197,20 +234,22 @@ export default {
 
 .login-button {
   padding: 14px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #003d7a 0%, #5a7ba8 100%);
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: all 0.3s ease;
   margin-top: 8px;
+  box-shadow: 0 4px 12px rgba(0, 61, 122, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .login-button:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #002d5c 0%, #4a6b9a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 61, 122, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .login-button:active:not(:disabled) {
@@ -220,6 +259,21 @@ export default {
 .login-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .login-card {
+    padding: 30px 20px;
+  }
+  
+  .login-title {
+    font-size: 1.75rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.9rem;
+  }
 }
 </style>
 
