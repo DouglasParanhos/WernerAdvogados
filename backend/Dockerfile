@@ -5,7 +5,9 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jre-alpine
-RUN apk add --no-cache curl postgresql-client
+RUN apk add --no-cache curl postgresql-client chromium chromium-chromedriver
+ENV CHROME_BIN=/usr/bin/chromium-browser
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8081
