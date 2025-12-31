@@ -5,6 +5,7 @@ infra/generate_users/insert_users.sql
 # Arquivos gerados
 *.sql
 !**/example*.sql
+!backend/src/main/resources/migrations/*.sql
 
 # Maven / Java
 target/
