@@ -26,21 +26,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         
+        String jwt = null;
         final String authHeader = request.getHeader("Authorization");
         
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        // Tenta obter token do header Authorization
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            jwt = authHeader.substring(7);
+        } 
+        // Se não encontrou no header, tenta obter da query string (útil para SSE)
+        else {
+            String tokenParam = request.getParameter("token");
+            if (tokenParam != null && !tokenParam.isEmpty()) {
+                jwt = tokenParam;
+            }
+        }
+        
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
         
         try {
-            final String jwt = authHeader.substring(7);
-            final String username = jwtUtil.extractUsername(jwt);
+            final String jwtToken = jwt;
+            final String username = jwtUtil.extractUsername(jwtToken);
             
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                if (jwtUtil.validateToken(jwt)) {
+                if (jwtUtil.validateToken(jwtToken)) {
                     // Extrair role do token
-                    String role = jwtUtil.extractClaim(jwt, claims -> claims.get("role", String.class));
+                    String role = jwtUtil.extractClaim(jwtToken, claims -> claims.get("role", String.class));
                     
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             username,

@@ -31,9 +31,12 @@ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'task' AND table_schema = 'public') THEN
         -- Verificar se a sequência já está vinculada à tabela
         IF NOT EXISTS (
-            SELECT 1 FROM pg_depend 
-            WHERE refobjid = 'public.task_task_id_seq'::regclass::oid
-            AND objid = 'public.task.task_id'::regclass::oid
+            SELECT 1 FROM pg_depend d
+            JOIN pg_class c ON d.objid = c.oid
+            JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum = d.objsubid
+            WHERE d.refobjid = 'public.task_task_id_seq'::regclass::oid
+            AND c.relname = 'task'
+            AND a.attname = 'task_id'
         ) THEN
             ALTER SEQUENCE public.task_task_id_seq OWNED BY public.task.task_id;
         END IF;
@@ -63,7 +66,4 @@ BEGIN
 END $$;
 
 COMMIT;
-
-
-
 

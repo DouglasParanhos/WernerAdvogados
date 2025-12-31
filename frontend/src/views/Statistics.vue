@@ -4,9 +4,11 @@
       <div class="header">
         <button @click="goBack" class="btn btn-secondary">← Voltar</button>
         <h1>Estatísticas</h1>
-        <button @click="loadStatistics" class="btn btn-primary" :disabled="loading" style="margin-left: auto;" title="Atualizar">
-          {{ loading ? '🔄' : '🔄' }}
-        </button>
+        <div @click="!loading && !isProcessing && updateAllData()" class="refresh-icon" :class="{ 'disabled': loading || isProcessing }" title="Atualizar dados">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :class="{ 'rotating': loading || isProcessing }">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+        </div>
       </div>
       
       <div v-if="loading" class="loading">Carregando estatísticas...</div>
@@ -36,11 +38,23 @@
           </div>
         </div>
 
-        <!-- Cards Principais: Total das Ações e Total de Honorários Esperados -->
+        <!-- Cards Principais: Total das Ações, Total das Ações Corrigido e Total de Honorários Esperados -->
         <div class="main-stats-grid">
           <div class="main-stat-card">
             <div class="main-stat-label">Total das Ações</div>
             <div class="main-stat-value">{{ formatCurrency(statistics.totalAcoes || 0) }}</div>
+          </div>
+          
+          <div class="main-stat-card">
+            <div class="main-stat-label">
+              Total das Ações Corrigido
+              <span v-if="isProcessing" class="processing-indicator" title="Atualizando valores corrigidos...">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinning-icon">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                </svg>
+              </span>
+            </div>
+            <div class="main-stat-value">{{ formatCurrency(statistics.totalAcoesCorrigido || 0) }}</div>
           </div>
           
           <div class="main-stat-card">
@@ -285,7 +299,11 @@ export default {
     Bar
   },
   async mounted() {
+    await this.checkProcessStatus()
     await this.loadStatistics()
+  },
+  beforeUnmount() {
+    this.disconnectStatusStream()
   },
   computed: {
     processesByTypeChartData() {
@@ -546,21 +564,97 @@ export default {
     return {
       statistics: null,
       loading: false,
-      error: null
+      error: null,
+      isProcessing: false,
+      eventSource: null
     }
   },
   methods: {
-    async loadStatistics() {
-      this.loading = true
+    async loadStatistics(showLoading = true) {
+      if (showLoading) {
+        this.loading = true
+      }
       this.error = null
       try {
-        this.statistics = await statisticsService.getStatistics()
-        await this.$nextTick()
+        const newStatistics = await statisticsService.getStatistics()
+        // Só atualiza se receber dados válidos
+        if (newStatistics) {
+          this.statistics = newStatistics
+          await this.$nextTick()
+        }
       } catch (err) {
         this.error = 'Erro ao carregar estatísticas: ' + (err.response?.data?.message || err.message)
         console.error(err)
+        // Mantém os dados existentes em caso de erro
       } finally {
         this.loading = false
+      }
+    },
+    async updateAllData() {
+      if (this.isProcessing) {
+        return
+      }
+      
+      this.error = null
+      try {
+        // Primeiro, aciona a atualização dos valores corrigidos
+        await statisticsService.updateProcessValues()
+        
+        // Mostra o ícone indicador e conecta ao SSE
+        this.isProcessing = true
+        this.connectToStatusStream()
+      } catch (err) {
+        this.error = 'Erro ao atualizar dados: ' + (err.response?.data?.message || err.message)
+        console.error(err)
+        this.isProcessing = false
+      }
+    },
+    async checkProcessStatus() {
+      try {
+        const status = await statisticsService.getProcessStatus()
+        if (status.status === 'RUNNING') {
+          this.isProcessing = true
+          this.connectToStatusStream()
+        }
+      } catch (err) {
+        console.error('Erro ao verificar status do processamento:', err)
+      }
+    },
+    connectToStatusStream() {
+      // Desconecta stream anterior se existir
+      this.disconnectStatusStream()
+      
+      this.eventSource = statisticsService.connectToStatusStream(
+        (data) => {
+          if (data.status === 'COMPLETED' || data.status === 'ERROR') {
+            this.isProcessing = false
+            this.disconnectStatusStream()
+            
+            if (data.status === 'COMPLETED') {
+              // Recarrega as estatísticas após conclusão sem mostrar loading
+              this.loadStatistics(false)
+            } else {
+              this.error = 'Erro ao processar atualização: ' + (data.errorMessage || 'Erro desconhecido')
+            }
+          } else if (data.status === 'RUNNING') {
+            this.isProcessing = true
+          }
+        },
+        (error) => {
+          console.error('Erro na conexão SSE:', error)
+          // Tenta reconectar após 2 segundos
+          setTimeout(() => {
+            if (this.isProcessing) {
+              this.connectToStatusStream()
+            }
+          }, 2000)
+        }
+      )
+    },
+    disconnectStatusStream() {
+      if (this.eventSource) {
+        this.eventSource.close()
+        this.eventSource = null
       }
     },
     formatCurrency(value) {
@@ -593,30 +687,47 @@ export default {
   margin-bottom: 1.5rem;
 }
 
-.btn-primary {
-  background: #5a7ba8;
-  color: white;
-  border: none;
-  padding: 0.5rem;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 6px;
+.refresh-icon {
+  margin-left: auto;
   cursor: pointer;
-  font-size: 1.2rem;
-  font-weight: 500;
-  transition: background 0.2s;
+  color: #5a7ba8;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: color 0.2s, transform 0.2s;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: #4a6b98;
+.refresh-icon:hover:not(.disabled) {
+  color: #4a6b98;
+  transform: scale(1.1);
 }
 
-.btn-primary:disabled {
+.refresh-icon.disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.refresh-icon svg {
+  transition: transform 0.3s ease;
+}
+
+.refresh-icon:hover:not(.disabled) svg:not(.rotating) {
+  transform: rotate(90deg);
+}
+
+.refresh-icon svg.rotating {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .header h1 {
@@ -677,6 +788,29 @@ export default {
   color: #718096;
   margin-bottom: 0.75rem;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processing-indicator {
+  display: inline-flex;
+  align-items: center;
+  color: #5a7ba8;
+  cursor: help;
+}
+
+.spinning-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .main-stat-value {

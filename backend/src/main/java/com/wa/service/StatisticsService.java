@@ -98,13 +98,24 @@ public class StatisticsService {
                 .collect(Collectors.toList());
         dto.setProcessesByStatus(processesByStatus);
         
-        // Total das Ações (soma dos valores de todos os processos)
+        // Total das Ações (soma dos valores ORIGINAIS de todos os processos)
+        // Sempre usa valorOriginal, independente de ter valorCorrigido ou não
         Double totalAcoes = allProcesses.stream()
-                .map(this::getValorEfetivo)
+                .map(Process::getValorOriginal)
                 .filter(valor -> valor != null)
                 .mapToDouble(Double::doubleValue)
                 .sum();
+        dto.setTotalValorProcessos(totalAcoes);
         dto.setTotalAcoes(totalAcoes);
+        
+        // Total das Ações Corrigidas (soma apenas dos valores corrigidos)
+        // Usa APENAS valorCorrigido, sem fallback para valorOriginal
+        Double totalAcoesCorrigido = allProcesses.stream()
+                .map(Process::getValorCorrigido)
+                .filter(valor -> valor != null)
+                .mapToDouble(Double::doubleValue)
+                .sum();
+        dto.setTotalAcoesCorrigido(totalAcoesCorrigido);
         
         // Honorários por Tipo (calculando quando contratual estiver vazio)
         Map<String, List<Process>> processesByTipo = allProcesses.stream()
