@@ -31,8 +31,11 @@ public class Process {
     @Column(nullable = false, length = 255)
     private String sistema;
     
-    @Column
-    private Double valor;
+    @Column(name = "valor_original")
+    private Double valorOriginal;
+    
+    @Column(name = "valor_corrigido")
+    private Double valorCorrigido;
     
     @Column(name = "previsao_honorarios_contratuais")
     private Double previsaoHonorariosContratuais;

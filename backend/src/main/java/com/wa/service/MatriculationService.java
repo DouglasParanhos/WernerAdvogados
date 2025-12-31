@@ -114,7 +114,8 @@ public class MatriculationService {
         dto.setComarca(process.getComarca());
         dto.setVara(process.getVara());
         dto.setSistema(process.getSistema());
-        dto.setValor(process.getValor());
+        dto.setValorOriginal(process.getValorOriginal());
+        dto.setValorCorrigido(process.getValorCorrigido());
         dto.setPrevisaoHonorariosContratuais(process.getPrevisaoHonorariosContratuais());
         dto.setPrevisaoHonorariosSucumbenciais(process.getPrevisaoHonorariosSucumbenciais());
         dto.setDistribuidoEm(process.getDistribuidoEm());

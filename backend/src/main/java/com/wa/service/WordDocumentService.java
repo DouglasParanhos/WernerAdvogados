@@ -171,14 +171,15 @@ public class WordDocumentService {
             dataMap.put("nimais20", "");
         }
         
-        // Valores monetários
-        if (process.getValor() != null) {
-            String valorFormatado = formatCurrency(process.getValor());
+        // Valores monetários - usar valor efetivo (valorCorrigido ou valorOriginal)
+        Double valorEfetivo = process.getValorCorrigido() != null ? process.getValorCorrigido() : process.getValorOriginal();
+        if (valorEfetivo != null) {
+            String valorFormatado = formatCurrency(valorEfetivo);
             dataMap.put("VALORBRUTO", valorFormatado);
             dataMap.put("VALOR", valorFormatado);
             
             // Calcular sucumbência (10% do valor bruto)
-            double sucumbencia = process.getValor() * 0.10;
+            double sucumbencia = valorEfetivo * 0.10;
             dataMap.put("SUCUMBENCIA", "R$ " + CURRENCY_FORMAT.format(sucumbencia));
         } else {
             dataMap.put("VALORBRUTO", "");

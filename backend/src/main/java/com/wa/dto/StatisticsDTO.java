@@ -10,35 +10,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StatisticsDTO {
-    private Long totalProcesses;
-    private Long totalTasks;
     private Long totalClients;
-    
-    // Processos por tipo
-    private List<CountByTypeDTO> processesByType;
-    
-    // Processos por comarca
-    private List<CountByTypeDTO> processesByComarca;
-    
-    // Processos por status
-    private List<CountByTypeDTO> processesByStatus;
-    
-    // Valor esperado de honorários por tipo de processo
-    private List<HonorariosByTypeDTO> honorariosByType;
-    
-    // Tarefas por status
-    private List<CountByTypeDTO> tasksByStatus;
-    
-    // Tarefas por tipo
-    private List<CountByTypeDTO> tasksByType;
-    
-    // Tarefas por responsável
-    private List<CountByTypeDTO> tasksByResponsavel;
-    
-    // Total de honorários esperados (contratuais + sucumbenciais)
+    private Long totalProcesses;
+    private Long totalMatriculations;
+    private Long totalMoviments;
+    private Double totalAcoes;
     private Double totalHonorariosEsperados;
-    
-    // Valor total dos processos
-    private Double totalValorProcessos;
+    private List<CountByTypeDTO> processesByType;
+    private List<ProcessByComarcaDTO> processesByComarca;
+    private List<ProcessByStatusDTO> processesByStatus;
+    private List<HonorariosByTypeDTO> honorariosByType;
 }
-

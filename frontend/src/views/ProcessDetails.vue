@@ -3,15 +3,8 @@
     <div class="container">
       <div class="header">
         <button @click="goBack" class="btn btn-secondary">← Voltar</button>
-        <div class="header-actions">
-          <div class="action-buttons">
-            <button @click="goToEdit" class="icon-btn edit-btn" title="Editar processo">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
+        <div>
+          <button @click="goToEdit" class="btn btn-secondary">Editar Processo</button>
         </div>
       </div>
       
@@ -39,17 +32,21 @@
               <label>Sistema:</label>
               <span>{{ process.sistema }}</span>
             </div>
-            <div class="info-item">
+            <div class="info-item" v-if="process.tipoProcesso">
               <label>Tipo:</label>
-              <span>{{ process.tipoProcesso || '-' }}</span>
+              <span>{{ process.tipoProcesso }}</span>
             </div>
             <div class="info-item" v-if="process.status">
               <label>Status:</label>
               <span>{{ process.status }}</span>
             </div>
-            <div class="info-item" v-if="process.valor">
-              <label>Valor:</label>
-              <span>{{ formatCurrency(process.valor) }}</span>
+            <div class="info-item" v-if="process.valorOriginal">
+              <label>Valor Original:</label>
+              <span>{{ formatCurrency(process.valorOriginal) }}</span>
+            </div>
+            <div class="info-item" v-if="process.valorCorrigido">
+              <label>Valor Corrigido:</label>
+              <span>{{ formatCurrency(process.valorCorrigido) }}</span>
             </div>
             <div class="info-item" v-if="process.previsaoHonorariosContratuais">
               <label>Previsão Honorários Contratuais:</label>
@@ -78,14 +75,7 @@
             <h3>Nova Movimentação</h3>
             <div class="form-group">
               <label>Data:</label>
-              <input 
-                type="text" 
-                v-model="newMoviment.date" 
-                class="form-control"
-                placeholder="dd/mm/aaaa"
-                @input="formatDateInput($event, 'newMoviment.date')"
-                maxlength="10"
-              />
+              <input type="datetime-local" v-model="newMoviment.date" class="form-control" />
             </div>
             <div class="form-group">
               <label>Descrição:</label>
@@ -104,20 +94,8 @@
                 <div class="moviment-header">
                   <div class="moviment-date">{{ formatDate(moviment.date) }}</div>
                   <div class="moviment-actions">
-                    <div class="action-buttons">
-                      <button @click="startEditMoviment(moviment)" class="icon-btn edit-btn" title="Editar movimentação">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                      </button>
-                      <button @click="deleteMoviment(moviment.id)" class="icon-btn delete-btn" title="Excluir movimentação">
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                      </button>
-                    </div>
+                    <button @click="startEditMoviment(moviment)" class="btn btn-sm btn-secondary">Editar</button>
+                    <button @click="deleteMoviment(moviment.id)" class="btn btn-sm btn-danger">Excluir</button>
                   </div>
                 </div>
                 <div class="moviment-description">{{ moviment.descricao }}</div>
@@ -127,14 +105,7 @@
               <div v-else class="moviment-edit-form">
                 <div class="form-group">
                   <label>Data:</label>
-                  <input 
-                    type="text" 
-                    v-model="editingMoviment.date" 
-                    class="form-control"
-                    placeholder="dd/mm/aaaa"
-                    @input="formatDateInput($event, 'editingMoviment.date')"
-                    maxlength="10"
-                  />
+                  <input type="datetime-local" v-model="editingMoviment.date" class="form-control" />
                 </div>
                 <div class="form-group">
                   <label>Descrição:</label>
@@ -159,6 +130,7 @@
 <script>
 import { processService } from '../services/processService'
 import { movimentService } from '../services/movimentService'
+import { matriculationService } from '../services/matriculationService'
 
 export default {
   name: 'ProcessDetails',
@@ -209,115 +181,36 @@ export default {
     formatDate(date) {
       if (!date) return '-'
       const d = new Date(date)
-      const day = String(d.getDate()).padStart(2, '0')
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const year = d.getFullYear()
-      return `${day}/${month}/${year}`
+      return d.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
     },
     formatCurrency(value) {
       if (!value) return '-'
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
     },
-    goBack() {
-      this.$router.back()
+    async goBack() {
+      // Voltar para o cliente se o processo tem matrícula com personId, senão para lista de processos
+      if (this.process?.matriculationId) {
+        try {
+          const matriculation = await matriculationService.getById(this.process.matriculationId)
+          if (matriculation?.personId) {
+            this.$router.push(`/clients/${matriculation.personId}`)
+            return
+          }
+        } catch (err) {
+          console.error('Erro ao buscar matrícula:', err)
+        }
+      }
+      // Se não conseguir encontrar o cliente, voltar para lista de processos
+      this.$router.push('/processes')
     },
     goToEdit() {
       this.$router.push(`/processes/${this.process.id}/edit`)
-    },
-    formatDateInput(event, fieldPath) {
-      // Aplica máscara dd/mm/aaaa enquanto o usuário digita
-      let value = event.target.value.replace(/\D/g, '') // Remove tudo que não é dígito
-      
-      if (value.length > 2) {
-        value = value.substring(0, 2) + '/' + value.substring(2)
-      }
-      if (value.length > 5) {
-        value = value.substring(0, 5) + '/' + value.substring(5, 9)
-      }
-      
-      // Atualiza o modelo Vue baseado no caminho do campo
-      const parts = fieldPath.split('.')
-      if (parts.length === 2) {
-        // Ex: newMoviment.date
-        if (!this[parts[0]]) {
-          this[parts[0]] = {}
-        }
-        this.$set(this[parts[0]], parts[1], value)
-      } else if (parts.length === 3) {
-        // Ex: editingMoviment.date
-        if (!this[parts[0]]) {
-          this[parts[0]] = {}
-        }
-        if (!this[parts[0]][parts[1]]) {
-          this.$set(this[parts[0]], parts[1], {})
-        }
-        this.$set(this[parts[0]][parts[1]], parts[2], value)
-      }
-      
-      // Atualiza o valor no campo
-      event.target.value = value
-    },
-    convertDateToISO(dateString) {
-      // Converte de dd/mm/aaaa para ISO (yyyy-MM-dd)
-      if (!dateString) return null
-      
-      // Remove espaços e caracteres especiais
-      const cleanDate = dateString.trim()
-      
-      // Verifica se está no formato dd/mm/aaaa
-      const datePattern = /^(\d{2})\/(\d{2})\/(\d{4})$/
-      const match = cleanDate.match(datePattern)
-      
-      if (match) {
-        const day = match[1]
-        const month = match[2]
-        const year = match[3]
-        
-        // Valida a data
-        const date = new Date(`${year}-${month}-${day}`)
-        if (!isNaN(date.getTime()) && 
-            date.getDate() == day && 
-            date.getMonth() + 1 == month && 
-            date.getFullYear() == year) {
-          // Retorna no formato yyyy-MM-dd (sem hora)
-          return `${year}-${month}-${day}`
-        }
-      }
-      
-      // Se não estiver no formato esperado, tenta parsear como está
-      console.warn('Data em formato inválido:', dateString)
-      return null
-    },
-    formatDateForInput(dateString) {
-      // Converte de formato ISO (yyyy-MM-dd ou yyyy-MM-ddTHH:mm:ss) para dd/mm/aaaa
-      if (!dateString) return ''
-      try {
-        let date
-        if (typeof dateString === 'string') {
-          // Remove a parte de hora se existir
-          const dateOnly = dateString.split('T')[0].split(' ')[0]
-          const parts = dateOnly.split('-')
-          if (parts.length === 3) {
-            // Formato yyyy-MM-dd
-            return `${parts[2]}/${parts[1]}/${parts[0]}`
-          }
-          // Tenta parsear como data ISO
-          date = new Date(dateString)
-        } else {
-          date = new Date(dateString)
-        }
-        
-        if (date && !isNaN(date.getTime())) {
-          const day = String(date.getDate()).padStart(2, '0')
-          const month = String(date.getMonth() + 1).padStart(2, '0')
-          const year = date.getFullYear()
-          return `${day}/${month}/${year}`
-        }
-        return ''
-      } catch (error) {
-        console.error('Erro ao formatar data:', dateString, error)
-        return ''
-      }
     },
     async saveNewMoviment() {
       if (!this.newMoviment.descricao || !this.newMoviment.date) {
@@ -327,13 +220,8 @@ export default {
       
       this.saving = true
       try {
-        // Converter de dd/mm/aaaa para formato ISO
-        const dateISO = this.convertDateToISO(this.newMoviment.date)
-        if (!dateISO) {
-          alert('Data inválida. Use o formato dd/mm/aaaa')
-          this.saving = false
-          return
-        }
+        // Converter para formato ISO
+        const dateISO = new Date(this.newMoviment.date).toISOString()
         await movimentService.create({
           ...this.newMoviment,
           date: dateISO
@@ -356,11 +244,17 @@ export default {
     },
     startEditMoviment(moviment) {
       this.editingMovimentId = moviment.id
-      // Converter data para formato dd/mm/aaaa
+      // Converter data para formato datetime-local
+      const date = new Date(moviment.date)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
       this.editingMoviment = {
         id: moviment.id,
         descricao: moviment.descricao,
-        date: this.formatDateForInput(moviment.date),
+        date: `${year}-${month}-${day}T${hours}:${minutes}`,
         processId: moviment.processId
       }
     },
@@ -372,13 +266,8 @@ export default {
       
       this.saving = true
       try {
-        // Converter de dd/mm/aaaa para formato ISO
-        const dateISO = this.convertDateToISO(this.editingMoviment.date)
-        if (!dateISO) {
-          alert('Data inválida. Use o formato dd/mm/aaaa')
-          this.saving = false
-          return
-        }
+        // Converter para formato ISO
+        const dateISO = new Date(this.editingMoviment.date).toISOString()
         await movimentService.update(this.editingMoviment.id, {
           ...this.editingMoviment,
           date: dateISO
@@ -425,12 +314,6 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
 }
 
 .section {
@@ -559,48 +442,6 @@ export default {
 .moviment-actions {
   display: flex;
   gap: 0.5rem;
-  align-items: center;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.icon-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0.375rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  border-radius: 4px;
-}
-
-.icon-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.edit-btn {
-  color: #6c757d;
-}
-
-.edit-btn:hover {
-  background-color: #f8f9fa;
-  color: #495057;
-}
-
-.delete-btn {
-  color: #dc3545;
-}
-
-.delete-btn:hover {
-  background-color: #fff5f5;
-  color: #c82333;
 }
 
 .moviment-edit-form {
@@ -615,7 +456,52 @@ export default {
   color: #6c757d;
 }
 
-/* Estilos de botões importados de styles/buttons.css */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
 
 .loading, .error {
   text-align: center;

@@ -24,7 +24,8 @@ public class ProcessRequestDTO {
     @NotBlank(message = "Sistema é obrigatório")
     private String sistema;
     
-    private Double valor;
+    private Double valorOriginal;
+    private Double valorCorrigido;
     private Double previsaoHonorariosContratuais;
     private Double previsaoHonorariosSucumbenciais;
     private LocalDateTime distribuidoEm;

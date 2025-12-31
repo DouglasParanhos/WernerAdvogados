@@ -21,6 +21,13 @@ public class StatisticsService {
     private final MatriculationRepository matriculationRepository;
     private final MovimentRepository movimentRepository;
     
+    /**
+     * Retorna o valor efetivo do processo: valorCorrigido se disponível, caso contrário valorOriginal
+     */
+    private Double getValorEfetivo(Process process) {
+        return process.getValorCorrigido() != null ? process.getValorCorrigido() : process.getValorOriginal();
+    }
+    
     public StatisticsDTO getStatistics() {
         StatisticsDTO dto = new StatisticsDTO();
         
@@ -93,8 +100,9 @@ public class StatisticsService {
         
         // Total das Ações (soma dos valores de todos os processos)
         Double totalAcoes = allProcesses.stream()
-                .filter(p -> p.getValor() != null)
-                .mapToDouble(Process::getValor)
+                .map(this::getValorEfetivo)
+                .filter(valor -> valor != null)
+                .mapToDouble(Double::doubleValue)
                 .sum();
         dto.setTotalAcoes(totalAcoes);
         
@@ -115,13 +123,16 @@ public class StatisticsService {
                             .mapToDouble(p -> {
                                 if (p.getPrevisaoHonorariosContratuais() != null) {
                                     return p.getPrevisaoHonorariosContratuais();
-                                } else if (p.getValor() != null && p.getTipoProcesso() != null) {
-                                    // Calcular baseado no tipo: 30% para PISO, 20% para outros
-                                    String tipoUpper = p.getTipoProcesso().toUpperCase();
-                                    if ("PISO".equals(tipoUpper)) {
-                                        return p.getValor() * 0.30;
-                                    } else if ("NOVAESCOLA".equals(tipoUpper) || "INTERNIVEIS".equals(tipoUpper)) {
-                                        return p.getValor() * 0.20;
+                                } else {
+                                    Double valorEfetivo = getValorEfetivo(p);
+                                    if (valorEfetivo != null && p.getTipoProcesso() != null) {
+                                        // Calcular baseado no tipo: 30% para PISO, 20% para outros
+                                        String tipoUpper = p.getTipoProcesso().toUpperCase();
+                                        if ("PISO".equals(tipoUpper)) {
+                                            return valorEfetivo * 0.30;
+                                        } else if ("NOVAESCOLA".equals(tipoUpper) || "INTERNIVEIS".equals(tipoUpper)) {
+                                            return valorEfetivo * 0.20;
+                                        }
                                     }
                                 }
                                 return 0.0;
@@ -133,9 +144,12 @@ public class StatisticsService {
                             .mapToDouble(p -> {
                                 if (p.getPrevisaoHonorariosSucumbenciais() != null) {
                                     return p.getPrevisaoHonorariosSucumbenciais();
-                                } else if (p.getValor() != null) {
-                                    // Calcular 10% do valor da ação quando sucumbenciais estiver vazio
-                                    return p.getValor() * 0.10;
+                                } else {
+                                    Double valorEfetivo = getValorEfetivo(p);
+                                    if (valorEfetivo != null) {
+                                        // Calcular 10% do valor da ação quando sucumbenciais estiver vazio
+                                        return valorEfetivo * 0.10;
+                                    }
                                 }
                                 return 0.0;
                             })
@@ -145,8 +159,9 @@ public class StatisticsService {
                     
                     // Calcular total de ações por tipo
                     Double totalAcoesPorTipo = processos.stream()
-                            .filter(p -> p.getValor() != null)
-                            .mapToDouble(Process::getValor)
+                            .map(this::getValorEfetivo)
+                            .filter(valor -> valor != null)
+                            .mapToDouble(Double::doubleValue)
                             .sum();
                     
                     HonorariosByTypeDTO honorarios = new HonorariosByTypeDTO();

@@ -185,7 +185,8 @@
                       <button @click.stop="cancelEditStatus" class="status-cancel-btn" title="Cancelar">✕</button>
                     </div>
                   </div>
-                  <div v-if="process.valor"><strong>Valor:</strong> {{ formatCurrency(process.valor) }}</div>
+                  <div v-if="process.valorOriginal"><strong>Valor Original:</strong> {{ formatCurrency(process.valorOriginal) }}</div>
+                  <div v-if="process.valorCorrigido"><strong>Valor Corrigido:</strong> {{ formatCurrency(process.valorCorrigido) }}</div>
                   <div v-if="process.distribuidoEm"><strong>Distribuído em:</strong> {{ formatDate(process.distribuidoEm) }}</div>
                 </div>
               </div>
@@ -275,7 +276,7 @@ export default {
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
     },
     goBack() {
-      this.$router.back()
+      this.$router.push('/clients')
     },
     goToEdit() {
       this.$router.push(`/clients/${this.client.id}/edit`)
@@ -284,13 +285,10 @@ export default {
       this.$router.push({ path: '/processes/new', query: { personId: this.client.id } })
     },
     goToProcessDetails(id) {
-      this.$router.push(`/processes/${id}`)
+      this.$router.push({ path: `/processes/${id}`, query: { from: 'client' } })
     },
     goToEditProcess(id) {
-      this.$router.push({ 
-        path: `/processes/${id}/edit`,
-        query: { personId: this.client.id }
-      })
+      this.$router.push(`/processes/${id}/edit`)
     },
     async deleteClient() {
       if (!confirm('Tem certeza que deseja excluir este cliente?')) {

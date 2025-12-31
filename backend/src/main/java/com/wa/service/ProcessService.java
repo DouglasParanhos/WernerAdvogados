@@ -22,6 +22,20 @@ public class ProcessService {
     private final ProcessRepository processRepository;
     private final MatriculationRepository matriculationRepository;
     
+    /**
+     * Retorna o valor efetivo do processo: valorCorrigido se disponível, caso contrário valorOriginal
+     */
+    private Double getValorEfetivo(Process process) {
+        return process.getValorCorrigido() != null ? process.getValorCorrigido() : process.getValorOriginal();
+    }
+    
+    /**
+     * Retorna o valor efetivo do request: valorCorrigido se disponível, caso contrário valorOriginal
+     */
+    private Double getValorEfetivo(ProcessRequestDTO request) {
+        return request.getValorCorrigido() != null ? request.getValorCorrigido() : request.getValorOriginal();
+    }
+    
     public List<ProcessDTO> findAll() {
         return processRepository.findAllWithRelations().stream()
                 .map(this::convertToDTO)
@@ -50,24 +64,26 @@ public class ProcessService {
         process.setComarca(request.getComarca());
         process.setVara(request.getVara());
         process.setSistema(request.getSistema());
-        process.setValor(request.getValor());
+        process.setValorOriginal(request.getValorOriginal());
+        process.setValorCorrigido(request.getValorCorrigido());
         
         // Calcular honorários contratuais automaticamente se estiver vazio
+        Double valorEfetivo = getValorEfetivo(request);
         Double honorariosContratuais = request.getPrevisaoHonorariosContratuais();
-        if (honorariosContratuais == null && request.getValor() != null && request.getTipoProcesso() != null) {
+        if (honorariosContratuais == null && valorEfetivo != null && request.getTipoProcesso() != null) {
             if ("PISO".equalsIgnoreCase(request.getTipoProcesso())) {
-                honorariosContratuais = request.getValor() * 0.30;
+                honorariosContratuais = valorEfetivo * 0.30;
             } else if ("NOVAESCOLA".equalsIgnoreCase(request.getTipoProcesso()) || 
                        "INTERNIVEIS".equalsIgnoreCase(request.getTipoProcesso())) {
-                honorariosContratuais = request.getValor() * 0.20;
+                honorariosContratuais = valorEfetivo * 0.20;
             }
         }
         process.setPrevisaoHonorariosContratuais(honorariosContratuais);
         
         // Calcular honorários sucumbenciais automaticamente se estiver vazio (10% do valor da ação)
         Double honorariosSucumbenciais = request.getPrevisaoHonorariosSucumbenciais();
-        if (honorariosSucumbenciais == null && request.getValor() != null) {
-            honorariosSucumbenciais = request.getValor() * 0.10;
+        if (honorariosSucumbenciais == null && valorEfetivo != null) {
+            honorariosSucumbenciais = valorEfetivo * 0.10;
         }
         process.setPrevisaoHonorariosSucumbenciais(honorariosSucumbenciais);
         process.setDistribuidoEm(request.getDistribuidoEm());
@@ -91,24 +107,26 @@ public class ProcessService {
         process.setComarca(request.getComarca());
         process.setVara(request.getVara());
         process.setSistema(request.getSistema());
-        process.setValor(request.getValor());
+        process.setValorOriginal(request.getValorOriginal());
+        process.setValorCorrigido(request.getValorCorrigido());
         
         // Calcular honorários contratuais automaticamente se estiver vazio
+        Double valorEfetivo = getValorEfetivo(request);
         Double honorariosContratuais = request.getPrevisaoHonorariosContratuais();
-        if (honorariosContratuais == null && request.getValor() != null && request.getTipoProcesso() != null) {
+        if (honorariosContratuais == null && valorEfetivo != null && request.getTipoProcesso() != null) {
             if ("PISO".equalsIgnoreCase(request.getTipoProcesso())) {
-                honorariosContratuais = request.getValor() * 0.30;
+                honorariosContratuais = valorEfetivo * 0.30;
             } else if ("NOVAESCOLA".equalsIgnoreCase(request.getTipoProcesso()) || 
                        "INTERNIVEIS".equalsIgnoreCase(request.getTipoProcesso())) {
-                honorariosContratuais = request.getValor() * 0.20;
+                honorariosContratuais = valorEfetivo * 0.20;
             }
         }
         process.setPrevisaoHonorariosContratuais(honorariosContratuais);
         
         // Calcular honorários sucumbenciais automaticamente se estiver vazio (10% do valor da ação)
         Double honorariosSucumbenciais = request.getPrevisaoHonorariosSucumbenciais();
-        if (honorariosSucumbenciais == null && request.getValor() != null) {
-            honorariosSucumbenciais = request.getValor() * 0.10;
+        if (honorariosSucumbenciais == null && valorEfetivo != null) {
+            honorariosSucumbenciais = valorEfetivo * 0.10;
         }
         process.setPrevisaoHonorariosSucumbenciais(honorariosSucumbenciais);
         process.setDistribuidoEm(request.getDistribuidoEm());
@@ -154,7 +172,8 @@ public class ProcessService {
         dto.setComarca(process.getComarca());
         dto.setVara(process.getVara());
         dto.setSistema(process.getSistema());
-        dto.setValor(process.getValor());
+        dto.setValorOriginal(process.getValorOriginal());
+        dto.setValorCorrigido(process.getValorCorrigido());
         dto.setPrevisaoHonorariosContratuais(process.getPrevisaoHonorariosContratuais());
         dto.setPrevisaoHonorariosSucumbenciais(process.getPrevisaoHonorariosSucumbenciais());
         dto.setDistribuidoEm(process.getDistribuidoEm());

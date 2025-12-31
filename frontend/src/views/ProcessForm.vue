@@ -78,8 +78,13 @@
             </div>
             
             <div class="form-group">
-              <label>Valor</label>
-              <input v-model="form.valor" type="number" step="0.01" @input="calculateHonorariosContratuais" />
+              <label>Valor Original</label>
+              <input v-model="form.valorOriginal" type="number" step="0.01" @input="calculateHonorariosContratuais" />
+            </div>
+            
+            <div class="form-group">
+              <label>Valor Corrigido</label>
+              <input v-model="form.valorCorrigido" type="number" step="0.01" @input="calculateHonorariosContratuais" />
             </div>
             
             <div class="form-group">
@@ -127,7 +132,8 @@ export default {
         sistema: '',
         tipoProcesso: '',
         status: '',
-        valor: null,
+        valorOriginal: null,
+        valorCorrigido: null,
         previsaoHonorariosContratuais: null,
         previsaoHonorariosSucumbenciais: null,
         distribuidoEm: ''
@@ -187,7 +193,8 @@ export default {
           sistema: process.sistema || '',
           tipoProcesso: process.tipoProcesso || '',
           status: process.status || '',
-          valor: process.valor || null,
+          valorOriginal: process.valorOriginal || null,
+          valorCorrigido: process.valorCorrigido || null,
           previsaoHonorariosContratuais: process.previsaoHonorariosContratuais || null,
           previsaoHonorariosSucumbenciais: process.previsaoHonorariosSucumbenciais || null,
           distribuidoEm: process.distribuidoEm || ''
@@ -218,13 +225,18 @@ export default {
       this.error = null
       
       try {
+        // Obter valor efetivo (valorCorrigido se disponível, senão valorOriginal)
+        const valorEfetivo = this.form.valorCorrigido !== null && this.form.valorCorrigido !== undefined 
+          ? this.form.valorCorrigido 
+          : this.form.valorOriginal
+        
         // Calcular honorários contratuais se estiver vazio
         let honorariosContratuais = this.form.previsaoHonorariosContratuais
-        if (!honorariosContratuais && this.form.valor && this.form.tipoProcesso) {
+        if (!honorariosContratuais && valorEfetivo && this.form.tipoProcesso) {
           if (this.form.tipoProcesso === 'PISO') {
-            honorariosContratuais = this.form.valor * 0.30
+            honorariosContratuais = valorEfetivo * 0.30
           } else if (this.form.tipoProcesso === 'NOVAESCOLA' || this.form.tipoProcesso === 'INTERNIVEIS') {
-            honorariosContratuais = this.form.valor * 0.20
+            honorariosContratuais = valorEfetivo * 0.20
           }
         }
         
@@ -236,7 +248,8 @@ export default {
           sistema: this.form.sistema,
           tipoProcesso: this.form.tipoProcesso || null,
           status: this.form.status || null,
-          valor: this.form.valor || null,
+          valorOriginal: this.form.valorOriginal || null,
+          valorCorrigido: this.form.valorCorrigido || null,
           previsaoHonorariosContratuais: honorariosContratuais || null,
           previsaoHonorariosSucumbenciais: this.form.previsaoHonorariosSucumbenciais || null,
           distribuidoEm: this.form.distribuidoEm || null
@@ -266,12 +279,17 @@ export default {
       }
     },
     calculateHonorariosContratuais() {
+      // Obter valor efetivo (valorCorrigido se disponível, senão valorOriginal)
+      const valorEfetivo = this.form.valorCorrigido !== null && this.form.valorCorrigido !== undefined 
+        ? this.form.valorCorrigido 
+        : this.form.valorOriginal
+      
       // Calcular automaticamente se honorários contratuais estiver vazio
-      if (!this.form.previsaoHonorariosContratuais && this.form.valor && this.form.tipoProcesso) {
+      if (!this.form.previsaoHonorariosContratuais && valorEfetivo && this.form.tipoProcesso) {
         if (this.form.tipoProcesso === 'PISO') {
-          this.form.previsaoHonorariosContratuais = this.form.valor * 0.30
+          this.form.previsaoHonorariosContratuais = valorEfetivo * 0.30
         } else if (this.form.tipoProcesso === 'NOVAESCOLA' || this.form.tipoProcesso === 'INTERNIVEIS') {
-          this.form.previsaoHonorariosContratuais = this.form.valor * 0.20
+          this.form.previsaoHonorariosContratuais = valorEfetivo * 0.20
         }
       }
     },

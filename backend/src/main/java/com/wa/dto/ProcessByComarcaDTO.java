@@ -14,3 +14,5 @@ public class ProcessByComarcaDTO {
     private List<CountByTypeDTO> byType;
 }
 
+
+
