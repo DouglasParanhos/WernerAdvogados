@@ -99,6 +99,7 @@ def main():
         print(f"VALUES ('{user['username']}', '{password_hash}', '{user['role']}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
         print(f"ON CONFLICT (username) DO UPDATE SET")
         print(f"    password = EXCLUDED.password,")
+        print(f"    user_role = EXCLUDED.user_role,")
         print(f"    modified_on = CURRENT_TIMESTAMP;")
         print()
 

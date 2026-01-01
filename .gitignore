@@ -1,6 +1,17 @@
 # Arquivos sensíveis com senhas
 infra/generate_users/users.config
+infra/database/generate_users/users.config
 infra/generate_users/insert_users.sql
+infra/database/generate_users/insert_users.sql
+
+# Arquivos de variáveis de ambiente (NUNCA commitar!)
+.env
+.env.local
+.env.*.local
+.env.railway
+*.env
+!.env.example
+!.env.*.example
 
 # Arquivos gerados
 *.sql
