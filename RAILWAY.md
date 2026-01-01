@@ -2,6 +2,8 @@
 
 Este guia explica como fazer o deploy completo do sistema Werner Advogados na plataforma Railway.
 
+> **📝 Nota:** Para um guia rápido de configuração de variáveis de ambiente no Railway, consulte [CONFIGURACAO_RAILWAY.md](./CONFIGURACAO_RAILWAY.md)
+
 ## Pré-requisitos
 
 - Conta no [Railway.app](https://railway.app)
@@ -30,7 +32,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./werneradv20250511.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./infra/database/generate_database.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 10s
@@ -62,9 +64,9 @@ services:
       args:
         VITE_API_URL: /api
     environment:
-      - PORT=80
-    ports:
-      - "${PORT:-80}:80"
+      - PORT=${PORT:-80}
+    # Railway atribui PORT dinamicamente, o nginx escuta diretamente nessa porta
+    # Não é necessário mapear portas aqui, o Railway faz isso automaticamente
     depends_on:
       - backend
 
@@ -107,10 +109,12 @@ server {
 2. Clique em **New Project**
 3. Selecione **Deploy from GitHub repo** (ou faça upload do código)
 4. Selecione seu repositório
-5. Railway detectará o `docker-compose.yml` automaticamente
+5. Railway detectará o `docker-compose.railway.yml` automaticamente (ou você pode especificar manualmente)
 6. Configure as variáveis de ambiente no dashboard:
    - `POSTGRES_PASSWORD`: Senha forte para o banco
    - `CORS_ALLOWED_ORIGINS`: URL do frontend (será configurada após o deploy)
+   - `JWT_SECRET`: Chave secreta forte para JWT (obrigatória)
+   - `JWT_EXPIRATION`: Tempo de expiração do token em milissegundos (opcional, padrão: 86400000)
 
 ---
 
@@ -149,22 +153,28 @@ Esta é a forma mais recomendada e confiável no Railway, onde cada serviço é 
    railway link
    
    # Executar SQL (substitua $DATABASE_URL pela URL do Railway)
-   railway run psql $DATABASE_URL < werneradv20250511.sql
+   railway run psql $DATABASE_URL < infra/database/generate_database.sql
    ```
    
    **Opção B: Via Dashboard**
    
    1. No serviço PostgreSQL, vá na aba **Data**
-   2. Use o **Query Editor** para executar o conteúdo do arquivo `werneradv20250511.sql`
+   2. Use o **Query Editor** para executar o conteúdo do arquivo `infra/database/generate_database.sql`
    3. Ou faça upload do arquivo SQL
+   
+   **Nota:** O arquivo SQL está localizado em `infra/database/generate_database.sql`. Este arquivo contém o schema completo do banco de dados.
 
 #### Passo 3: Deploy do Backend
 
 1. No mesmo projeto, clique em **New Service**
 2. Selecione **Deploy from GitHub repo** (ou via CLI)
-3. Selecione a pasta `backend` do repositório
-4. Railway detectará o `Dockerfile` automaticamente
-5. Configure as **Variáveis de Ambiente**:
+3. Selecione seu repositório
+4. Configure o **Root Directory** como `backend`
+5. **Configure a Branch:** Selecione a branch que deseja usar (ex: `main`, `master`, `develop`)
+   - Por padrão, o Railway usa `main` ou `master`
+   - Para alterar depois: **Settings** → **Source** → **Branch**
+6. Railway detectará o `Dockerfile` automaticamente
+7. Configure as **Variáveis de Ambiente**:
 
    ```
    SPRING_DATASOURCE_URL=${{Postgres.DATABASE_URL}}
@@ -174,7 +184,11 @@ Esta é a forma mais recomendada e confiável no Railway, onde cada serviço é 
    SPRING_JPA_SHOW_SQL=false
    SERVER_PORT=${{PORT}}
    CORS_ALLOWED_ORIGINS=${{Frontend.RAILWAY_PUBLIC_DOMAIN}}
+   JWT_SECRET=sua-chave-secreta-forte-aqui
+   JWT_EXPIRATION=86400000
    ```
+   
+   **Importante:** Substitua `sua-chave-secreta-forte-aqui` por uma chave secreta forte e única. Use uma string aleatória de pelo menos 32 caracteres.
 
    **Nota:** `${{Postgres.DATABASE_URL}}` é uma referência automática do Railway que conecta os serviços. Você pode encontrá-la na aba **Variables** do serviço PostgreSQL.
 
@@ -184,78 +198,70 @@ Esta é a forma mais recomendada e confiável no Railway, onde cada serviço é 
 
 1. No mesmo projeto, clique em **New Service**
 2. Selecione **Deploy from GitHub repo**
-3. Selecione a pasta `frontend` do repositório
-4. Railway detectará o `Dockerfile` automaticamente
-5. Configure as **Variáveis de Ambiente**:
+3. Selecione seu repositório (mesmo repositório)
+4. Configure o **Root Directory** como `frontend`
+5. **Configure a Branch:** Selecione a mesma branch usada no backend (ex: `main`, `master`, `develop`)
+   - Por padrão, o Railway usa `main` ou `master`
+   - Para alterar depois: **Settings** → **Source** → **Branch**
+6. Railway detectará o `Dockerfile` automaticamente
+7. Configure as **Variáveis de Ambiente**:
 
    ```
    VITE_API_URL=/api
    ```
 
-6. **Ajustar Nginx para Railway:**
+6. **Configurar Proxy do Backend:**
 
-   O Railway usa uma variável `PORT` dinâmica. Você precisa atualizar o `frontend/Dockerfile`:
+   **IMPORTANTE:** No Railway, quando os serviços são deployados separadamente, eles não compartilham a mesma rede Docker. Portanto, o proxy do Nginx precisa usar a URL pública do backend, não o nome do serviço.
 
-   ```dockerfile
-   FROM node:18-alpine AS build
-   WORKDIR /app
-   COPY package*.json ./
-   RUN npm install
-   COPY . .
-   ARG VITE_API_URL=/api
-   ENV VITE_API_URL=$VITE_API_URL
-   RUN npm run build
+   Você tem duas opções:
 
-   FROM nginx:alpine
-   COPY --from=build /app/dist /usr/share/nginx/html
-   COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-   # Railway usa variável PORT
-   RUN apk add --no-cache envsubst
-   RUN echo '#!/bin/sh' > /entrypoint.sh && \
-       echo 'envsubst "\$PORT" < /etc/nginx/conf.d/default.conf > /tmp/default.conf' && \
-       echo 'mv /tmp/default.conf /etc/nginx/conf.d/default.conf' && \
-       echo 'exec nginx -g "daemon off;"' >> /entrypoint.sh && \
-       chmod +x /entrypoint.sh
-
-   EXPOSE $PORT
-   CMD ["/entrypoint.sh"]
-   ```
-
-   E atualizar `frontend/nginx.conf`:
-
+   **Opção A: Usar URL pública do backend (Recomendado)**
+   
+   Após fazer o deploy do backend, você precisará:
+   1. Gerar um domínio público para o backend (Settings → Domains → Generate Domain)
+   2. Atualizar o `frontend/nginx.conf` para usar a URL pública:
+   
    ```nginx
-   server {
-       listen ${PORT} default_server;
-       server_name _;
-       root /usr/share/nginx/html;
-       index index.html;
-
-       location / {
-           try_files $uri $uri/ /index.html;
-       }
-
-       location /api {
-           proxy_pass http://backend:8081/api;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-           proxy_cache_bypass $http_upgrade;
-       }
+   location /api {
+       proxy_pass https://seu-backend.railway.app/api;
+       # ... resto da configuração
+   }
+   ```
+   
+   **Opção B: Usar variável de ambiente (Mais flexível)**
+   
+   1. No serviço Frontend, adicione uma variável de ambiente:
+      - Nome: `BACKEND_URL`
+      - Valor: `https://seu-backend.railway.app` (ou use `${{Backend.RAILWAY_PUBLIC_DOMAIN}}`)
+   
+   2. Atualize o `frontend/Dockerfile` para substituir a variável no nginx.conf:
+   
+   ```dockerfile
+   # No entrypoint.sh, adicione:
+   envsubst "$$PORT $$BACKEND_URL" < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
+   ```
+   
+   3. Atualize o `frontend/nginx.conf`:
+   
+   ```nginx
+   location /api {
+       proxy_pass ${BACKEND_URL}/api;
+       # ... resto da configuração
    }
    ```
 
-   **Nota:** Se preferir uma solução mais simples, você pode usar o `nginx.conf` original e o Railway ajustará automaticamente a porta.
+   **Nota:** Os arquivos `frontend/Dockerfile` e `frontend/nginx.conf` já foram atualizados para suportar a variável PORT dinâmica do Railway. Você só precisa ajustar o proxy_pass conforme uma das opções acima.
 
 #### Passo 5: Conectar Serviços
 
 1. No serviço **Frontend**, vá em **Settings** → **Networking**
 2. Adicione o **Backend** como dependência (isso garante que o frontend só inicie após o backend)
 3. No serviço **Backend**, adicione o **PostgreSQL** como dependência
+
+**Importante:** No Railway, os serviços deployados separadamente não compartilham a mesma rede Docker. Para o proxy do Nginx funcionar, você precisa:
+- Gerar um domínio público para o backend (Settings → Domains → Generate Domain)
+- Atualizar o `nginx.conf` do frontend para usar a URL pública do backend (veja Passo 4, Opção A ou B)
 
 #### Passo 6: Configurar Domínio
 
@@ -279,7 +285,7 @@ Após o frontend estar deployado e ter um domínio:
 - [ ] Conta Railway criada
 - [ ] Projeto PostgreSQL criado e configurado
 - [ ] Variável `POSTGRES_DB=wa_db` configurada
-- [ ] SQL de inicialização (`werneradv20250511.sql`) executado
+- [ ] SQL de inicialização (`infra/database/generate_database.sql`) executado
 - [ ] Backend deployado com variáveis corretas
 - [ ] Frontend deployado
 - [ ] Serviços conectados (dependências configuradas)
@@ -301,6 +307,10 @@ Após o frontend estar deployado e ter um domínio:
 - `SPRING_DATASOURCE_PASSWORD`: Use `${{Postgres.PGPASSWORD}}`
 - `SERVER_PORT`: Use `${{PORT}}`
 - `CORS_ALLOWED_ORIGINS`: URL do frontend (ex: `https://seu-app.railway.app`)
+- `JWT_SECRET`: Chave secreta para JWT (configure uma chave forte e segura)
+- `JWT_EXPIRATION`: Tempo de expiração do token em milissegundos (padrão: 86400000 = 24h)
+- `SPRING_JPA_HIBERNATE_DDL_AUTO`: Use `validate` (não use `update` em produção)
+- `SPRING_JPA_SHOW_SQL`: Use `false` em produção
 
 ### Frontend
 - `VITE_API_URL`: `/api` (para proxy do Nginx)
@@ -338,9 +348,10 @@ Após o frontend estar deployado e ter um domínio:
 
 ### Banco de dados não inicializa
 
-1. Verifique se o arquivo SQL foi executado corretamente
+1. Verifique se o arquivo SQL (`infra/database/generate_database.sql`) foi executado corretamente
 2. Verifique os logs do PostgreSQL
 3. Tente executar o SQL novamente via Query Editor
+4. **Importante:** O Railway usa Flyway para migrações automáticas. Certifique-se de que as migrações em `backend/src/main/resources/migrations/` estão corretas
 
 ### Porta não encontrada
 
@@ -372,15 +383,26 @@ railway open
 railway variables
 ```
 
+## Arquivos Criados/Atualizados para Railway
+
+Os seguintes arquivos foram preparados para o deploy no Railway:
+
+- ✅ `docker-compose.railway.yml` - Criado para deploy com Docker Compose no Railway (Opção 1)
+- ✅ `frontend/Dockerfile` - Atualizado para suportar variável PORT dinâmica
+- ✅ `frontend/nginx.conf` - Atualizado para usar variável PORT dinâmica
+- ✅ `.railwayignore` - Criado para otimizar builds (ignora arquivos desnecessários)
+- ✅ `RAILWAY.md` - Documentação completa do processo de deploy
+
 ## Próximos Passos
 
 Após o deploy bem-sucedido:
 
-1. **Configurar backup automático** do banco de dados
-2. **Configurar monitoramento** (Railway oferece métricas básicas)
-3. **Configurar domínio customizado** (se necessário)
-4. **Documentar credenciais** em local seguro
-5. **Testar todas as funcionalidades** em produção
+1. **Configurar variáveis de ambiente sensíveis** (JWT_SECRET, etc.) no Railway
+2. **Configurar backup automático** do banco de dados
+3. **Configurar monitoramento** (Railway oferece métricas básicas)
+4. **Configurar domínio customizado** (se necessário)
+5. **Documentar credenciais** em local seguro
+6. **Testar todas as funcionalidades** em produção
 
 ## Suporte
 

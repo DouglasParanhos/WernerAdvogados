@@ -1,0 +1,58 @@
+# Arquivos e diretórios a ignorar no Railway
+# Isso ajuda a reduzir o tamanho do contexto de build
+
+# Dependências (serão instaladas durante o build)
+node_modules/
+target/
+.mvn/
+
+# Arquivos de desenvolvimento
+.git/
+.gitignore
+.vscode/
+.idea/
+*.iml
+
+# Arquivos de documentação
+*.md
+README.md
+RAILWAY.md
+DOCKER.md
+
+# Arquivos de configuração local
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporários
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Arquivos de backup
+*.bak
+*.backup
+
+# Arquivos de teste
+__tests__/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Arquivos de infraestrutura local (não necessários no Railway)
+infra/
+docker-compose.dev.yml
+
+# Scripts shell que podem confundir o Railpack
+*.sh
+!**/node_modules/**/*.sh
+
+# Arquivos SQL locais (se houver versão diferente)
+# werneradv20250511.sql
+
