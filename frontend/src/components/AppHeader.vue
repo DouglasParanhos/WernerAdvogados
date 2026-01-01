@@ -46,13 +46,6 @@
           >
             • Áreas de Atuação
           </router-link>
-          <router-link
-            to="/publicacoes"
-            :class="['block margemcima', isAuthenticated ? 'text-white' : '']"
-            :style="!isAuthenticated ? 'color: silver' : ''"
-          >
-            • Nossas Publicações
-          </router-link>
           <br />
           <!-- Quando autenticado, mostra usuário e botão sair -->
           <template v-if="isAuthenticated">
@@ -127,14 +120,6 @@
               :class="['margemcima hover:font-bold', isAuthenticated ? 'text-white' : '']"
             >
               • Áreas de Atuação
-            </router-link>
-          </li>
-          <li>
-            <router-link 
-              to="/publicacoes" 
-              :class="['margemcima hover:font-bold', isAuthenticated ? 'text-white' : '']"
-            >
-              • Nossas Publicações
             </router-link>
           </li>
           <li>
