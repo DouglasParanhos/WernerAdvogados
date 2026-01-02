@@ -100,7 +100,7 @@
         <ul class="flex gap-4 items-center">
           <li>
             <router-link 
-              :to="isAuthenticated ? '/dashboard' : '/'" 
+              to="/" 
               :class="['margemcima hover:font-bold', isAuthenticated ? 'text-white' : '']"
             >
               • Início
@@ -198,7 +198,7 @@ export default {
     handleLogout() {
       authService.logout()
       this.updateAuthState()
-      router.push('/login')
+      router.push('/')
     }
   }
 }

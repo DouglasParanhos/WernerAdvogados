@@ -64,9 +64,9 @@ export default {
     }
   },
   mounted() {
-    // Se já estiver autenticado, redirecionar para dashboard
+    // Se já estiver autenticado, redirecionar para home
     if (authService.isAuthenticated()) {
-      router.push('/dashboard')
+      router.push('/')
     }
   },
   methods: {
@@ -95,6 +95,7 @@ export default {
       
       try {
         await authService.login(this.username, this.password)
+        // After login, redirect to dashboard (authenticated area)
         router.push('/dashboard')
       } catch (error) {
         if (error.response && error.response.status === 401) {

@@ -154,9 +154,9 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const isAuthenticated = authService.isAuthenticated()
   
-  // If authenticated user tries to access public home page, redirect to dashboard
-  if (to.path === '/' && isAuthenticated && to.name === 'HomePublic') {
-    next('/dashboard')
+  // Always allow access to public home page, regardless of authentication status
+  if (to.path === '/' && to.name === 'HomePublic') {
+    next()
     return
   }
   
@@ -164,8 +164,8 @@ router.beforeEach((to, from, next) => {
     // Redirect to login, but preserve the intended destination
     next('/login')
   } else if (to.path === '/login' && isAuthenticated) {
-    // If authenticated and trying to access login, redirect to dashboard
-    next('/dashboard')
+    // If authenticated and trying to access login, redirect to home page (not dashboard)
+    next('/')
   } else {
     next()
   }
