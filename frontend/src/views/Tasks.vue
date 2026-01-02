@@ -13,12 +13,23 @@
         </div>
         <div class="header-actions">
           <div class="filter-group">
-            <label for="filter-responsavel">Filtrar por:</label>
+            <label for="filter-responsavel">Responsável:</label>
             <select id="filter-responsavel" v-model="filterResponsavel" class="filter-select">
               <option value="">Todos</option>
               <option value="Liz">Liz</option>
               <option value="Angelo">Angelo</option>
               <option value="Thiago">Thiago</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-tipo-tarefa">Tipo de Tarefa:</label>
+            <select id="filter-tipo-tarefa" v-model="filterTipoTarefa" class="filter-select">
+              <option value="">Todos</option>
+              <option value="PRESENCIAL">Presencial / Diligência</option>
+              <option value="COMUNICAR_CLIENTE">Comunicar com Cliente</option>
+              <option value="ESCRITA_PECA">Escrita de Peça</option>
+              <option value="PRAZO">Prazo</option>
+              <option value="ADMINISTRATIVO">Administrativo</option>
             </select>
           </div>
           <button @click="showNewTaskModal = true" class="btn-icon-add" title="Nova Tarefa">
@@ -38,16 +49,32 @@
           v-for="column in columns" 
           :key="column.status" 
           class="board-column"
+          :class="{ 'collapsed': isColumnCollapsed(column.status) }"
           @drop="onDrop($event, column.status)"
           @dragover.prevent
           @dragenter.prevent
         >
           <div class="column-header" :style="{ backgroundColor: column.color }">
             <h2>{{ column.title }}</h2>
-            <span class="task-count">{{ getTasksByStatus(column.status).length }}</span>
+            <div class="column-header-right">
+              <span class="task-count">{{ getTasksByStatus(column.status).length }}</span>
+              <button 
+                v-if="isMobile" 
+                @click.stop="toggleColumn(column.status)" 
+                class="column-toggle-btn"
+                :title="isColumnCollapsed(column.status) ? 'Expandir' : 'Minimizar'"
+              >
+                <svg v-if="isColumnCollapsed(column.status)" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
           </div>
           
-          <div class="tasks-list">
+          <div class="tasks-list" :class="{ 'collapsed': isColumnCollapsed(column.status) }">
             <div
               v-for="task in getTasksByStatus(column.status)"
               :key="task.id"
@@ -146,6 +173,7 @@ export default {
       showEditTaskModal: false,
       draggedTask: null,
       filterResponsavel: '',
+      filterTipoTarefa: '',
       taskForm: {
         id: null,
         titulo: '',
@@ -158,11 +186,24 @@ export default {
         { status: 'PARA_INICIAR', title: 'Para Iniciar', color: '#e2e8f0' },
         { status: 'EM_ANDAMENTO', title: 'Em Andamento', color: '#dbeafe' },
         { status: 'COMPLETA', title: 'Completa', color: '#d1fae5' }
-      ]
+      ],
+      collapsedColumns: new Set(),
+      isMobile: false
     }
   },
   async mounted() {
     await this.loadTasks()
+    this.checkMobile()
+    window.addEventListener('resize', this.checkMobile)
+    // No mobile, todas as colunas começam minimizadas
+    if (this.isMobile) {
+      this.columns.forEach(col => {
+        this.collapsedColumns.add(col.status)
+      })
+    }
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.checkMobile)
   },
   methods: {
     async loadTasks() {
@@ -181,8 +222,9 @@ export default {
       return this.tasks
         .filter(task => {
           const matchesStatus = task.status === status
-          const matchesFilter = !this.filterResponsavel || task.responsavel === this.filterResponsavel
-          return matchesStatus && matchesFilter
+          const matchesResponsavel = !this.filterResponsavel || task.responsavel === this.filterResponsavel
+          const matchesTipoTarefa = !this.filterTipoTarefa || task.tipoTarefa === this.filterTipoTarefa
+          return matchesStatus && matchesResponsavel && matchesTipoTarefa
         })
         .sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
     },
@@ -287,7 +329,20 @@ export default {
       }
     },
     goToHome() {
-      this.$router.push('/')
+      this.$router.push('/dashboard')
+    },
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 1024
+    },
+    isColumnCollapsed(status) {
+      return this.collapsedColumns.has(status)
+    },
+    toggleColumn(status) {
+      if (this.collapsedColumns.has(status)) {
+        this.collapsedColumns.delete(status)
+      } else {
+        this.collapsedColumns.add(status)
+      }
     }
   }
 }
@@ -310,6 +365,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .header-left {
@@ -349,6 +406,7 @@ h1 {
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .filter-group {
@@ -428,6 +486,12 @@ h1 {
   min-height: 500px;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.board-column.collapsed {
+  min-height: auto;
 }
 
 .column-header {
@@ -436,6 +500,36 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.column-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.column-toggle-btn {
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #1a1a1a;
+  padding: 0;
+}
+
+.column-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.column-toggle-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .column-header h2 {
@@ -458,6 +552,14 @@ h1 {
   padding: 1rem;
   overflow-y: auto;
   min-height: 400px;
+  transition: all 0.3s ease;
+}
+
+.tasks-list.collapsed {
+  max-height: 0;
+  padding: 0 1rem;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .task-card {
@@ -658,6 +760,43 @@ h1 {
 @media (max-width: 1024px) {
   .board-container {
     grid-template-columns: 1fr;
+  }
+  
+  .column-toggle-btn {
+    display: flex;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header-left {
+    width: 100%;
+  }
+  
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .filter-group {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .filter-select {
+    width: 100%;
+  }
+}
+
+@media (min-width: 1025px) {
+  .column-toggle-btn {
+    display: none;
   }
 }
 </style>

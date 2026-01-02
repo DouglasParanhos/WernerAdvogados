@@ -74,20 +74,6 @@
 
     <!-- Coluna 3 -->
     <div class="column2">
-      <router-link to="/publicacoes/interniveis1" class="article-card">
-        <img
-          src="/Slide1.png"
-          alt="Imagem do Artigo 4"
-          class="article-image transparent-image hover-zoom"
-        />
-        <h4 class="article-title font-semibold">
-          Ação Interníveis - Entrar mesmo após tanto tempo?
-        </h4>
-      </router-link>
-    </div>
-
-    <!-- Coluna 4 -->
-    <div class="column2">
       <router-link to="/publicacoes/piso3" class="article-card">
         <img
           src="/Slide3.png"

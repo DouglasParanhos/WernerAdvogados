@@ -28,8 +28,22 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
+      // Só redirecionar para login se não estiver em uma rota pública
+      const currentRoute = router.currentRoute.value
+      const isPublicRoute = currentRoute.path === '/' || 
+                           currentRoute.name === 'HomePublic' ||
+                           currentRoute.name === 'About' ||
+                           currentRoute.name === 'Areas' ||
+                           currentRoute.name === 'Privacy' ||
+                           currentRoute.name === 'Interniveis' ||
+                           currentRoute.path === '/login'
+      
       authService.logout()
-      router.push('/login')
+      
+      // Só redirecionar se não estiver em uma rota pública
+      if (!isPublicRoute) {
+        router.push('/login')
+      }
     }
     return Promise.reject(error)
   }

@@ -2,6 +2,12 @@
   <div class="calculations">
     <div class="calculations-container">
       <div class="calculations-header">
+        <button @click="goToHome" class="btn-home" title="Voltar para Home">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
         <h1>Cálculos Judiciais</h1>
         <p class="subtitle">Selecione o tipo de cálculo que deseja realizar</p>
       </div>
@@ -51,6 +57,9 @@
 export default {
   name: 'Calculations',
   methods: {
+    goToHome() {
+      this.$router.push('/dashboard')
+    },
     goToNovaEscola() {
       this.$router.push('/calculations/novaescola')
     },
@@ -85,6 +94,36 @@ export default {
   text-align: center;
   margin-bottom: 3rem;
   color: #1a1a1a;
+  position: relative;
+}
+
+.btn-home {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: transparent;
+  border: 1.5px solid #6c757d;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+}
+
+.btn-home:hover {
+  background-color: #f8f9fa;
+  color: #003d7a;
+  border-color: #003d7a;
+}
+
+.btn-home svg {
+  width: 20px;
+  height: 20px;
 }
 
 .calculations-header h1 {
@@ -229,4 +268,5 @@ export default {
   }
 }
 </style>
+
 

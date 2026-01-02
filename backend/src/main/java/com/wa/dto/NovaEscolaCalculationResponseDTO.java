@@ -16,3 +16,4 @@ public class NovaEscolaCalculationResponseDTO {
     private List<ParcelaCalculadaDTO> parcelas;
 }
 
+

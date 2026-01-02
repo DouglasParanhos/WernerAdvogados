@@ -6,224 +6,128 @@
     </div>
 
     <!-- Rodapé para mobile -->
-    <footer class="footer-mobile mobile-footer bg-slate-800 text-white">
-      <div class="container mx-auto flex flex-col items-center">
-        <!-- Redes Sociais -->
-        <div class="footer-section">
-          <h4 class="text-xl font-bold mb-4">Redes Sociais</h4>
-          <ul class="flex gap-4">
-            <li>
-              <a
-                href="https://www.instagram.com/lizwerner.adv/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="/icone_ig.png"
-                  alt="Instagram"
-                  class="h-8 w-auto mb-2"
-                />
-                <span></span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.facebook.com/LizWernerAdv/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="/icone_fb.png"
-                  alt="Facebook"
-                  class="h-8 w-auto mb-2"
-                />
-                <span></span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.youtube.com/channel/UCgj5AqZpC2Qp7tM3hNGMrrw"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="/icone_yt.png"
-                  alt="YouTube"
-                  class="h-8 w-auto mb-8"
-                />
-                <span></span>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Contatos -->
-        <div class="footer-section text-center">
-          <h4 class="text-xl font-bold mb-4">Contatos</h4>
-          <p class="mb-2">
-            <img
-              src="/icone_email.png"
-              alt="E-mail"
-              class="h-6 w-auto inline-block mr-2"
-            />
-            E-mail: lizwerner.adv@gmail.com
-          </p>
-          <p class="mb-2">
-            <img
-              src="/icone_wa.png"
-              alt="WhatsApp"
-              class="h-7 w-auto inline-block mr-2"
-            />
-            WhatsApp:
-            <a
-              href="https://wa.me/5521995264562"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              (21) 99526-4562
-            </a>
-          </p>
-        </div>
-      </div>
-
-      <!-- Logo + Werner Advogados -->
-      <div class="text-center py-4 container mx-auto">
-        <router-link
-          to="/"
-          class="lexend-deca title-with-imagefoot"
-          style="text-align: -webkit-center"
-        >
-          <img src="/LogoW.png" alt="Logo" class="title-imagefoot" />
-          <span
-            class="Libre-Baskerville seu-texto-metalizado font-bold tracking-widest"
-            >Werner Advogados</span
+    <footer class="footer-mobile mobile-footer text-white" style="background-color: #003d7a; padding: 1.5rem 1rem;">
+      <div class="container mx-auto">
+        <div class="flex flex-col items-center gap-3">
+          <!-- Logo + Werner Advogados -->
+          <router-link
+            to="/"
+            class="lexend-deca title-with-imagefoot"
+            style="text-align: -webkit-center"
           >
-        </router-link>
+            <img src="/LogoW.png" alt="Logo" class="title-imagefoot-mobile" />
+            <span
+              class="Libre-Baskerville seu-texto-metalizado font-bold tracking-widest"
+              style="font-size: 0.9rem;"
+              >Werner Advogados</span
+            >
+          </router-link>
+          
+          <!-- Contatos -->
+          <div class="footer-section text-center" style="margin-top: 0.5rem;">
+            <h4 class="text-lg font-bold mb-2" style="font-size: 1rem;">Contatos</h4>
+            <p class="mb-1" style="font-size: 0.875rem;">
+              <img
+                src="/icone_email.png"
+                alt="E-mail"
+                class="h-5 w-auto inline-block mr-2"
+              />
+              lizwerner.adv@gmail.com
+            </p>
+            <p class="mb-0" style="font-size: 0.875rem;">
+              <img
+                src="/icone_wa.png"
+                alt="WhatsApp"
+                class="h-5 w-auto inline-block mr-2"
+              />
+              <a
+                href="https://wa.me/5521995264562"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                (21) 99526-4562
+              </a>
+            </p>
+          </div>
+        </div>
       </div>
     </footer>
 
     <!-- Rodapé para desktop -->
     <footer class="footer-desktop desktop-footer">
-      <div class="container mx-auto flex justify-between">
-        <!-- Redes Sociais -->
-        <div class="footer-section">
-          <h4 class="text-xl font-bold mb-4">Redes Sociais</h4>
-          <ul class="flex items-center gap-4">
-            <li>
-              <a
-                href="https://www.instagram.com/lizwerner.adv/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="/icone_ig.png"
-                  alt="Instagram"
-                  class="h-8 w-auto mb-2"
-                />
-                <span>Instagram</span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.facebook.com/LizWernerAdv/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="/icone_fb.png"
-                  alt="Facebook"
-                  class="h-8 w-auto mb-2"
-                />
-                <span>Facebook</span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.youtube.com/channel/UCgj5AqZpC2Qp7tM3hNGMrrw"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src="/icone_yt.png"
-                  alt="YouTube"
-                  class="h-8 w-auto mb-2"
-                />
-                <span>YouTube</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Contatos -->
-        <div class="footer-section">
-          <h4 class="text-xl font-bold mb-6">Contatos</h4>
-          <p class="flex items-center">
-            <img
-              src="/icone_email.png"
-              alt="E-mail"
-              class="h-6 w-auto mr-2"
-            />
-            E-mail: lizwerner.adv@gmail.com
-          </p>
-          <p class="flex items-center mt-1.5">
-            <img
-              src="/icone_wa.png"
-              alt="WhatsApp"
-              class="h-7 w-auto mr-2"
-            />
-            WhatsApp:
-            <a
-              href="https://wa.me/5521995264562"
-              target="_blank"
-              rel="noopener noreferrer"
+      <div class="container mx-auto">
+        <div class="flex justify-between items-start gap-8" style="padding-bottom: 1rem;">
+          <!-- Logo + Werner Advogados -->
+          <div class="flex-shrink-0">
+            <router-link
+              to="/"
+              class="lexend-deca title-with-imagefoot"
+              style="text-align: center;"
             >
-              (21) 99526-4562
-            </a>
-          </p>
-        </div>
+              <img src="/LogoW.png" alt="Logo" class="title-imagefoot-desktop" />
+              <span
+                class="Libre-Baskerville seu-texto-metalizado font-bold tracking-widest"
+                style="font-size: 1.1rem;"
+              >
+                Werner Advogados
+              </span>
+            </router-link>
+          </div>
 
-        <!-- Navegação -->
-        <div class="footer-section">
-          <h4 class="text-xl font-bold mb-4">Navegação</h4>
-          <ul class="flex flex-col gap-2">
-            <li>
-              <router-link to="/" class="underline hover:font-bold">
-                Início
-              </router-link>
-            </li>
-            <li>
-              <router-link to="/about" class="underline hover:font-bold"
-                >Sobre o Escritório</router-link
+          <!-- Contatos -->
+          <div class="footer-section">
+            <h4 class="text-lg font-bold mb-2" style="font-size: 1rem;">Contatos</h4>
+            <p class="flex items-center mb-1" style="font-size: 0.9rem;">
+              <img
+                src="/icone_email.png"
+                alt="E-mail"
+                class="h-5 w-auto mr-2"
+              />
+              lizwerner.adv@gmail.com
+            </p>
+            <p class="flex items-center mb-0" style="font-size: 0.9rem;">
+              <img
+                src="/icone_wa.png"
+                alt="WhatsApp"
+                class="h-5 w-auto mr-2"
+              />
+              <a
+                href="https://wa.me/5521995264562"
+                target="_blank"
+                rel="noopener noreferrer"
               >
-            </li>
-            <li>
-              <router-link to="/areas" class="underline hover:font-bold"
-                >Áreas de Atuação</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/privacidade" class="underline hover:font-bold"
-                >Política de Privacidade</router-link
-              >
-            </li>
-          </ul>
-        </div>
-      </div>
+                (21) 99526-4562
+              </a>
+            </p>
+          </div>
 
-      <!-- Logo + Werner Advogados -->
-      <div class="text-center py-4 container mx-auto">
-        <router-link
-          to="/"
-          class="lexend-deca title-with-imagefoot"
-          style="text-align: -webkit-center"
-        >
-          <img src="/LogoW.png" alt="Logo" class="title-imagefoot" />
-          <span
-            class="large-title Libre-Baskerville seu-texto-metalizado font-bold tracking-widest font-tamanho"
-          >
-            Werner Advogados
-          </span>
-        </router-link>
+          <!-- Navegação -->
+          <div class="footer-section">
+            <h4 class="text-lg font-bold mb-2" style="font-size: 1rem;">Navegação</h4>
+            <ul class="flex flex-col gap-1" style="font-size: 0.9rem;">
+              <li>
+                <router-link to="/" class="underline hover:font-bold">
+                  Início
+                </router-link>
+              </li>
+              <li>
+                <router-link to="/about" class="underline hover:font-bold"
+                  >Sobre o Escritório</router-link
+                >
+              </li>
+              <li>
+                <router-link to="/areas" class="underline hover:font-bold"
+                  >Áreas de Atuação</router-link
+                >
+              </li>
+              <li>
+                <router-link to="/privacidade" class="underline hover:font-bold"
+                  >Política de Privacidade</router-link
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
     </footer>
   </div>
@@ -257,6 +161,14 @@ export default {
 
 .title-imagefoot {
   height: 3rem;
+}
+
+.title-imagefoot-mobile {
+  height: 2.5rem;
+}
+
+.title-imagefoot-desktop {
+  height: 4rem;
 }
 
 .title-imageLogo {
@@ -296,13 +208,13 @@ export default {
   }
   .desktop-footer {
     display: block;
-    background-color: #1e293b;
+    background-color: #003d7a;
     color: white;
-    padding: 2rem;
+    padding: 1.5rem 2rem;
   }
 
   .desktop-footer .footer-section {
-    margin-bottom: 2rem;
+    margin-bottom: 0;
   }
 
   .desktop-footer .footer-section h4 {
@@ -349,8 +261,8 @@ export default {
     height: 4rem;
   }
 
-  .title-imagefoot {
-    height: 8rem;
+  .title-imagefoot-desktop {
+    height: 4rem;
   }
 }
 
@@ -538,7 +450,7 @@ export default {
 }
 
 .bg-slate-800 {
-  background-color: #1e293b;
+  background-color: #003d7a;
 }
 
 .text-white {

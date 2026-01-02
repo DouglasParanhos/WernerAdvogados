@@ -2,7 +2,15 @@
   <div class="statistics">
     <div class="container">
       <div class="header">
-        <button @click="goBack" class="btn btn-secondary">← Voltar</button>
+        <div class="header-left">
+          <button @click="goToHome" class="btn-home" title="Voltar para Home">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button @click="goBack" class="btn btn-secondary">← Voltar</button>
+        </div>
         <h1>Estatísticas</h1>
         <div @click="!loading && !isProcessing && updateAllData()" class="refresh-icon" :class="{ 'disabled': loading || isProcessing }" title="Atualizar dados">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :class="{ 'rotating': loading || isProcessing }">
@@ -661,8 +669,11 @@ export default {
       if (!value) return 'R$ 0,00'
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
     },
+    goToHome() {
+      this.$router.push('/dashboard')
+    },
     goBack() {
-      this.$router.push('/')
+      this.$router.push('/dashboard')
     }
   }
 }
@@ -685,6 +696,38 @@ export default {
   align-items: center;
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-home {
+  background: transparent;
+  border: 1.5px solid #6c757d;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+}
+
+.btn-home:hover {
+  background-color: #f8f9fa;
+  color: #003d7a;
+  border-color: #003d7a;
+}
+
+.btn-home svg {
+  width: 20px;
+  height: 20px;
 }
 
 .refresh-icon {

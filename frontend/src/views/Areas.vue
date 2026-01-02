@@ -1,455 +1,331 @@
 <template>
- <div class="background-container">
-    <h2
-      class="tracking-widest Libre-Baskerville titulopag"
-    >
-    Áreas de Atuação
-    </h2> 
-      
-  </div> <br/>
-  <hr class="my-2" />
-
-
-  <div class="justificado tamanho-fonte">
-    <p>
-      Em resposta à crescente demanda e à complexidade inerente às causas
-      jurídicas, nosso escritório concentra-se integralmente na defesa dos
-      Professores do Estado do Rio de Janeiro. Dentre as diversas questões
-      abordadas, destacam-se aquelas relacionadas à indenização por valores
-      pagos incorretamente, litígios envolvendo falta de pagamentos de
-      gratificações e disputas referentes ao Piso Nacional.
-    </p> <br/>
-    <p>
-      Este compromisso exige um acompanhamento meticuloso dos julgados tanto do
-      Tribunal de Justiça do Estado do Rio de Janeiro quanto do Superior
-      Tribunal de Justiça (STJ) e do Supremo Tribunal Federal (STF). À medida
-      que as ações evoluem, novas teses surgem, demandando uma constante
-      preparação para rebater alegações, fundamentadas nas leis e nos
-      entendimentos judiciais. As questões não se limitam ao âmbito do Direito
-      Administrativo, estendendo-se a áreas como direito civil, direito
-      processual e direito constitucional, entre outras.
-    </p> <br/>
-  </div> <br/>
-
-  <!-- Versão Desktop -->
-  <div class="flex mobile-desaparece">
-    <!-- Coluna 1: Interníveis -->
-    <div class="coluna">
-      <h3 class=""></h3>
-      <div class="coluna-content">
-        <img
-          src="/interniveis.png"
-          alt="quadro 1"
-          class="image-resol-areas"
-        />
-        <p class="justificado">
-          Trata-se de uma diferença de que o Estado teria que ter pago no
-          período de agosto/1998 a março/2003, referente a mudança de nível. Estava ativo(a) ou aposentado(a)
-          nesse período? Clique aqui para saber mais.
-        </p>
-        <button
-          @click="redirecionarParaPagina('interniveis')"
-          class="btn custom-info"
-        >
-          Saiba Mais
-        </button>
+  <div class="areas-page">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <h1 class="hero-title">Áreas de Atuação</h1>
       </div>
-    </div>
+    </section>
 
-    <!-- Coluna 2: Nova Escola -->
-    <div class="coluna">
-      <h3></h3>
-      <div class="coluna-content">
-        <img src="/NE.png" alt="quadro NE" class="image-resol-areas" />
-        <p class="justificado">
-          A Ação trata da Gratificação <span class = "font-bold"> Nova Escola</span> do ano de 2002 que não foi
-          paga pelo Estado do Rio de Janeiro. Estava ativo(a) em sala de Aula
-          nesse período? Clique aqui para saber mais.
-        </p>
-        <button
-          @click="redirecionarParaPagina('novaescola')"
-          class="btn custom-info"
-        >
-          Saiba Mais
-        </button>
-      </div>
-    </div>
-
-    <!-- Coluna 3: Piso -->
-    <div class="coluna">
-      <h3></h3>
-      <div class="coluna-content">
-        <img
-          src="/piso.png"
-          alt="quadro piso"
-          class="image-resol-areas"
-        />
-        <p class="justificado">
-          A ação trata de pedido de cumprimento de Lei Federal que instituiu o
-          Piso Salarial para o Magistério. É professor(a) do Estado ativo(a) ou
-          aposentado(a)? Clique aqui para saber mais.
-        </p>
-        <button @click="redirecionarParaPagina('piso')" class="btn custom-info">
-          Saiba Mais
-        </button>
-      </div>
-    </div> 
-  </div><br/>
-
-  <!--Versão Mobile-->
-  <div class="flex desktop-desaparece" style="flex-direction: column">
-    <!-- Coluna 1: Interníveis -->
-    <div class="coluna">
-      <h3 class="">Interníveis</h3>
-      <div class="coluna-content">
-        <img
-          src="/interniveis.png"
-          alt="quadro 1"
-          class="tamanho-imagem"
-        />
-        <p class="justificado">
-          Trata-se de uma diferença de que o Estado teria que ter pago no
-          período de agosto/1998 a março/2003. Estava ativo(a) ou aposentado(a)
-          nesse período? Clique aqui para saber mais.
-        </p>
-        <button @click="redirecionarParaPagina('interniveis')" class="btn">
-          Saiba Mais
-        </button>
-      </div>
-    </div>
-
-    <!-- Coluna 2: Nova Escola -->
-    <div class="coluna">
-      <h3>Nova Escola</h3>
-      <div class="coluna-content">
-        <img src="/NE.png" alt="quadro NE" class="tamanho-imagem" />
-        <p class="justificado">
-          A Ação trata da Gratificação Nova Escola do ano de 2002 que não foi
-          paga pelo Estado do Rio de Janeiro. Estava ativo(a) em sala de Aula
-          nesse período? Clique aqui para saber mais.
-        </p>
-        <button @click="redirecionarParaPagina('novaescola')" class="btn">
-          Saiba Mais
-        </button>
-      </div>
-    </div>
-
-    <!-- Coluna 3: Piso -->
-    <div class="coluna">
-      <h3>Piso</h3>
-      <div class="coluna-content">
-        <img src="/piso.png" alt="quadro piso" class="tamanho-imagem" />
-        <p class="justificado">
-          A ação trata de pedido de cumprimento de Lei Federal que instituiu o
-          Piso Salarial para o Magistério. É professor(a) do Estado ativo(a) ou
-          aposentado(a)? Clique aqui para saber mais.
-        </p>
-        <button @click="redirecionarParaPagina('piso')" class="btn">
-          Saiba Mais
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="justificado tamanho-fonte">
-    <p>
-      Nosso escritório está em constante aprendizado, sempre atualizando nossos
-      conhecimentos, principalmente nos temas em que atuamos efetivamente e
-      explorando assuntos que são de interesse vital para nossos clientes.
-      Investimos em estudos contínuos não apenas para aprimorar nossa expertise,
-      mas também para garantir maior segurança e redução de riscos, minimizando
-      surpresas indesejadas.
-    </p> <br/>
-    <p>
-      Optamos por não utilizar termos como
-      <span class="italico">"causa ganha"</span> ou
-      <span class="italico">"100% de certeza"</span>, pois compreendemos que as
-      decisões judiciais não são exatas e dependem de análises detalhadas,
-      envolvendo mais de um "julgador". Uma única ação pode passar por decisões
-      de multiplos juízes em primeiro grau, e em casos de recursos, por um
-      colegiado de desembargadores. Se chegar aos Tribunais Superiores (STJ e
-      STF), será analisada por um colegiado de ministros.
-    </p> <br/>
-    <p>
-      Dessa forma, abraçamos a humildade e a dedicação aos estudos, nos
-      dedicando a buscar sempre o melhor resultado possível em prol dos
-      interesses de nossos clientes.
-    </p>
-  </div>
-
-  <img
-    src="/martelo.png"
-    alt="martelo"
-    class="mx-auto image-resol mobile-image desktop-container tamanhofoto"
-  />
-  <div class="mobile-desaparece">
-    <!-- Versão Desktop -->
-    <div class="mobile-desaparece">
-      <h3>Outras Ações nas quais atuamos</h3> <br/>
-      <div class="flex">
-        <!-- Imagem -->
-        <div>
-         
-        </div>
-
-        <!-- Título e Parágrafo -->
-        <div class="text-container">
-          <h1>• Férias ou Licença Prêmio não gozada - conversão em pecúnia</h1>
-          <p class="justificado tamanho-fonte">
-            Licença prêmio não gozada significa que uma pessoa tem direito a um
-            período de licença, mas não utilizou essa licença, mesmo tendo
-            preenchido os requisitos para fazê-lo. Isso é um direito adquirido
-            por servidores públicos, e eles têm a possibilidade de receber esse
-            período não utilizado em dinheiro. Qualquer interpretação diferente
-            levaria a um enriquecimento injustificado por parte da Administração
-            Pública, o que não é permitido pela lei.
+    <!-- Introduction Section -->
+    <section class="intro-section">
+      <div class="content-container">
+        <div class="intro-content">
+          <p>
+            Em resposta à crescente demanda e à complexidade inerente às causas
+            jurídicas, nosso escritório concentra-se integralmente na defesa dos
+            Professores do Estado do Rio de Janeiro. Dentre as diversas questões
+            abordadas, destacam-se aquelas relacionadas à indenização por valores
+            pagos incorretamente, litígios envolvendo falta de pagamentos de
+            gratificações e disputas referentes ao Piso Nacional.
+          </p>
+          <p>
+            Este compromisso exige um acompanhamento meticuloso dos julgados tanto do
+            Tribunal de Justiça do Estado do Rio de Janeiro quanto do Superior
+            Tribunal de Justiça (STJ) e do Supremo Tribunal Federal (STF). À medida
+            que as ações evoluem, novas teses surgem, demandando uma constante
+            preparação para rebater alegações, fundamentadas nas leis e nos
+            entendimentos judiciais. As questões não se limitam ao âmbito do Direito
+            Administrativo, estendendo-se a áreas como direito civil, direito
+            processual e direito constitucional, entre outras.
           </p>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!--Versão Mobile-->
-    <div class="flex desktop-desaparece text-container-mobile">
-      <h1>• Férias ou Licença Prêmio não gozada - conversão em pecúnia</h1>
-      <p class="justificado tamanho-fonte-mobile">
-        Licença prêmio não gozada significa que uma pessoa tem direito a um
-        período de licença, mas não utilizou essa licença, mesmo tendo
-        preenchido os requisitos para fazê-lo. Isso é um direito adquirido por
-        servidores públicos, e eles têm a possibilidade de receber esse período
-        não utilizado em dinheiro. Qualquer interpretação diferente levaria a um
-        enriquecimento injustificado por parte da Administração Pública, o que
-        não é permitido pela lei.
-      </p>
-    </div>
+    <!-- Areas Grid -->
+    <section class="areas-section">
+      <div class="content-container">
+        <div class="areas-grid">
+          <!-- Nova Escola -->
+          <div class="area-card">
+            <div class="area-header">
+              <h3 class="area-title">Nova Escola</h3>
+            </div>
+            <div class="area-content">
+              <p class="area-description">
+                A Ação trata da Gratificação <strong>Nova Escola</strong> do ano de 2002 que não foi
+                paga pelo Estado do Rio de Janeiro. Estava ativo(a) em sala de Aula
+                nesse período?
+              </p>
+            </div>
+          </div>
+
+          <!-- Piso -->
+          <div class="area-card">
+            <div class="area-header">
+              <h3 class="area-title">Piso</h3>
+            </div>
+            <div class="area-content">
+              <p class="area-description">
+                A ação trata de pedido de cumprimento de Lei Federal que instituiu o
+                Piso Salarial para o Magistério. É professor(a) do Estado ativo(a) ou
+                aposentado(a)?
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Philosophy Section -->
+    <section class="philosophy-section">
+      <div class="content-container">
+        <div class="philosophy-content">
+          <h2 class="section-title">Nossa Abordagem</h2>
+          <div class="text-block">
+            <p>
+              Nosso escritório está em constante aprendizado, sempre atualizando nossos
+              conhecimentos, principalmente nos temas em que atuamos efetivamente e
+              explorando assuntos que são de interesse vital para nossos clientes.
+              Investimos em estudos contínuos não apenas para aprimorar nossa expertise,
+              mas também para garantir maior segurança e redução de riscos, minimizando
+              surpresas indesejadas.
+            </p>
+          </div>
+          <div class="text-block">
+            <p>
+              Optamos por não utilizar termos como <em>"causa ganha"</em> ou
+              <em>"100% de certeza"</em>, pois compreendemos que as
+              decisões judiciais não são exatas e dependem de análises detalhadas,
+              envolvendo mais de um "julgador". Uma única ação pode passar por decisões
+              de múltiplos juízes em primeiro grau, e em casos de recursos, por um
+              colegiado de desembargadores. Se chegar aos Tribunais Superiores (STJ e
+              STF), será analisada por um colegiado de ministros.
+            </p>
+          </div>
+          <div class="text-block">
+            <p>
+              Dessa forma, abraçamos a humildade e a dedicação aos estudos, nos
+              dedicando a buscar sempre o melhor resultado possível em prol dos
+              interesses de nossos clientes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Areas',
-  methods: {
-    redirecionarParaPagina(rota) {
-      this.$router.push(`/${rota}`)
-    }
-  }
+  name: 'Areas'
 }
 </script>
 
 <style scoped>
-.background-container {
-  background-image: url("/bannerAreas.png");
-  background-size: cover;
-  background-position: center;
-  color: #f7f7f7;
-  padding: 10px;
+.areas-page {
+  min-height: 100vh;
+  background: #f8f9fa;
 }
-.titulopag {
-  font-size: 46px;
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, #003d7a 0%, #1e5a9e 50%, #003d7a 100%);
   color: white;
-  text-align: right;
-  margin-top: 200px;
-  margin-right: 20px;
-  text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.795);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-image: linear-gradient(45deg, #b1c6c9, #cbd2d6);
-}
-
-h2 {
-  margin-bottom: 20px;
-  font-size: 36px;
-}
-h3 {
-  margin-bottom: 20px;
-  font-size: 36px;
+  padding: 100px 20px 60px;
   text-align: center;
-}
-h1 {
-  font-size: 30px;
-}
-p {
-  margin: 22px 0;
-}
-.coluna {
-  width: 28%;
-  border: 1px solid #110c3f8c;
-  padding: 20px;
-  box-sizing: border-box;
-  border-radius: 0.325rem;
-}
-.coluna:hover {
-  border-color: #02102585;
-  box-shadow: 0px 8px 8px 0px rgba(7, 7, 41, 0.4);
+  position: relative;
+  overflow: hidden;
 }
 
-.coluna-content {
-  text-align: center;
-}
-.flex {
-  display: flex;
-  justify-content: space-between;
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
 }
 
-.image-resol-areas {
-  display: inline;
-  height: 13rem;
-  width: auto;
+.hero-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-family: "Libre Baskerville", serif;
+  margin: 0;
+}
+
+/* Introduction Section */
+.intro-section {
+  padding: 60px 20px;
+  background: white;
+}
+
+.content-container {
+  max-width: 1200px;
   margin: 0 auto;
 }
 
-.tamanho-fonte {
-  font-size: 24px;
+.intro-content {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-.flex.mobile-desaparece .custom-info {
-  background-color: transparent;
-  border-radius: 8px;
-  margin: 10px;
-  padding: 5px;
-  cursor: pointer;
-  display: inline-block;
-  height: auto;
-  width: auto;
-  border: 0.5px solid #d9d9d9;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-}
-
-.flex.mobile-desaparece .custom-info:hover {
-  border-color: #02102585;
-  box-shadow: 0px 8px 8px 0px rgba(7, 7, 41, 0.4);
-}
-@media only screen and (min-width: 601px) {
-  .desktop-desaparece {
-    display: none;
-  }
-}
-@media (max-width: 600px) {
-  .flex-mobile {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .coluna {
-    width: 100%;
-    margin-bottom: 20px;
-  }
-  h2 {
-    font-size: 32px;
-    margin-top: 40px;
-    margin-bottom: 40px;
-    font-weight: bold;
-  }
-
-  h3 {
-    font-size: 22px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-
-  li {
-    font-size: 12px;
-  }
-
-  p {
-    font-size: 14px;
-    margin: 30px 0;
-  }
-  .mobile-desaparece {
-    display: none;
-  }
-  .desktop-desaparece {
-    display: flex;
-  }
-  .tamanho-imagem {
-    height: 30px;
-    width: auto;
-  }
-}
-.image-resol {
-  max-width: 100%;
-  height: auto;
-}
-@media only screen and (max-width: 600px) {
-  .desktop-container {
-    display: none;
-  }
-  .tamanhofotomobile {
-    width: 200px;
-    height: auto;
-  }
-  .flex.desktop-desaparece .custom-info {
-  background-color: transparent;
-  border-radius: 8px;
-  margin: 10px;
-  padding: 5px;
-  cursor: pointer;
-  display: inline-block;
-  height: auto;
-  width: auto;
-  border: 0.5px solid #d9d9d9;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-}
-
-.flex.desktop-desaparece .custom-info:hover {
-  border-color: #02102585;
-  box-shadow: 0px 8px 8px 0px rgba(7, 7, 41, 0.4);
-}
-}
-.tamanhofoto {
-  width: 200px;
-  height: auto;
-}
-.tamanhofoto2 {
-  width: 750px;
-  height: auto;
-  margin-right: 40px;
-}
-
-.custom-info {
-  background-color: transparent;
-  border-radius: 8px;
-  margin: 10px;
-  padding: 5px;
-  cursor: pointer;
-  display: inline-block;
-  height: auto;
-  width: auto;
-  border: 0.5px solid #d9d9d9;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-}
-.custom-info:hover {
-  border-color: #02102585;
-  box-shadow: 0px 8px 8px 0px rgba(7, 7, 41, 0.4);
-}
-
-.justificado {
+.intro-content p {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #2d3748;
   text-align: justify;
+  margin-bottom: 1.5rem;
 }
 
-.italico {
-  font-style: italic;
+.intro-content p:last-child {
+  margin-bottom: 0;
 }
 
-.font-bold {
-  font-weight: bold;
+/* Areas Section */
+.areas-section {
+  padding: 60px 20px;
+  background: #f8f9fa;
 }
 
-.Libre-Baskerville {
+.areas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.area-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.area-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 61, 122, 0.15);
+  border-color: #003d7a;
+}
+
+.area-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.area-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
   font-family: "Libre Baskerville", serif;
 }
 
-.tracking-widest {
-  letter-spacing: 0.1em;
+.area-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.mx-auto {
-  margin-left: auto;
-  margin-right: auto;
+.area-description {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: #2d3748;
+  text-align: justify;
+  margin-bottom: 1.5rem;
+  flex: 1;
 }
 
-.mobile-image {
-  max-width: 80%;
-  height: auto;
+.area-description strong {
+  color: #003d7a;
+  font-weight: 600;
+}
+
+/* Philosophy Section */
+.philosophy-section {
+  padding: 60px 20px;
+  background: white;
+}
+
+.philosophy-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: 2.25rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #1a1a1a;
+  font-family: "Libre Baskerville", serif;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.text-block {
+  margin-bottom: 1.5rem;
+}
+
+.text-block:last-child {
+  margin-bottom: 0;
+}
+
+.text-block p {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: #2d3748;
+  text-align: justify;
+  margin: 0;
+}
+
+.text-block em {
+  font-style: italic;
+  color: #4a5568;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.25rem;
+  }
+
+  .hero-section {
+    padding: 80px 20px 50px;
+  }
+
+  .intro-section,
+  .areas-section,
+  .philosophy-section {
+    padding: 50px 20px;
+  }
+
+  .areas-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .area-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .intro-content p,
+  .area-description,
+  .text-block p {
+    font-size: 1rem;
+  }
 }
 </style>
-
