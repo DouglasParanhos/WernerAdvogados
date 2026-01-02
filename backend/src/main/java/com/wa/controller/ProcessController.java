@@ -5,6 +5,9 @@ import com.wa.dto.ProcessRequestDTO;
 import com.wa.service.ProcessService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,10 +22,31 @@ public class ProcessController {
     private final ProcessService processService;
     
     @GetMapping
-    public ResponseEntity<List<ProcessDTO>> findAll(@RequestParam(required = false) Long personId) {
-        if (personId != null) {
+    public ResponseEntity<?> findAll(
+            @RequestParam(required = false) Long personId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String numero,
+            @RequestParam(required = false) String comarca,
+            @RequestParam(required = false) String vara,
+            @RequestParam(required = false) String tipoProcesso,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean showArchived) {
+        // Se personId for fornecido, retornar processos da pessoa (compatibilidade)
+        if (personId != null && page == null && size == null) {
             return ResponseEntity.ok(processService.findByPersonId(personId));
         }
+        // Se page ou size forem fornecidos, usar paginação
+        if (page != null || size != null) {
+            int pageNumber = page != null ? page : 0;
+            int pageSize = size != null ? size : 10;
+            Pageable pageable = PageRequest.of(pageNumber, pageSize);
+            Boolean showArchivedValue = showArchived != null ? showArchived : false;
+            Page<ProcessDTO> result = processService.findAllPaginated(
+                    numero, comarca, vara, tipoProcesso, status, showArchivedValue, pageable);
+            return ResponseEntity.ok(result);
+        }
+        // Caso contrário, retornar lista completa (compatibilidade)
         return ResponseEntity.ok(processService.findAll());
     }
     

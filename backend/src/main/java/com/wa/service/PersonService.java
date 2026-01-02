@@ -13,6 +13,9 @@ import com.wa.repository.MatriculationRepository;
 import com.wa.repository.PersonRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,27 +24,46 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class PersonService {
-    
+
     private final PersonRepository personRepository;
     private final AddressRepository addressRepository;
     private final MatriculationRepository matriculationRepository;
-    
+
     public List<PersonDTO> findAll() {
         return personRepository.findAllWithRelations().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
-    
+
+    @Transactional
+    public Page<PersonDTO> findAllPaginated(String search, Pageable pageable) {
+        Page<Person> page = personRepository.findAllWithRelationsPaginated(search, pageable);
+        // Carregar relacionamentos explicitamente para evitar N+1
+        page.getContent().forEach(person -> {
+            if (person.getAddress() != null) {
+                person.getAddress().getId(); // Force load
+            }
+            if (person.getMatriculations() != null) {
+                person.getMatriculations().size(); // Force load
+            }
+        });
+        List<PersonDTO> dtos = page.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
+    }
+
     @Transactional
     public PersonDTO findById(Long id) {
         Person person = personRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
-        
-        // Carregar processos das matrículas em uma query separada para evitar MultipleBagFetchException
+
+        // Carregar processos das matrículas em uma query separada para evitar
+        // MultipleBagFetchException
         if (person.getMatriculations() != null && !person.getMatriculations().isEmpty()) {
-            List<com.wa.model.Matriculation> matriculationsWithProcesses = 
-                    matriculationRepository.findByPersonIdWithProcesses(id);
-            
+            List<com.wa.model.Matriculation> matriculationsWithProcesses = matriculationRepository
+                    .findByPersonIdWithProcesses(id);
+
             // Atualizar as matrículas da pessoa com os processos carregados
             person.getMatriculations().forEach(mat -> {
                 matriculationsWithProcesses.stream()
@@ -50,17 +72,18 @@ public class PersonService {
                         .ifPresent(m -> mat.setProcesses(m.getProcesses()));
             });
         }
-        
+
         return convertToDTO(person);
     }
-    
+
     @Transactional
     public PersonDTO create(PersonRequestDTO request) {
         Person person = new Person();
         person.setFullname(request.getFullname());
         // Converte string vazia para null para evitar violação de constraint UNIQUE
-        person.setEmail(request.getEmail() != null && !request.getEmail().trim().isEmpty() 
-            ? request.getEmail().trim() : null);
+        person.setEmail(request.getEmail() != null && !request.getEmail().trim().isEmpty()
+                ? request.getEmail().trim()
+                : null);
         person.setCpf(request.getCpf());
         person.setRg(request.getRg());
         person.setEstadoCivil(request.getEstadoCivil());
@@ -71,7 +94,7 @@ public class PersonService {
         person.setRepresentante(request.getRepresentante());
         person.setIdFuncional(request.getIdFuncional());
         person.setNacionalidade(request.getNacionalidade());
-        
+
         if (request.getAddress() != null) {
             Address address = convertToEntity(request.getAddress());
             address = addressRepository.save(address);
@@ -81,24 +104,25 @@ public class PersonService {
                     .orElseThrow(() -> new RuntimeException("Endereço não encontrado"));
             person.setAddress(address);
         }
-        
+
         person = personRepository.save(person);
-        
+
         // Processar matrículas
         processMatriculations(person, request);
-        
+
         return convertToDTO(personRepository.findByIdWithRelations(person.getId()).orElse(person));
     }
-    
+
     @Transactional
     public PersonDTO update(Long id, PersonRequestDTO request) {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
-        
+
         person.setFullname(request.getFullname());
         // Converte string vazia para null para evitar violação de constraint UNIQUE
-        person.setEmail(request.getEmail() != null && !request.getEmail().trim().isEmpty() 
-            ? request.getEmail().trim() : null);
+        person.setEmail(request.getEmail() != null && !request.getEmail().trim().isEmpty()
+                ? request.getEmail().trim()
+                : null);
         person.setCpf(request.getCpf());
         person.setRg(request.getRg());
         person.setEstadoCivil(request.getEstadoCivil());
@@ -109,7 +133,7 @@ public class PersonService {
         person.setRepresentante(request.getRepresentante());
         person.setIdFuncional(request.getIdFuncional());
         person.setNacionalidade(request.getNacionalidade());
-        
+
         if (request.getAddress() != null) {
             Address address = convertToEntity(request.getAddress());
             if (person.getAddress() != null && person.getAddress().getId() != null) {
@@ -122,19 +146,19 @@ public class PersonService {
                     .orElseThrow(() -> new RuntimeException("Endereço não encontrado"));
             person.setAddress(address);
         }
-        
+
         person = personRepository.save(person);
-        
+
         // Processar matrículas
         processMatriculations(person, request);
-        
+
         return convertToDTO(personRepository.findByIdWithRelations(person.getId()).orElse(person));
     }
-    
+
     private void processMatriculations(Person person, PersonRequestDTO request) {
         // Buscar matrículas existentes da pessoa
         List<Matriculation> existingMatriculations = matriculationRepository.findByPersonId(person.getId());
-        
+
         // Processar primeira matrícula
         if (request.getMatriculation1() != null) {
             MatriculationRequestDTO mat1 = request.getMatriculation1();
@@ -152,7 +176,7 @@ public class PersonService {
                 matriculationRepository.save(matriculation1);
             }
         }
-        
+
         // Processar segunda matrícula
         if (request.getMatriculation2() != null) {
             MatriculationRequestDTO mat2 = request.getMatriculation2();
@@ -174,7 +198,7 @@ public class PersonService {
             matriculationRepository.delete(existingMatriculations.get(1));
         }
     }
-    
+
     private void updateMatriculationFromDTO(Matriculation mat, MatriculationRequestDTO dto) {
         mat.setNumero(dto.getNumero());
         mat.setInicioErj(dto.getInicioErj());
@@ -184,15 +208,15 @@ public class PersonService {
         mat.setTrienioAtual(dto.getTrienioAtual());
         mat.setReferencia(dto.getReferencia());
     }
-    
+
     private boolean isMatriculationValid(MatriculationRequestDTO mat) {
         return mat.getNumero() != null && !mat.getNumero().trim().isEmpty() &&
-               mat.getCargo() != null && !mat.getCargo().trim().isEmpty() &&
-               mat.getNivelAtual() != null && !mat.getNivelAtual().trim().isEmpty() &&
-               mat.getTrienioAtual() != null && !mat.getTrienioAtual().trim().isEmpty() &&
-               mat.getReferencia() != null && !mat.getReferencia().trim().isEmpty();
+                mat.getCargo() != null && !mat.getCargo().trim().isEmpty() &&
+                mat.getNivelAtual() != null && !mat.getNivelAtual().trim().isEmpty() &&
+                mat.getTrienioAtual() != null && !mat.getTrienioAtual().trim().isEmpty() &&
+                mat.getReferencia() != null && !mat.getReferencia().trim().isEmpty();
     }
-    
+
     private Matriculation convertToMatriculationEntity(MatriculationRequestDTO dto) {
         Matriculation mat = new Matriculation();
         mat.setNumero(dto.getNumero());
@@ -204,14 +228,14 @@ public class PersonService {
         mat.setReferencia(dto.getReferencia());
         return mat;
     }
-    
+
     @Transactional
     public void delete(Long id) {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
         personRepository.delete(person);
     }
-    
+
     private PersonDTO convertToDTO(Person person) {
         PersonDTO dto = new PersonDTO();
         dto.setId(person.getId());
@@ -229,7 +253,7 @@ public class PersonService {
         dto.setNacionalidade(person.getNacionalidade());
         dto.setUserId(person.getUser() != null ? person.getUser().getId() : null);
         dto.setAddressId(person.getAddress() != null ? person.getAddress().getId() : null);
-        
+
         if (person.getAddress() != null) {
             AddressDTO addressDTO = new AddressDTO();
             addressDTO.setId(person.getAddress().getId());
@@ -239,16 +263,16 @@ public class PersonService {
             addressDTO.setCep(person.getAddress().getCep());
             dto.setAddress(addressDTO);
         }
-        
+
         if (person.getMatriculations() != null) {
             dto.setMatriculations(person.getMatriculations().stream()
                     .map(this::convertMatriculationToDTO)
                     .collect(Collectors.toList()));
         }
-        
+
         return dto;
     }
-    
+
     private MatriculationDTO convertMatriculationToDTO(com.wa.model.Matriculation matriculation) {
         MatriculationDTO dto = new MatriculationDTO();
         dto.setId(matriculation.getId());
@@ -260,16 +284,16 @@ public class PersonService {
         dto.setTrienioAtual(matriculation.getTrienioAtual());
         dto.setReferencia(matriculation.getReferencia());
         dto.setPersonId(matriculation.getPerson().getId());
-        
+
         if (matriculation.getProcesses() != null) {
             dto.setProcesses(matriculation.getProcesses().stream()
                     .map(this::convertProcessToDTO)
                     .collect(Collectors.toList()));
         }
-        
+
         return dto;
     }
-    
+
     private com.wa.dto.ProcessDTO convertProcessToDTO(com.wa.model.Process process) {
         com.wa.dto.ProcessDTO dto = new com.wa.dto.ProcessDTO();
         dto.setId(process.getId());
@@ -287,7 +311,7 @@ public class PersonService {
         dto.setMatriculationId(process.getMatriculation().getId());
         return dto;
     }
-    
+
     private Address convertToEntity(AddressDTO dto) {
         Address address = new Address();
         if (dto.getId() != null) {
@@ -300,4 +324,3 @@ public class PersonService {
         return address;
     }
 }
-

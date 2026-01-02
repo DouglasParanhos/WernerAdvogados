@@ -10,6 +10,9 @@ import com.wa.repository.MatriculationRepository;
 import com.wa.repository.ProcessRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,13 +26,6 @@ public class ProcessService {
     private final MatriculationRepository matriculationRepository;
     
     /**
-     * Retorna o valor efetivo do processo: valorCorrigido se disponível, caso contrário valorOriginal
-     */
-    private Double getValorEfetivo(Process process) {
-        return process.getValorCorrigido() != null ? process.getValorCorrigido() : process.getValorOriginal();
-    }
-    
-    /**
      * Retorna o valor efetivo do request: valorCorrigido se disponível, caso contrário valorOriginal
      */
     private Double getValorEfetivo(ProcessRequestDTO request) {
@@ -40,6 +36,27 @@ public class ProcessService {
         return processRepository.findAllWithRelations().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+    
+    @Transactional
+    public Page<ProcessDTO> findAllPaginated(String numero, String comarca, String vara, 
+                                             String tipoProcesso, String status, 
+                                             Boolean showArchived, Pageable pageable) {
+        Page<Process> page = processRepository.findAllWithRelationsPaginated(
+                numero, comarca, vara, tipoProcesso, status, showArchived, pageable);
+        // Carregar relacionamentos explicitamente para evitar N+1
+        page.getContent().forEach(process -> {
+            if (process.getMatriculation() != null) {
+                process.getMatriculation().getId(); // Force load
+                if (process.getMatriculation().getPerson() != null) {
+                    process.getMatriculation().getPerson().getId(); // Force load
+                }
+            }
+        });
+        List<ProcessDTO> dtos = page.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return new PageImpl<>(dtos, pageable, page.getTotalElements());
     }
     
     public List<ProcessDTO> findByPersonId(Long personId) {

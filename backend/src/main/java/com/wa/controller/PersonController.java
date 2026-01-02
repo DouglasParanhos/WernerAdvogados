@@ -5,11 +5,12 @@ import com.wa.dto.PersonRequestDTO;
 import com.wa.service.PersonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/persons")
@@ -19,7 +20,19 @@ public class PersonController {
     private final PersonService personService;
     
     @GetMapping
-    public ResponseEntity<List<PersonDTO>> findAll() {
+    public ResponseEntity<?> findAll(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String search) {
+        // Se page ou size forem fornecidos, usar paginação
+        if (page != null || size != null) {
+            int pageNumber = page != null ? page : 0;
+            int pageSize = size != null ? size : 10;
+            Pageable pageable = PageRequest.of(pageNumber, pageSize);
+            Page<PersonDTO> result = personService.findAllPaginated(search, pageable);
+            return ResponseEntity.ok(result);
+        }
+        // Caso contrário, retornar lista completa (compatibilidade)
         return ResponseEntity.ok(personService.findAll());
     }
     

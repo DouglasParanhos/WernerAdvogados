@@ -1,8 +1,17 @@
 import api from './api'
 
 export const processService = {
-  async getAll(personId = null) {
-    const params = personId ? { personId } : {}
+  async getAll(personId = null, page = null, size = null, filters = {}) {
+    const params = {}
+    if (personId) params.personId = personId
+    if (page !== null) params.page = page
+    if (size !== null) params.size = size
+    if (filters.numero) params.numero = filters.numero
+    if (filters.comarca) params.comarca = filters.comarca
+    if (filters.vara) params.vara = filters.vara
+    if (filters.tipoProcesso) params.tipoProcesso = filters.tipoProcesso
+    if (filters.status) params.status = filters.status
+    if (filters.showArchived !== undefined) params.showArchived = filters.showArchived
     const response = await api.get('/processes', { params })
     return response.data
   },
