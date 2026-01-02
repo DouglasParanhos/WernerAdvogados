@@ -403,38 +403,91 @@ export default {
       
       try {
         // Preparar dados das matrículas
-        const matriculation1 = this.isMatriculationValid(this.form.matriculation1) 
-          ? {
-              ...this.form.matriculation1,
-              inicioErj: this.formatDDMMYYYYToISO(this.form.matriculation1.inicioErj),
-              dataAposentadoria: this.formatDDMMYYYYToISO(this.form.matriculation1.dataAposentadoria),
-              personId: this.isEdit ? parseInt(this.clientId) : null
-            }
-          : null
+        // Validar e formatar primeira matrícula
+        let matriculation1 = null
+        if (this.isMatriculationValid(this.form.matriculation1)) {
+          const inicioErj = this.formatDDMMYYYYToISO(this.form.matriculation1.inicioErj)
+          const dataAposentadoria = this.formatDDMMYYYYToISO(this.form.matriculation1.dataAposentadoria)
+          
+          if (!inicioErj || !dataAposentadoria) {
+            this.error = 'Por favor, verifique as datas da primeira matrícula'
+            this.saving = false
+            return
+          }
+          
+          matriculation1 = {
+            numero: this.form.matriculation1.numero.trim(),
+            cargo: this.form.matriculation1.cargo.trim(),
+            inicioErj: inicioErj,
+            dataAposentadoria: dataAposentadoria,
+            nivelAtual: this.form.matriculation1.nivelAtual.trim(),
+            trienioAtual: this.form.matriculation1.trienioAtual.trim(),
+            referencia: this.form.matriculation1.referencia.trim()
+          }
+          
+          // personId só é necessário quando está editando
+          // Na criação, o backend preenche automaticamente
+          if (this.isEdit) {
+            matriculation1.personId = parseInt(this.clientId)
+          }
+          // Não incluir personId na criação (null causaria erro de validação)
+        }
         
-        const matriculation2 = this.form.hasSecondMatriculation && this.isMatriculationValid(this.form.matriculation2)
-          ? {
-              ...this.form.matriculation2,
-              inicioErj: this.formatDDMMYYYYToISO(this.form.matriculation2.inicioErj),
-              dataAposentadoria: this.formatDDMMYYYYToISO(this.form.matriculation2.dataAposentadoria),
-              personId: this.isEdit ? parseInt(this.clientId) : null
-            }
-          : null
+        // Validar e formatar segunda matrícula
+        let matriculation2 = null
+        if (this.form.hasSecondMatriculation && this.isMatriculationValid(this.form.matriculation2)) {
+          const inicioErj = this.formatDDMMYYYYToISO(this.form.matriculation2.inicioErj)
+          const dataAposentadoria = this.formatDDMMYYYYToISO(this.form.matriculation2.dataAposentadoria)
+          
+          if (!inicioErj || !dataAposentadoria) {
+            this.error = 'Por favor, verifique as datas da segunda matrícula'
+            this.saving = false
+            return
+          }
+          
+          matriculation2 = {
+            numero: this.form.matriculation2.numero.trim(),
+            cargo: this.form.matriculation2.cargo.trim(),
+            inicioErj: inicioErj,
+            dataAposentadoria: dataAposentadoria,
+            nivelAtual: this.form.matriculation2.nivelAtual.trim(),
+            trienioAtual: this.form.matriculation2.trienioAtual.trim(),
+            referencia: this.form.matriculation2.referencia.trim()
+          }
+          
+          if (this.isEdit) {
+            matriculation2.personId = parseInt(this.clientId)
+          }
+          // Não incluir personId na criação
+        }
+        
+        // Validar data de nascimento
+        const dataNascimento = this.formatDDMMYYYYToISO(this.form.dataNascimento)
+        if (!dataNascimento) {
+          this.error = 'Por favor, verifique a data de nascimento'
+          this.saving = false
+          return
+        }
         
         const data = {
-          fullname: this.form.fullname,
-          email: this.form.email || null,
-          cpf: this.form.cpf,
-          rg: this.form.rg,
+          fullname: this.form.fullname.trim(),
+          email: this.form.email ? this.form.email.trim() : null,
+          cpf: this.form.cpf.trim(),
+          rg: this.form.rg.trim(),
           estadoCivil: this.form.estadoCivil,
-          dataNascimento: this.formatDDMMYYYYToISO(this.form.dataNascimento),
-          profissao: this.form.profissao,
-          telefone: this.form.telefone,
+          dataNascimento: dataNascimento,
+          profissao: this.form.profissao.trim(),
+          telefone: this.form.telefone.trim(),
           vivo: this.form.vivo,
-          representante: this.form.representante || null,
-          idFuncional: this.form.idFuncional || null,
-          nacionalidade: this.form.nacionalidade || null,
-          address: this.form.address.logradouro ? this.form.address : null,
+          representante: this.form.representante ? this.form.representante.trim() : null,
+          idFuncional: this.form.idFuncional ? this.form.idFuncional.trim() : null,
+          nacionalidade: this.form.nacionalidade ? this.form.nacionalidade.trim() : null,
+          address: this.form.address.logradouro ? {
+            logradouro: this.form.address.logradouro.trim(),
+            cidade: this.form.address.cidade ? this.form.address.cidade.trim() : '',
+            estado: this.form.address.estado ? this.form.address.estado.trim() : '',
+            cep: this.form.address.cep ? this.form.address.cep.trim() : ''
+          } : null,
           matriculation1: matriculation1,
           matriculation2: matriculation2
         }
@@ -495,17 +548,31 @@ export default {
     },
     formatDDMMYYYYToISO(dateString) {
       if (!dateString || dateString.trim() === '') return null
+      // Validar formato dd/mm/yyyy
       const parts = dateString.split('/')
       if (parts.length !== 3) return null
       const [day, month, year] = parts
       if (!day || !month || !year) return null
       
-      // Criar data no formato ISO (YYYY-MM-DDTHH:mm:ss)
-      const date = new Date(`${year}-${month}-${day}T00:00:00`)
+      // Validar se a data é válida
+      const dayNum = parseInt(day, 10)
+      const monthNum = parseInt(month, 10)
+      const yearNum = parseInt(year, 10)
+      
+      if (isNaN(dayNum) || isNaN(monthNum) || isNaN(yearNum)) return null
+      if (dayNum < 1 || dayNum > 31) return null
+      if (monthNum < 1 || monthNum > 12) return null
+      if (yearNum < 1900 || yearNum > 2100) return null
+      
+      // O backend aceita formato dd/MM/yyyy diretamente, então retornamos como está
+      // Mas também podemos enviar no formato ISO para garantir compatibilidade
+      // Vamos usar o formato ISO que é mais padrão
+      const date = new Date(yearNum, monthNum - 1, dayNum)
       if (isNaN(date.getTime())) return null
       
-      // Retornar no formato ISO string que o backend espera
-      return date.toISOString()
+      // Retornar no formato ISO (yyyy-MM-ddTHH:mm:ss)
+      const isoString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00`
+      return isoString
     },
     isMatriculationValid(mat) {
       return mat && 
