@@ -37,6 +37,7 @@
           <input 
             type="text" 
             v-model="searchQuery" 
+            @input="onSearchChange"
             placeholder="Buscar cliente por nome..." 
             class="search-input"
           />
@@ -46,7 +47,23 @@
       <div v-if="loading" class="loading">Carregando...</div>
       <div v-if="error" class="error">{{ error }}</div>
       
+      <div v-if="!loading && !error" class="pagination-controls-top">
+        <div class="pagination-info">
+          <span>Mostrar:</span>
+          <select v-model="pageSize" @change="onPageSizeChange" class="page-size-select">
+            <option :value="10">10</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+          <span>registros por página</span>
+        </div>
+        <div class="pagination-info" v-if="paginationData">
+          Mostrando {{ ((currentPage) * pageSize) + 1 }} - {{ Math.min((currentPage + 1) * pageSize, paginationData.totalElements) }} de {{ paginationData.totalElements }} clientes
+        </div>
+      </div>
+      
       <div v-if="!loading && !error" class="table-container">
+        <!-- Desktop Table -->
         <table class="client-table">
           <thead>
             <tr>
@@ -60,7 +77,7 @@
           </thead>
           <tbody>
             <tr 
-              v-for="client in filteredClients" 
+              v-for="client in clients" 
               :key="client.id"
               @click="goToClientDetails(client.id)"
               class="table-row"
@@ -87,13 +104,98 @@
                 </div>
               </td>
             </tr>
-            <tr v-if="filteredClients.length === 0">
+            <tr v-if="clients.length === 0">
               <td colspan="6" class="empty-state">
                 {{ searchQuery ? 'Nenhum cliente encontrado com esse nome' : 'Nenhum cliente encontrado' }}
               </td>
             </tr>
           </tbody>
         </table>
+        
+        <!-- Mobile Cards -->
+        <div class="mobile-cards">
+          <div 
+            v-for="client in clients" 
+            :key="client.id"
+            class="mobile-card"
+            @click="goToClientDetails(client.id)"
+          >
+            <div class="card-header">
+              <h3 class="card-title">{{ client.fullname }}</h3>
+            </div>
+            <div class="card-body">
+              <div class="card-info">
+                <span class="info-label">Email:</span>
+                <span class="info-value">{{ client.email }}</span>
+              </div>
+              <div class="card-info">
+                <span class="info-label">CPF:</span>
+                <span class="info-value">{{ client.cpf }}</span>
+              </div>
+              <div class="card-info">
+                <span class="info-label">Telefone:</span>
+                <span class="info-value">{{ client.telefone }}</span>
+              </div>
+              <div class="card-info">
+                <span class="info-label">Processos:</span>
+                <span class="info-value">{{ getProcessCount(client) }}</span>
+              </div>
+            </div>
+            <div class="card-actions" @click.stop>
+              <button @click="goToEditClient(client.id)" class="mobile-icon-btn edit-btn" title="Editar cliente">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Editar</span>
+              </button>
+              <button @click="deleteClient(client.id)" class="mobile-icon-btn delete-btn" title="Excluir cliente">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Excluir</span>
+              </button>
+            </div>
+          </div>
+          <div v-if="clients.length === 0" class="mobile-empty-state">
+            {{ searchQuery ? 'Nenhum cliente encontrado com esse nome' : 'Nenhum cliente encontrado' }}
+          </div>
+        </div>
+      </div>
+      
+      <div v-if="!loading && !error && paginationData && paginationData.totalPages > 1" class="pagination-controls">
+        <button 
+          @click="goToPage(0)" 
+          :disabled="currentPage === 0"
+          class="pagination-btn"
+        >
+          Primeira
+        </button>
+        <button 
+          @click="goToPage(currentPage - 1)" 
+          :disabled="currentPage === 0"
+          class="pagination-btn"
+        >
+          Anterior
+        </button>
+        <span class="pagination-page-info">
+          Página {{ currentPage + 1 }} de {{ paginationData.totalPages }}
+        </span>
+        <button 
+          @click="goToPage(currentPage + 1)" 
+          :disabled="currentPage >= paginationData.totalPages - 1"
+          class="pagination-btn"
+        >
+          Próxima
+        </button>
+        <button 
+          @click="goToPage(paginationData.totalPages - 1)" 
+          :disabled="currentPage >= paginationData.totalPages - 1"
+          class="pagination-btn"
+        >
+          Última
+        </button>
       </div>
     </div>
   </div>
@@ -112,19 +214,11 @@ export default {
       error: null,
       searchQuery: '',
       showBackupModal: false,
-      backupLoading: false
-    }
-  },
-  computed: {
-    filteredClients() {
-      if (!this.searchQuery.trim()) {
-        return this.clients
-      }
-      const query = this.searchQuery.toLowerCase().trim()
-      return this.clients.filter(client => {
-        const fullname = (client.fullname || '').toLowerCase()
-        return fullname.includes(query)
-      })
+      backupLoading: false,
+      currentPage: 0,
+      pageSize: 10,
+      paginationData: null,
+      searchTimeout: null
     }
   },
   async mounted() {
@@ -135,13 +229,47 @@ export default {
       this.loading = true
       this.error = null
       try {
-        this.clients = await personService.getAll()
+        const search = this.searchQuery.trim() || null
+        const response = await personService.getAll(this.currentPage, this.pageSize, search)
+        
+        // Verificar se é resposta paginada ou lista simples
+        if (response.content) {
+          this.clients = response.content
+          this.paginationData = {
+            totalElements: response.totalElements,
+            totalPages: response.totalPages,
+            size: response.size,
+            number: response.number
+          }
+        } else {
+          // Compatibilidade com resposta não paginada
+          this.clients = Array.isArray(response) ? response : []
+          this.paginationData = null
+        }
       } catch (err) {
         this.error = 'Erro ao carregar clientes: ' + (err.response?.data?.message || err.message)
         console.error(err)
       } finally {
         this.loading = false
       }
+    },
+    onSearchChange() {
+      // Debounce da busca
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout)
+      }
+      this.searchTimeout = setTimeout(() => {
+        this.currentPage = 0
+        this.loadClients()
+      }, 500)
+    },
+    onPageSizeChange() {
+      this.currentPage = 0
+      this.loadClients()
+    },
+    goToPage(page) {
+      this.currentPage = page
+      this.loadClients()
     },
     getProcessCount(client) {
       if (!client.matriculations || client.matriculations.length === 0) {
@@ -169,6 +297,10 @@ export default {
       }
       try {
         await personService.delete(id)
+        // Se a página atual ficar vazia após deletar, voltar para página anterior
+        if (this.clients.length === 1 && this.currentPage > 0) {
+          this.currentPage--
+        }
         await this.loadClients()
       } catch (err) {
         alert('Erro ao excluir cliente: ' + (err.response?.data?.message || err.message))
@@ -382,6 +514,81 @@ export default {
   font-style: italic;
 }
 
+.pagination-controls-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.page-size-select {
+  padding: 0.375rem 0.75rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-size-select:focus {
+  outline: none;
+  border-color: #003d7a;
+  box-shadow: 0 0 0 3px rgba(0, 61, 122, 0.1);
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pagination-btn {
+  padding: 0.5rem 1rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: white;
+  color: #495057;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #003d7a;
+  color: #003d7a;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-page-info {
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
 /* Modal de Confirmação */
 .modal-overlay {
   position: fixed;
@@ -461,6 +668,246 @@ export default {
 .delete-btn:hover {
   background-color: #fff5f5;
   color: #c82333;
+}
+
+/* Mobile Cards */
+.mobile-cards {
+  display: none;
+}
+
+.mobile-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobile-card:active {
+  background-color: #f8f9fa;
+}
+
+.card-header {
+  margin-bottom: 0.75rem;
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.card-body {
+  margin-bottom: 1rem;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.mobile-icon-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: white;
+  color: #495057;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+}
+
+.mobile-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mobile-icon-btn.edit-btn {
+  color: #6c757d;
+}
+
+.mobile-icon-btn.edit-btn:active {
+  background-color: #f8f9fa;
+  border-color: #003d7a;
+  color: #003d7a;
+}
+
+.mobile-icon-btn.delete-btn {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.mobile-icon-btn.delete-btn:active {
+  background-color: #fff5f5;
+  border-color: #c82333;
+  color: #c82333;
+}
+
+.mobile-empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+  background: white;
+  border-radius: 8px;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .client-list {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .header-actions .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .search-wrapper {
+    max-width: 100%;
+  }
+
+  .search-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 1rem 1rem 1rem 3rem;
+  }
+
+  .pagination-controls-top {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .pagination-info {
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+  }
+
+  .pagination-info span:last-child {
+    display: none; /* Hide long text on mobile */
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .pagination-btn {
+    min-height: 44px;
+    flex: 1;
+    min-width: calc(50% - 0.25rem);
+  }
+
+  .pagination-page-info {
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem 0;
+    order: -1;
+  }
+
+  /* Hide table, show cards */
+  .client-table {
+    display: none;
+  }
+
+  .mobile-cards {
+    display: block;
+  }
+
+  .table-container {
+    overflow: visible;
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .client-list {
+    padding: 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+  }
+
+  .pagination-controls {
+    gap: 0.375rem;
+  }
+
+  .pagination-btn {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Hide "Primeira" and "Última" buttons on very small screens */
+  .pagination-btn:first-child,
+  .pagination-btn:last-child {
+    display: none;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .info-value {
+    font-size: 0.85rem;
+  }
 }
 </style>
 

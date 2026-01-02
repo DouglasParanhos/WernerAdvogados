@@ -24,6 +24,7 @@
             <input 
               type="text" 
               v-model="filters.numero" 
+              @input="onFilterChange"
               placeholder="Buscar por número..."
               class="filter-input"
             />
@@ -34,6 +35,7 @@
             <input 
               type="text" 
               v-model="filters.comarca" 
+              @input="onFilterChange"
               placeholder="Filtrar por comarca..."
               class="filter-input"
             />
@@ -44,6 +46,7 @@
             <input 
               type="text" 
               v-model="filters.vara" 
+              @input="onFilterChange"
               placeholder="Filtrar por vara..."
               class="filter-input"
             />
@@ -54,6 +57,7 @@
             <input 
               type="text" 
               v-model="filters.tipoProcesso" 
+              @input="onFilterChange"
               placeholder="Filtrar por tema..."
               class="filter-input"
             />
@@ -61,7 +65,7 @@
           
           <div class="filter-group">
             <label>Status</label>
-            <select v-model="filters.status" class="filter-select">
+            <select v-model="filters.status" @change="onFilterChange" class="filter-select">
               <option value="">Todos</option>
               <option v-for="status in distinctStatuses" :key="status" :value="status">
                 {{ status }}
@@ -74,6 +78,7 @@
               <input 
                 type="checkbox" 
                 v-model="showArchived"
+                @change="onFilterChange"
                 class="checkbox-input"
               />
               <span>Mostrar processos arquivados</span>
@@ -89,7 +94,23 @@
       <div v-if="loading" class="loading">Carregando...</div>
       <div v-if="error" class="error">{{ error }}</div>
       
+      <div v-if="!loading && !error" class="pagination-controls-top">
+        <div class="pagination-info">
+          <span>Mostrar:</span>
+          <select v-model="pageSize" @change="onPageSizeChange" class="page-size-select">
+            <option :value="10">10</option>
+            <option :value="50">50</option>
+            <option :value="100">100</option>
+          </select>
+          <span>registros por página</span>
+        </div>
+        <div class="pagination-info" v-if="paginationData">
+          Mostrando {{ ((currentPage) * pageSize) + 1 }} - {{ Math.min((currentPage + 1) * pageSize, paginationData.totalElements) }} de {{ paginationData.totalElements }} processos
+        </div>
+      </div>
+      
       <div v-if="!loading && !error" class="table-container">
+        <!-- Desktop Table -->
         <table class="process-table">
           <thead>
             <tr>
@@ -104,7 +125,7 @@
           </thead>
           <tbody>
             <tr 
-              v-for="process in filteredProcesses" 
+              v-for="process in processes" 
               :key="process.id"
               @click="goToProcessDetails(process.id)"
               class="table-row"
@@ -164,13 +185,131 @@
                 </div>
               </td>
             </tr>
-            <tr v-if="filteredProcesses.length === 0">
+            <tr v-if="processes.length === 0">
               <td colspan="7" class="empty-state">
                 {{ hasActiveFilters ? 'Nenhum processo encontrado com os filtros aplicados' : 'Nenhum processo encontrado' }}
               </td>
             </tr>
           </tbody>
         </table>
+        
+        <!-- Mobile Cards -->
+        <div class="mobile-cards">
+          <div 
+            v-for="process in processes" 
+            :key="process.id"
+            class="mobile-card"
+            @click="goToProcessDetails(process.id)"
+          >
+            <div class="card-header">
+              <h3 class="card-title">{{ process.numero }}</h3>
+            </div>
+            <div class="card-body">
+              <div class="card-info">
+                <span class="info-label">Cliente:</span>
+                <span class="info-value">{{ getClientName(process) }}</span>
+              </div>
+              <div class="card-info">
+                <span class="info-label">Comarca:</span>
+                <span class="info-value">{{ process.comarca }}</span>
+              </div>
+              <div class="card-info">
+                <span class="info-label">Vara:</span>
+                <span class="info-value">{{ process.vara }}</span>
+              </div>
+              <div class="card-info">
+                <span class="info-label">Tema:</span>
+                <span class="info-value">{{ process.tipoProcesso || '-' }}</span>
+              </div>
+              <div class="card-info" @click.stop>
+                <span class="info-label">Status:</span>
+                <div class="mobile-status-field">
+                  <span v-if="editingStatusId !== process.id" class="mobile-status-display">
+                    <span class="status-badge" :class="getStatusClass(process.status)">
+                      {{ process.status || 'Sem status' }}
+                    </span>
+                    <button 
+                      @click="startEditStatus(process)" 
+                      class="mobile-status-edit-btn"
+                      title="Editar status"
+                    >
+                      ✏️
+                    </button>
+                  </span>
+                  <div v-else class="mobile-status-edit">
+                    <input
+                      type="text"
+                      v-model="editingStatus"
+                      @keyup.enter="saveStatus(process.id)"
+                      @keyup.esc="cancelEditStatus"
+                      @input="filterStatusSuggestions"
+                      class="mobile-status-input"
+                      :list="`mobile-status-suggestions-${process.id}`"
+                    />
+                    <datalist :id="`mobile-status-suggestions-${process.id}`">
+                      <option v-for="suggestion in filteredStatusSuggestions" :key="suggestion" :value="suggestion" />
+                    </datalist>
+                    <button @click="saveStatus(process.id)" class="mobile-status-save-btn" title="Salvar">✓</button>
+                    <button @click="cancelEditStatus" class="mobile-status-cancel-btn" title="Cancelar">✕</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions" @click.stop>
+              <button @click="goToEditProcess(process.id)" class="mobile-icon-btn edit-btn" title="Editar processo">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Editar</span>
+              </button>
+              <button @click="deleteProcess(process.id)" class="mobile-icon-btn delete-btn" title="Excluir processo">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Excluir</span>
+              </button>
+            </div>
+          </div>
+          <div v-if="processes.length === 0" class="mobile-empty-state">
+            {{ hasActiveFilters ? 'Nenhum processo encontrado com os filtros aplicados' : 'Nenhum processo encontrado' }}
+          </div>
+        </div>
+      </div>
+      
+      <div v-if="!loading && !error && paginationData && paginationData.totalPages > 1" class="pagination-controls">
+        <button 
+          @click="goToPage(0)" 
+          :disabled="currentPage === 0"
+          class="pagination-btn"
+        >
+          Primeira
+        </button>
+        <button 
+          @click="goToPage(currentPage - 1)" 
+          :disabled="currentPage === 0"
+          class="pagination-btn"
+        >
+          Anterior
+        </button>
+        <span class="pagination-page-info">
+          Página {{ currentPage + 1 }} de {{ paginationData.totalPages }}
+        </span>
+        <button 
+          @click="goToPage(currentPage + 1)" 
+          :disabled="currentPage >= paginationData.totalPages - 1"
+          class="pagination-btn"
+        >
+          Próxima
+        </button>
+        <button 
+          @click="goToPage(paginationData.totalPages - 1)" 
+          :disabled="currentPage >= paginationData.totalPages - 1"
+          class="pagination-btn"
+        >
+          Última
+        </button>
       </div>
     </div>
   </div>
@@ -201,59 +340,16 @@ export default {
         vara: '',
         tipoProcesso: '',
         status: ''
-      }
+      },
+      currentPage: 0,
+      pageSize: 10,
+      paginationData: null,
+      filterTimeout: null
     }
   },
   computed: {
-    filteredProcesses() {
-      let filtered = this.processes
-
-      // Filtrar processos arquivados se a checkbox não estiver marcada
-      if (!this.showArchived) {
-        filtered = filtered.filter(p => {
-          const status = (p.status || '').toLowerCase()
-          return !status.includes('arquivado')
-        })
-      }
-
-      if (this.filters.numero) {
-        const numero = this.filters.numero.toLowerCase().trim()
-        filtered = filtered.filter(p => 
-          (p.numero || '').toLowerCase().includes(numero)
-        )
-      }
-
-      if (this.filters.comarca) {
-        const comarca = this.filters.comarca.toLowerCase().trim()
-        filtered = filtered.filter(p => 
-          (p.comarca || '').toLowerCase().includes(comarca)
-        )
-      }
-
-      if (this.filters.vara) {
-        const vara = this.filters.vara.toLowerCase().trim()
-        filtered = filtered.filter(p => 
-          (p.vara || '').toLowerCase().includes(vara)
-        )
-      }
-
-      if (this.filters.tipoProcesso) {
-        const tipo = this.filters.tipoProcesso.toLowerCase().trim()
-        filtered = filtered.filter(p => 
-          (p.tipoProcesso || '').toLowerCase().includes(tipo)
-        )
-      }
-
-      if (this.filters.status) {
-        filtered = filtered.filter(p => 
-          (p.status || '') === this.filters.status
-        )
-      }
-
-      return filtered
-    },
     hasActiveFilters() {
-      return Object.values(this.filters).some(value => value !== '')
+      return Object.values(this.filters).some(value => value !== '') || this.showArchived
     }
   },
   async mounted() {
@@ -264,22 +360,20 @@ export default {
       this.loading = true
       this.error = null
       try {
-        // Carregar processos, clientes e statuses em paralelo
-        const [processesData, clientsData, statusesData] = await Promise.all([
-          processService.getAll(),
+        // Carregar clientes e statuses (não paginados)
+        const [clientsData, statusesData] = await Promise.all([
           personService.getAll(),
           processService.getDistinctStatuses()
         ])
         
-        this.processes = processesData
-        this.clients = clientsData
+        this.clients = Array.isArray(clientsData) ? clientsData : (clientsData.content || [])
         this.distinctStatuses = statusesData
         this.statusSuggestions = statusesData
         this.filteredStatusSuggestions = statusesData
         
         // Criar um mapa de matrículas a partir dos clientes
         this.matriculations = []
-        clientsData.forEach(client => {
+        this.clients.forEach(client => {
           if (client.matriculations && client.matriculations.length > 0) {
             client.matriculations.forEach(mat => {
               this.matriculations.push({
@@ -289,12 +383,69 @@ export default {
             })
           }
         })
+        
+        // Carregar processos com paginação e filtros
+        await this.loadProcesses()
       } catch (err) {
         this.error = 'Erro ao carregar processos: ' + (err.response?.data?.message || err.message)
         console.error(err)
       } finally {
         this.loading = false
       }
+    },
+    async loadProcesses() {
+      this.loading = true
+      this.error = null
+      try {
+        const filters = {
+          numero: this.filters.numero.trim() || null,
+          comarca: this.filters.comarca.trim() || null,
+          vara: this.filters.vara.trim() || null,
+          tipoProcesso: this.filters.tipoProcesso.trim() || null,
+          status: this.filters.status || null,
+          showArchived: this.showArchived
+        }
+        
+        const response = await processService.getAll(null, this.currentPage, this.pageSize, filters)
+        
+        // Verificar se é resposta paginada ou lista simples
+        if (response.content) {
+          this.processes = response.content
+          this.paginationData = {
+            totalElements: response.totalElements,
+            totalPages: response.totalPages,
+            size: response.size,
+            number: response.number
+          }
+        } else {
+          // Compatibilidade com resposta não paginada
+          this.processes = Array.isArray(response) ? response : []
+          this.paginationData = null
+        }
+      } catch (err) {
+        this.error = 'Erro ao carregar processos: ' + (err.response?.data?.message || err.message)
+        console.error(err)
+      } finally {
+        this.loading = false
+      }
+    },
+    onFilterChange() {
+      // Debounce dos filtros
+      if (this.filterTimeout) {
+        clearTimeout(this.filterTimeout)
+      }
+      this.filterTimeout = setTimeout(() => {
+        this.currentPage = 0
+        this.loadProcesses()
+      }, 500)
+    },
+    onPageSizeChange() {
+      this.currentPage = 0
+      this.loadProcesses()
+    },
+    goToPage(page) {
+      this.currentPage = page
+      this.loadProcesses()
     },
     getClientName(process) {
       if (!process.matriculationId) return '-'
@@ -341,6 +492,9 @@ export default {
         tipoProcesso: '',
         status: ''
       }
+      this.showArchived = false
+      this.currentPage = 0
+      this.loadProcesses()
     },
     async deleteProcess(id) {
       if (!confirm('Tem certeza que deseja excluir este processo?')) {
@@ -348,7 +502,11 @@ export default {
       }
       try {
         await processService.delete(id)
-        await this.loadData()
+        // Se a página atual ficar vazia após deletar, voltar para página anterior
+        if (this.processes.length === 1 && this.currentPage > 0) {
+          this.currentPage--
+        }
+        await this.loadProcesses()
       } catch (err) {
         alert('Erro ao excluir processo: ' + (err.response?.data?.message || err.message))
       }
@@ -729,19 +887,415 @@ export default {
   color: #0c5460;
 }
 
+.pagination-controls-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.page-size-select {
+  padding: 0.375rem 0.75rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-size-select:focus {
+  outline: none;
+  border-color: #003d7a;
+  box-shadow: 0 0 0 3px rgba(0, 61, 122, 0.1);
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pagination-btn {
+  padding: 0.5rem 1rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: white;
+  color: #495057;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #003d7a;
+  color: #003d7a;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-page-info {
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+/* Mobile Cards */
+.mobile-cards {
+  display: none;
+}
+
+.mobile-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobile-card:active {
+  background-color: #f8f9fa;
+}
+
+.card-header {
+  margin-bottom: 0.75rem;
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  word-break: break-word;
+}
+
+.card-body {
+  margin-bottom: 1rem;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.info-value {
+  font-size: 0.9rem;
+  color: #495057;
+  word-break: break-word;
+}
+
+.mobile-status-field {
+  margin-top: 0.25rem;
+}
+
+.mobile-status-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.mobile-status-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.mobile-status-edit-btn:active {
+  opacity: 1;
+}
+
+.mobile-status-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.mobile-status-input {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.5rem;
+  border: 1.5px solid #007bff;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.mobile-status-input:focus {
+  outline: none;
+  border-color: #003d7a;
+  box-shadow: 0 0 0 2px rgba(0, 61, 122, 0.1);
+}
+
+.mobile-status-save-btn,
+.mobile-status-cancel-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.5rem;
+  transition: opacity 0.2s;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.mobile-status-save-btn {
+  color: #28a745;
+}
+
+.mobile-status-save-btn:active {
+  opacity: 0.7;
+}
+
+.mobile-status-cancel-btn {
+  color: #dc3545;
+}
+
+.mobile-status-cancel-btn:active {
+  opacity: 0.7;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.mobile-icon-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: white;
+  color: #495057;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 44px;
+}
+
+.mobile-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mobile-icon-btn.edit-btn {
+  color: #6c757d;
+}
+
+.mobile-icon-btn.edit-btn:active {
+  background-color: #f8f9fa;
+  border-color: #003d7a;
+  color: #003d7a;
+}
+
+.mobile-icon-btn.delete-btn {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.mobile-icon-btn.delete-btn:active {
+  background-color: #fff5f5;
+  border-color: #c82333;
+  color: #c82333;
+}
+
+.mobile-empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+  background: white;
+  border-radius: 8px;
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
+  .process-list {
+    padding: 1rem;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .filters-container {
+    padding: 1rem;
+  }
+
   .filters-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
-  
+
+  .filter-input,
+  .filter-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem;
+    min-height: 44px;
+  }
+
+  .filter-actions {
+    justify-content: stretch;
+  }
+
+  .filter-actions .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .pagination-controls-top {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .pagination-info {
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+  }
+
+  .pagination-info span:last-child {
+    display: none; /* Hide long text on mobile */
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .pagination-btn {
+    min-height: 44px;
+    flex: 1;
+    min-width: calc(50% - 0.25rem);
+  }
+
+  .pagination-page-info {
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem 0;
+    order: -1;
+  }
+
+  /* Hide table, show cards */
   .process-table {
-    font-size: 0.875rem;
+    display: none;
   }
-  
-  .process-table th,
-  .process-table td {
-    padding: 0.75rem 0.5rem;
+
+  .mobile-cards {
+    display: block;
+  }
+
+  .table-container {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 480px) {
+  .process-list {
+    padding: 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+  }
+
+  .filters-container {
+    padding: 0.75rem;
+  }
+
+  .pagination-controls {
+    gap: 0.375rem;
+  }
+
+  .pagination-btn {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Hide "Primeira" and "Última" buttons on very small screens */
+  .pagination-btn:first-child,
+  .pagination-btn:last-child {
+    display: none;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .info-value {
+    font-size: 0.85rem;
+  }
+
+  .mobile-status-edit {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mobile-status-input {
+    width: 100%;
   }
 }
 </style>
