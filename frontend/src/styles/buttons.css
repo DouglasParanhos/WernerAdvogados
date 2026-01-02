@@ -83,3 +83,27 @@
   cursor: not-allowed;
 }
 
+/* Botões com ícone (usados em headers) */
+/* Sempre mostrar apenas ícones, ocultar texto */
+.header-actions .btn-new-process,
+.header-actions .btn-new-client,
+.header-actions .btn-backup {
+  padding: 0.75rem;
+  min-width: auto;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-actions .btn-text {
+  display: none;
+}
+
+.header-actions .btn-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+

@@ -12,8 +12,21 @@
           <h1>Clientes</h1>
         </div>
         <div class="header-actions">
-          <button @click="showBackupConfirmation" class="btn btn-secondary">Backup do Banco</button>
-          <button @click="goToNewClient" class="btn btn-primary">Novo Cliente</button>
+          <button @click="showBackupConfirmation" class="btn btn-secondary btn-backup" title="Backup do Banco">
+            <span class="btn-text">Backup do Banco</span>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="12" cy="5" rx="9" ry="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 12v4M16 12v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button @click="goToNewClient" class="btn btn-primary btn-new-client" title="Novo Cliente">
+            <span class="btn-text">Novo Cliente</span>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
       
