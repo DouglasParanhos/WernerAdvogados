@@ -154,18 +154,23 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const isAuthenticated = authService.isAuthenticated()
   
-  // Always allow access to public home page, regardless of authentication status
-  if (to.path === '/' && to.name === 'HomePublic') {
+  // Always allow access to public routes (including home page), regardless of authentication status
+  // Check if the route is public (doesn't require auth) or is the home page
+  if (!requiresAuth || to.path === '/' || to.name === 'HomePublic') {
+    // If trying to access login while authenticated, redirect to home
+    if (to.path === '/login' && isAuthenticated) {
+      next('/')
+      return
+    }
+    // Allow access to public routes
     next()
     return
   }
   
+  // For routes that require authentication
   if (requiresAuth && !isAuthenticated) {
     // Redirect to login, but preserve the intended destination
     next('/login')
-  } else if (to.path === '/login' && isAuthenticated) {
-    // If authenticated and trying to access login, redirect to home page (not dashboard)
-    next('/')
   } else {
     next()
   }
