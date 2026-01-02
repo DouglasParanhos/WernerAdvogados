@@ -2,9 +2,26 @@
   <div class="client-details">
     <div class="container">
       <div class="header">
-        <button @click="goBack" class="btn btn-secondary">← Voltar</button>
+        <div class="header-left">
+          <button @click="goToHome" class="btn-home" title="Voltar para Home">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button @click="goBack" class="btn btn-secondary">← Voltar</button>
+        </div>
         <div class="header-actions">
-          <button @click="openClientDocumentModal" class="btn btn-primary">Gerar Documento do Cliente</button>
+          <button @click="openClientDocumentModal" class="btn btn-primary btn-generate-doc" title="Gerar Documento do Cliente">
+            <span class="btn-text">Gerar Documento do Cliente</span>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <polyline points="10 9 9 9 8 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
           <div class="action-buttons">
             <button @click="goToEdit" class="icon-btn edit-btn" title="Editar cliente">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -105,7 +122,12 @@
         <div class="section" v-if="client.matriculations && client.matriculations.length > 0">
           <div class="section-header">
             <h2>Matrículas e Processos</h2>
-            <button @click="goToNewProcess" class="btn btn-primary">Novo Processo</button>
+            <button @click="goToNewProcess" class="btn btn-primary btn-new-process" title="Novo Processo">
+              <span class="btn-text">Novo Processo</span>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
           
           <div v-for="matriculation in client.matriculations" :key="matriculation.id" class="matriculation-card">
@@ -132,7 +154,15 @@
                 <div class="process-header">
                   <strong @click="goToProcessDetails(process.id)" class="process-link">{{ process.numero }}</strong>
                   <div class="process-actions">
-                    <button @click.stop="openDocumentModal(process)" class="btn btn-sm btn-primary">Gerar Documento</button>
+                    <button @click.stop="openDocumentModal(process)" class="btn btn-sm btn-primary btn-generate-process-doc" title="Gerar Documento">
+                      <span class="btn-text">Gerar Documento</span>
+                      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </button>
                     <div class="action-buttons">
                       <button @click.stop="goToEditProcess(process.id)" class="icon-btn edit-btn" title="Editar processo">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -200,7 +230,12 @@
         <div v-else class="section">
           <div class="section-header">
             <h2>Matrículas e Processos</h2>
-            <button @click="goToNewProcess" class="btn btn-primary">Novo Processo</button>
+            <button @click="goToNewProcess" class="btn btn-primary btn-new-process" title="Novo Processo">
+              <span class="btn-text">Novo Processo</span>
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
           <p class="empty-state">Nenhuma matrícula cadastrada</p>
         </div>
@@ -274,6 +309,9 @@ export default {
     formatCurrency(value) {
       if (!value) return '-'
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+    },
+    goToHome() {
+      this.$router.push('/dashboard')
     },
     goBack() {
       this.$router.push('/clients')
@@ -399,6 +437,38 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-home {
+  background: transparent;
+  border: 1.5px solid #6c757d;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+}
+
+.btn-home:hover {
+  background-color: #f8f9fa;
+  color: #003d7a;
+  border-color: #003d7a;
+}
+
+.btn-home svg {
+  width: 20px;
+  height: 20px;
 }
 
 .header-actions {
@@ -668,6 +738,44 @@ export default {
 
 .error {
   color: #dc3545;
+}
+
+/* Sempre mostrar apenas ícones */
+.header-actions .btn-generate-doc,
+.section-header .btn-new-process,
+.process-actions .btn-generate-process-doc {
+  padding: 0.75rem;
+  min-width: auto;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-actions .btn-text,
+.section-header .btn-text,
+.process-actions .btn-text {
+  display: none;
+}
+
+.header-actions .btn-icon,
+.section-header .btn-icon,
+.process-actions .btn-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.process-actions .btn-sm {
+  width: 40px;
+  height: 40px;
+  padding: 0.5rem;
+}
+
+.process-actions .btn-icon {
+  width: 18px;
+  height: 18px;
 }
 </style>
 

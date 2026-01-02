@@ -12,7 +12,12 @@
           <h1>Processos</h1>
         </div>
         <div class="header-actions">
-          <button @click="goToNewProcess" class="btn btn-primary">Novo Processo</button>
+          <button @click="goToNewProcess" class="btn btn-primary btn-new-process" title="Novo Processo">
+            <span class="btn-text">Novo Processo</span>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
       
@@ -322,7 +327,7 @@ export default {
       return 'status-info'
     },
     goToHome() {
-      this.$router.push('/')
+      this.$router.push('/dashboard')
     },
     goToProcessDetails(id) {
       this.$router.push(`/processes/${id}`)
@@ -727,6 +732,27 @@ export default {
 .status-info {
   background-color: #d1ecf1;
   color: #0c5460;
+}
+
+/* Sempre mostrar apenas ícones */
+.header-actions .btn-new-process {
+  padding: 0.75rem;
+  min-width: auto;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-actions .btn-text {
+  display: none;
+}
+
+.header-actions .btn-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
 }
 
 /* Responsividade */
