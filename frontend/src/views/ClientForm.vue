@@ -33,8 +33,8 @@
             </div>
             
             <div class="form-group">
-              <label>Email *</label>
-              <input v-model="form.email" type="email" required />
+              <label>Email</label>
+              <input v-model="form.email" type="email" />
               <span v-if="errors.email" class="error-text">{{ errors.email }}</span>
             </div>
             
@@ -65,7 +65,14 @@
             
             <div class="form-group">
               <label>Data de Nascimento *</label>
-              <input v-model="form.dataNascimento" type="date" required />
+              <input 
+                v-model="form.dataNascimento" 
+                type="text" 
+                placeholder="dd/mm/aaaa"
+                @input="formatDateInput($event, 'dataNascimento')"
+                maxlength="10"
+                required 
+              />
               <span v-if="errors.dataNascimento" class="error-text">{{ errors.dataNascimento }}</span>
             </div>
             
@@ -104,6 +111,126 @@
             <div class="form-group">
               <label>Nacionalidade</label>
               <input v-model="form.nacionalidade" type="text" />
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <h2>Matrículas</h2>
+          <div class="matriculation-section">
+            <div class="matriculation-form">
+              <h3>Primeira Matrícula</h3>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Número *</label>
+                  <input v-model="form.matriculation1.numero" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Cargo *</label>
+                  <input v-model="form.matriculation1.cargo" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Início ERJ *</label>
+                  <input 
+                    v-model="form.matriculation1.inicioErj" 
+                    type="text" 
+                    placeholder="dd/mm/aaaa"
+                    @input="formatDateInput($event, 'matriculation1', 'inicioErj')"
+                    maxlength="10"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label>Data de Aposentadoria *</label>
+                  <input 
+                    v-model="form.matriculation1.dataAposentadoria" 
+                    type="text" 
+                    placeholder="dd/mm/aaaa"
+                    @input="formatDateInput($event, 'matriculation1', 'dataAposentadoria')"
+                    maxlength="10"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label>Nível Atual *</label>
+                  <input v-model="form.matriculation1.nivelAtual" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Triênio Atual *</label>
+                  <input v-model="form.matriculation1.trienioAtual" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Referência *</label>
+                  <input v-model="form.matriculation1.referencia" type="text" />
+                </div>
+              </div>
+            </div>
+            
+            <div class="checkbox-group">
+              <label>
+                <input 
+                  type="checkbox" 
+                  v-model="form.hasSecondMatriculation"
+                  @change="toggleSecondMatriculation"
+                />
+                Adicionar Segunda Matrícula
+              </label>
+            </div>
+            
+            <div v-if="form.hasSecondMatriculation" class="matriculation-form">
+              <h3>Segunda Matrícula</h3>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Número *</label>
+                  <input v-model="form.matriculation2.numero" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Cargo *</label>
+                  <input v-model="form.matriculation2.cargo" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Início ERJ *</label>
+                  <input 
+                    v-model="form.matriculation2.inicioErj" 
+                    type="text" 
+                    placeholder="dd/mm/aaaa"
+                    @input="formatDateInput($event, 'matriculation2', 'inicioErj')"
+                    maxlength="10"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label>Data de Aposentadoria *</label>
+                  <input 
+                    v-model="form.matriculation2.dataAposentadoria" 
+                    type="text" 
+                    placeholder="dd/mm/aaaa"
+                    @input="formatDateInput($event, 'matriculation2', 'dataAposentadoria')"
+                    maxlength="10"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label>Nível Atual *</label>
+                  <input v-model="form.matriculation2.nivelAtual" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Triênio Atual *</label>
+                  <input v-model="form.matriculation2.trienioAtual" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Referência *</label>
+                  <input v-model="form.matriculation2.referencia" type="text" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -169,7 +296,26 @@ export default {
           cidade: '',
           estado: '',
           cep: ''
-        }
+        },
+        matriculation1: {
+          numero: '',
+          cargo: '',
+          inicioErj: '',
+          dataAposentadoria: '',
+          nivelAtual: '',
+          trienioAtual: '',
+          referencia: ''
+        },
+        matriculation2: {
+          numero: '',
+          cargo: '',
+          inicioErj: '',
+          dataAposentadoria: '',
+          nivelAtual: '',
+          trienioAtual: '',
+          referencia: ''
+        },
+        hasSecondMatriculation: false
       },
       errors: {},
       loading: false,
@@ -198,13 +344,19 @@ export default {
       this.error = null
       try {
         const client = await personService.getById(this.clientId)
+        
+        // Carregar matrículas
+        const matriculations = client.matriculations || []
+        const mat1 = matriculations[0] || {}
+        const mat2 = matriculations[1] || {}
+        
         this.form = {
           fullname: client.fullname || '',
           email: client.email || '',
           cpf: client.cpf || '',
           rg: client.rg || '',
           estadoCivil: client.estadoCivil || '',
-          dataNascimento: client.dataNascimento || '',
+          dataNascimento: this.formatDateToDDMMYYYY(client.dataNascimento),
           profissao: client.profissao || '',
           telefone: client.telefone || '',
           vivo: client.vivo,
@@ -216,7 +368,26 @@ export default {
             cidade: '',
             estado: '',
             cep: ''
-          }
+          },
+          matriculation1: {
+            numero: mat1.numero || '',
+            cargo: mat1.cargo || '',
+            inicioErj: this.formatDateToDDMMYYYY(mat1.inicioErj),
+            dataAposentadoria: this.formatDateToDDMMYYYY(mat1.dataAposentadoria),
+            nivelAtual: mat1.nivelAtual || '',
+            trienioAtual: mat1.trienioAtual || '',
+            referencia: mat1.referencia || ''
+          },
+          matriculation2: {
+            numero: mat2.numero || '',
+            cargo: mat2.cargo || '',
+            inicioErj: this.formatDateToDDMMYYYY(mat2.inicioErj),
+            dataAposentadoria: this.formatDateToDDMMYYYY(mat2.dataAposentadoria),
+            nivelAtual: mat2.nivelAtual || '',
+            trienioAtual: mat2.trienioAtual || '',
+            referencia: mat2.referencia || ''
+          },
+          hasSecondMatriculation: !!mat2.numero
         }
       } catch (err) {
         this.error = 'Erro ao carregar cliente: ' + (err.response?.data?.message || err.message)
@@ -231,20 +402,41 @@ export default {
       this.error = null
       
       try {
+        // Preparar dados das matrículas
+        const matriculation1 = this.isMatriculationValid(this.form.matriculation1) 
+          ? {
+              ...this.form.matriculation1,
+              inicioErj: this.formatDDMMYYYYToISO(this.form.matriculation1.inicioErj),
+              dataAposentadoria: this.formatDDMMYYYYToISO(this.form.matriculation1.dataAposentadoria),
+              personId: this.isEdit ? parseInt(this.clientId) : null
+            }
+          : null
+        
+        const matriculation2 = this.form.hasSecondMatriculation && this.isMatriculationValid(this.form.matriculation2)
+          ? {
+              ...this.form.matriculation2,
+              inicioErj: this.formatDDMMYYYYToISO(this.form.matriculation2.inicioErj),
+              dataAposentadoria: this.formatDDMMYYYYToISO(this.form.matriculation2.dataAposentadoria),
+              personId: this.isEdit ? parseInt(this.clientId) : null
+            }
+          : null
+        
         const data = {
           fullname: this.form.fullname,
-          email: this.form.email,
+          email: this.form.email || null,
           cpf: this.form.cpf,
           rg: this.form.rg,
           estadoCivil: this.form.estadoCivil,
-          dataNascimento: this.form.dataNascimento,
+          dataNascimento: this.formatDDMMYYYYToISO(this.form.dataNascimento),
           profissao: this.form.profissao,
           telefone: this.form.telefone,
           vivo: this.form.vivo,
           representante: this.form.representante || null,
           idFuncional: this.form.idFuncional || null,
           nacionalidade: this.form.nacionalidade || null,
-          address: this.form.address.logradouro ? this.form.address : null
+          address: this.form.address.logradouro ? this.form.address : null,
+          matriculation1: matriculation1,
+          matriculation2: matriculation2
         }
         
         if (this.isEdit) {
@@ -268,6 +460,75 @@ export default {
         console.error(err)
       } finally {
         this.saving = false
+      }
+    },
+    formatDateInput(event, field, subField = null) {
+      let value = event.target.value.replace(/\D/g, '')
+      
+      if (value.length > 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2)
+      }
+      if (value.length > 5) {
+        value = value.substring(0, 5) + '/' + value.substring(5, 9)
+      }
+      
+      if (subField) {
+        this.form[field][subField] = value
+      } else {
+        this.form[field] = value
+      }
+      
+      event.target.value = value
+    },
+    formatDateToDDMMYYYY(dateString) {
+      if (!dateString) return ''
+      try {
+        const date = new Date(dateString)
+        if (isNaN(date.getTime())) return ''
+        const day = String(date.getDate()).padStart(2, '0')
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const year = date.getFullYear()
+        return `${day}/${month}/${year}`
+      } catch (e) {
+        return ''
+      }
+    },
+    formatDDMMYYYYToISO(dateString) {
+      if (!dateString || dateString.trim() === '') return null
+      const parts = dateString.split('/')
+      if (parts.length !== 3) return null
+      const [day, month, year] = parts
+      if (!day || !month || !year) return null
+      
+      // Criar data no formato ISO (YYYY-MM-DDTHH:mm:ss)
+      const date = new Date(`${year}-${month}-${day}T00:00:00`)
+      if (isNaN(date.getTime())) return null
+      
+      // Retornar no formato ISO string que o backend espera
+      return date.toISOString()
+    },
+    isMatriculationValid(mat) {
+      return mat && 
+             mat.numero && mat.numero.trim() !== '' &&
+             mat.cargo && mat.cargo.trim() !== '' &&
+             mat.inicioErj && mat.inicioErj.trim() !== '' &&
+             mat.dataAposentadoria && mat.dataAposentadoria.trim() !== '' &&
+             mat.nivelAtual && mat.nivelAtual.trim() !== '' &&
+             mat.trienioAtual && mat.trienioAtual.trim() !== '' &&
+             mat.referencia && mat.referencia.trim() !== ''
+    },
+    toggleSecondMatriculation() {
+      if (!this.form.hasSecondMatriculation) {
+        // Limpar segunda matrícula quando desmarcar
+        this.form.matriculation2 = {
+          numero: '',
+          cargo: '',
+          inicioErj: '',
+          dataAposentadoria: '',
+          nivelAtual: '',
+          trienioAtual: '',
+          referencia: ''
+        }
       }
     },
     closeSuccessModal() {
@@ -493,6 +754,47 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+}
+
+.matriculation-section {
+  margin-top: 1rem;
+}
+
+.matriculation-form {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #dee2e6;
+}
+
+.matriculation-form h3 {
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.checkbox-group {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #e9ecef;
+  border-radius: 4px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 </style>
 
