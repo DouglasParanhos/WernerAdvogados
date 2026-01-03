@@ -26,6 +26,7 @@ import Tasks from '../views/Tasks.vue'
 import Statistics from '../views/Statistics.vue'
 import Calculations from '../views/Calculations.vue'
 import NovaEscolaCalculation from '../views/NovaEscolaCalculation.vue'
+import ClientMoviments from '../views/ClientMoviments.vue'
 
 const routes = [
   // Public routes with PublicLayout
@@ -198,6 +199,12 @@ const routes = [
     name: 'NovaEscolaCalculation',
     component: NovaEscolaCalculation,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/my-moviments',
+    name: 'ClientMoviments',
+    component: ClientMoviments,
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -210,9 +217,14 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const isAuthenticated = authService.isAuthenticated()
   
-  // If authenticated user tries to access public home page, redirect to dashboard
+  // If authenticated user tries to access public home page, redirect based on role
   if (to.path === '/' && isAuthenticated && to.name === 'HomePublic') {
-    next('/dashboard')
+    const user = authService.getUser()
+    if (user && user.role === 'CLIENT') {
+      next('/my-moviments')
+    } else {
+      next('/dashboard')
+    }
     return
   }
   
@@ -220,8 +232,21 @@ router.beforeEach((to, from, next) => {
     // Redirect to login, but preserve the intended destination
     next('/login')
   } else if (to.path === '/login' && isAuthenticated) {
-    // If authenticated and trying to access login, redirect to dashboard
-    next('/dashboard')
+    // If authenticated and trying to access login, redirect based on role
+    const user = authService.getUser()
+    if (user && user.role === 'CLIENT') {
+      next('/my-moviments')
+    } else {
+      next('/dashboard')
+    }
+  } else if (requiresAuth && isAuthenticated) {
+    // If user is CLIENT and trying to access authenticated route that is not /my-moviments
+    const user = authService.getUser()
+    if (user && user.role === 'CLIENT' && to.path !== '/my-moviments') {
+      next('/my-moviments')
+      return
+    }
+    next()
   } else {
     next()
   }

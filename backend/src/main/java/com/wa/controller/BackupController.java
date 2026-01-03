@@ -1,5 +1,6 @@
 package com.wa.controller;
 
+import com.wa.annotation.RequiresNonClient;
 import com.wa.service.BackupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +21,7 @@ public class BackupController {
     private final BackupService backupService;
     
     @PostMapping
+    @RequiresNonClient
     public ResponseEntity<byte[]> createBackup() {
         try {
             byte[] backupData = backupService.createBackup();

@@ -69,6 +69,15 @@
   color: #c82333;
 }
 
+.login-btn {
+  color: #003d7a;
+}
+
+.login-btn:hover {
+  background-color: #e6f2ff;
+  color: #002855;
+}
+
 /* Mobile icon buttons */
 .mobile-icon-btn {
   flex: 1;
@@ -111,6 +120,17 @@
   background-color: #fff5f5;
   border-color: #c82333;
   color: #c82333;
+}
+
+.mobile-icon-btn.login-btn {
+  color: #003d7a;
+  border-color: #003d7a;
+}
+
+.mobile-icon-btn.login-btn:active {
+  background-color: #e6f2ff;
+  border-color: #002855;
+  color: #002855;
 }
 
 /* Status badges (used in ProcessList) */

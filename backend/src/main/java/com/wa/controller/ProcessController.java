@@ -1,5 +1,6 @@
 package com.wa.controller;
 
+import com.wa.annotation.RequiresNonClient;
 import com.wa.dto.ProcessDTO;
 import com.wa.dto.ProcessRequestDTO;
 import com.wa.service.ProcessService;
@@ -22,6 +23,7 @@ public class ProcessController {
     private final ProcessService processService;
     
     @GetMapping
+    @RequiresNonClient
     public ResponseEntity<?> findAll(
             @RequestParam(required = false) Long personId,
             @RequestParam(required = false) Integer page,
@@ -51,32 +53,38 @@ public class ProcessController {
     }
     
     @GetMapping("/{id}")
+    @RequiresNonClient
     public ResponseEntity<ProcessDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(processService.findById(id));
     }
     
     @PostMapping
+    @RequiresNonClient
     public ResponseEntity<ProcessDTO> create(@Valid @RequestBody ProcessRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(processService.create(request));
     }
     
     @PutMapping("/{id}")
+    @RequiresNonClient
     public ResponseEntity<ProcessDTO> update(@PathVariable Long id, @Valid @RequestBody ProcessRequestDTO request) {
         return ResponseEntity.ok(processService.update(id, request));
     }
     
     @DeleteMapping("/{id}")
+    @RequiresNonClient
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         processService.delete(id);
         return ResponseEntity.noContent().build();
     }
     
     @GetMapping("/status/distinct")
+    @RequiresNonClient
     public ResponseEntity<List<String>> getDistinctStatuses() {
         return ResponseEntity.ok(processService.getDistinctStatuses());
     }
     
     @PatchMapping("/{id}/status")
+    @RequiresNonClient
     public ResponseEntity<ProcessDTO> updateStatus(@PathVariable Long id, @RequestBody java.util.Map<String, String> request) {
         String status = request.get("status");
         return ResponseEntity.ok(processService.updateStatus(id, status));
