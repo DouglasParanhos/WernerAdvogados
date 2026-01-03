@@ -202,5 +202,115 @@ class LocalDateTimeFlexibleDeserializerTest {
         LocalDateTime expected = LocalDateTime.of(1946, 12, 5, 0, 0, 0);
         assertEquals(expected, result);
     }
+
+    @Test
+    void testDeserializeIsoDateTimeWithTimezoneZ() throws IOException {
+        // Testa formato ISO com timezone Z: yyyy-MM-dd'T'HH:mm:ss.SSSZ
+        String dateString = "2023-03-15T15:30:45.123Z";
+        JsonParser parser = createJsonParser(dateString);
+        DeserializationContext context = objectMapper.getDeserializationContext();
+        
+        LocalDateTime result = deserializer.deserialize(parser, context);
+        
+        assertNotNull(result);
+        assertEquals(2023, result.getYear());
+        assertEquals(3, result.getMonthValue());
+        assertEquals(15, result.getDayOfMonth());
+        assertEquals(15, result.getHour());
+        assertEquals(30, result.getMinute());
+        assertEquals(45, result.getSecond());
+    }
+
+    @Test
+    void testDeserializeIsoDateTimeWithTimezoneZ_WithoutMillis() throws IOException {
+        // Testa formato ISO com timezone Z sem milissegundos: yyyy-MM-dd'T'HH:mm:ssZ
+        String dateString = "2023-03-15T15:30:45Z";
+        JsonParser parser = createJsonParser(dateString);
+        DeserializationContext context = objectMapper.getDeserializationContext();
+        
+        LocalDateTime result = deserializer.deserialize(parser, context);
+        
+        assertNotNull(result);
+        assertEquals(2023, result.getYear());
+        assertEquals(3, result.getMonthValue());
+        assertEquals(15, result.getDayOfMonth());
+        assertEquals(15, result.getHour());
+        assertEquals(30, result.getMinute());
+        assertEquals(45, result.getSecond());
+    }
+
+    @Test
+    void testDeserializeIsoDateTimeWithTimezoneOffset() throws IOException {
+        // Testa formato ISO com offset de timezone: yyyy-MM-dd'T'HH:mm:ss+00:00
+        String dateString = "2023-03-15T15:30:45+00:00";
+        JsonParser parser = createJsonParser(dateString);
+        DeserializationContext context = objectMapper.getDeserializationContext();
+        
+        LocalDateTime result = deserializer.deserialize(parser, context);
+        
+        assertNotNull(result);
+        assertEquals(2023, result.getYear());
+        assertEquals(3, result.getMonthValue());
+        assertEquals(15, result.getDayOfMonth());
+        assertEquals(15, result.getHour());
+        assertEquals(30, result.getMinute());
+        assertEquals(45, result.getSecond());
+    }
+
+    @Test
+    void testDeserializeIsoDateTimeWithTimezoneOffset_WithMillis() throws IOException {
+        // Testa formato ISO com offset e milissegundos: yyyy-MM-dd'T'HH:mm:ss.SSS+00:00
+        String dateString = "2023-03-15T15:30:45.123+00:00";
+        JsonParser parser = createJsonParser(dateString);
+        DeserializationContext context = objectMapper.getDeserializationContext();
+        
+        LocalDateTime result = deserializer.deserialize(parser, context);
+        
+        assertNotNull(result);
+        assertEquals(2023, result.getYear());
+        assertEquals(3, result.getMonthValue());
+        assertEquals(15, result.getDayOfMonth());
+        assertEquals(15, result.getHour());
+        assertEquals(30, result.getMinute());
+        assertEquals(45, result.getSecond());
+    }
+
+    @Test
+    void testDeserializeIsoDateTimeWithTimezoneOffset_BrazilianTimezone() throws IOException {
+        // Testa formato ISO com timezone brasileiro: yyyy-MM-dd'T'HH:mm:ss-03:00
+        String dateString = "2023-03-15T15:30:45-03:00";
+        JsonParser parser = createJsonParser(dateString);
+        DeserializationContext context = objectMapper.getDeserializationContext();
+        
+        LocalDateTime result = deserializer.deserialize(parser, context);
+        
+        assertNotNull(result);
+        assertEquals(2023, result.getYear());
+        assertEquals(3, result.getMonthValue());
+        assertEquals(15, result.getDayOfMonth());
+        // O timezone é convertido para LocalDateTime (UTC)
+        assertEquals(15, result.getHour());
+        assertEquals(30, result.getMinute());
+        assertEquals(45, result.getSecond());
+    }
+
+    @Test
+    void testDeserializeIsoDateTimeWithTimezoneZ_FromFrontend() throws IOException {
+        // Testa formato exato que o frontend envia via toISOString()
+        // Exemplo: "2023-03-15T15:30:45.123Z"
+        String dateString = "2023-03-15T15:30:45.123Z";
+        JsonParser parser = createJsonParser(dateString);
+        DeserializationContext context = objectMapper.getDeserializationContext();
+        
+        LocalDateTime result = deserializer.deserialize(parser, context);
+        
+        assertNotNull(result);
+        assertEquals(2023, result.getYear());
+        assertEquals(3, result.getMonthValue());
+        assertEquals(15, result.getDayOfMonth());
+        assertEquals(15, result.getHour());
+        assertEquals(30, result.getMinute());
+        assertEquals(45, result.getSecond());
+    }
 }
 

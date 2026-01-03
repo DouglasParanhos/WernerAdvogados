@@ -6,6 +6,7 @@ import com.wa.model.User;
 import com.wa.repository.PersonRepository;
 import com.wa.repository.UserRepository;
 import com.wa.service.MovimentService;
+import com.wa.util.JWTUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = MovimentController.class)
@@ -50,6 +52,9 @@ class MovimentControllerTest {
 
     @MockBean
     private PersonRepository personRepository;
+
+    @MockBean
+    private JWTUtil jwtUtil;
 
     private MovimentDTO movimentDTO1;
     private MovimentDTO movimentDTO2;
@@ -216,6 +221,167 @@ class MovimentControllerTest {
                 .andExpect(status().is5xxServerError());
 
         verify(movimentService, never()).findByPersonId(any());
+    }
+
+    @Test
+    void testUpdate_WithValidData_ReturnsUpdatedMoviment() throws Exception {
+        // Arrange
+        Long movimentId = 1L;
+        MovimentDTO updatedDTO = new MovimentDTO();
+        updatedDTO.setId(movimentId);
+        updatedDTO.setDescricao("Descrição atualizada");
+        updatedDTO.setDate(LocalDateTime.of(2023, 3, 15, 15, 30));
+        updatedDTO.setProcessId(1L);
+        updatedDTO.setVisibleToClient(true);
+
+        String requestBody = """
+            {
+                "descricao": "Descrição atualizada",
+                "date": "2023-03-15T15:30:00",
+                "processId": 1,
+                "visibleToClient": true
+            }
+            """;
+
+        when(movimentService.update(eq(movimentId), any())).thenReturn(updatedDTO);
+
+        // Act & Assert
+        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(movimentId))
+                .andExpect(jsonPath("$.descricao").value("Descrição atualizada"))
+                .andExpect(jsonPath("$.processId").value(1L))
+                .andExpect(jsonPath("$.visibleToClient").value(true));
+
+        verify(movimentService, times(1)).update(eq(movimentId), any());
+    }
+
+    @Test
+    void testUpdate_WithIsoDateTimeWithTimezone_ReturnsUpdatedMoviment() throws Exception {
+        // Arrange
+        Long movimentId = 1L;
+        MovimentDTO updatedDTO = new MovimentDTO();
+        updatedDTO.setId(movimentId);
+        updatedDTO.setDescricao("Descrição atualizada");
+        updatedDTO.setDate(LocalDateTime.of(2023, 3, 15, 15, 30));
+        updatedDTO.setProcessId(1L);
+
+        // Formato ISO com timezone (Z)
+        String requestBody = """
+            {
+                "descricao": "Descrição atualizada",
+                "date": "2023-03-15T15:30:00.000Z",
+                "processId": 1,
+                "visibleToClient": false
+            }
+            """;
+
+        when(movimentService.update(eq(movimentId), any())).thenReturn(updatedDTO);
+
+        // Act & Assert
+        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(movimentId))
+                .andExpect(jsonPath("$.descricao").value("Descrição atualizada"));
+
+        verify(movimentService, times(1)).update(eq(movimentId), any());
+    }
+
+    @Test
+    void testUpdate_WithMissingDescription_ReturnsBadRequest() throws Exception {
+        // Arrange
+        Long movimentId = 1L;
+        String requestBody = """
+            {
+                "date": "2023-03-15T15:30:00",
+                "processId": 1
+            }
+            """;
+
+        // Act & Assert
+        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        verify(movimentService, never()).update(any(), any());
+    }
+
+    @Test
+    void testUpdate_WithMissingDate_ReturnsBadRequest() throws Exception {
+        // Arrange
+        Long movimentId = 1L;
+        String requestBody = """
+            {
+                "descricao": "Descrição atualizada",
+                "processId": 1
+            }
+            """;
+
+        // Act & Assert
+        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        verify(movimentService, never()).update(any(), any());
+    }
+
+    @Test
+    void testUpdate_WithMissingProcessId_ReturnsBadRequest() throws Exception {
+        // Arrange
+        Long movimentId = 1L;
+        String requestBody = """
+            {
+                "descricao": "Descrição atualizada",
+                "date": "2023-03-15T15:30:00"
+            }
+            """;
+
+        // Act & Assert
+        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+
+        verify(movimentService, never()).update(any(), any());
+    }
+
+    @Test
+    void testUpdate_WithIdInRequestBody_IgnoresId() throws Exception {
+        // Arrange
+        Long movimentId = 1L;
+        MovimentDTO updatedDTO = new MovimentDTO();
+        updatedDTO.setId(movimentId);
+        updatedDTO.setDescricao("Descrição atualizada");
+        updatedDTO.setDate(LocalDateTime.of(2023, 3, 15, 15, 30));
+        updatedDTO.setProcessId(1L);
+
+        // Request body com id (deve ser ignorado, pois id vem da URL)
+        String requestBody = """
+            {
+                "id": 999,
+                "descricao": "Descrição atualizada",
+                "date": "2023-03-15T15:30:00",
+                "processId": 1
+            }
+            """;
+
+        when(movimentService.update(eq(movimentId), any())).thenReturn(updatedDTO);
+
+        // Act & Assert
+        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(movimentId));
+
+        // Verifica que o update foi chamado com o id da URL, não do body
+        verify(movimentService, times(1)).update(eq(movimentId), any());
     }
 }
 

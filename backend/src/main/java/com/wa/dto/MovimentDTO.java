@@ -20,4 +20,5 @@ public class MovimentDTO {
     private String processTipoProcesso;
     private String processMatriculationNumero;
     private String processStatus;
+    private Boolean visibleToClient;
 }

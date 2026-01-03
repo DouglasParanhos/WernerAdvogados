@@ -2,6 +2,7 @@ package com.wa.controller;
 
 import com.wa.dto.PersonDTO;
 import com.wa.service.PersonService;
+import com.wa.util.JWTUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,9 @@ class PersonControllerTest {
 
     @MockBean
     private PersonService personService;
+
+    @MockBean
+    private JWTUtil jwtUtil;
 
     private PersonDTO personDTO1;
     private PersonDTO personDTO2;

@@ -1,6 +1,7 @@
 package com.wa.service;
 
 import com.wa.dto.MovimentDTO;
+import com.wa.dto.MovimentRequestDTO;
 import com.wa.model.Moviment;
 import com.wa.model.Person;
 import com.wa.model.Process;
@@ -118,6 +119,148 @@ class MovimentServiceTest {
         // Verifica que está ordenado por data DESC (mais recente primeiro)
         assertTrue(result.get(0).getDate().isAfter(result.get(1).getDate()) ||
                    result.get(0).getDate().isEqual(result.get(1).getDate()));
+    }
+
+    @Test
+    void testUpdate_WithValidData_ReturnsUpdatedMoviment() {
+        // Arrange
+        Long movimentId = 1L;
+        Long processId = 1L;
+        LocalDateTime newDate = LocalDateTime.of(2023, 3, 15, 15, 30);
+        
+        MovimentRequestDTO requestDTO = new MovimentRequestDTO();
+        requestDTO.setDescricao("Descrição atualizada");
+        requestDTO.setDate(newDate);
+        requestDTO.setProcessId(processId);
+        requestDTO.setVisibleToClient(true);
+
+        Process process = new Process();
+        process.setId(processId);
+        process.setNumero("1234567-89.2023.8.19.0001");
+
+        Moviment existingMoviment = new Moviment();
+        existingMoviment.setId(movimentId);
+        existingMoviment.setDescricao("Descrição antiga");
+        existingMoviment.setDate(LocalDateTime.of(2023, 1, 15, 10, 0));
+        existingMoviment.setProcess(process1);
+        existingMoviment.setVisibleToClient(false);
+
+        Moviment savedMoviment = new Moviment();
+        savedMoviment.setId(movimentId);
+        savedMoviment.setDescricao("Descrição atualizada");
+        savedMoviment.setDate(newDate);
+        savedMoviment.setProcess(process);
+        savedMoviment.setVisibleToClient(true);
+
+        when(movimentRepository.findById(movimentId)).thenReturn(java.util.Optional.of(existingMoviment));
+        when(processRepository.findById(processId)).thenReturn(java.util.Optional.of(process));
+        when(movimentRepository.save(any(Moviment.class))).thenReturn(savedMoviment);
+
+        // Act
+        MovimentDTO result = movimentService.update(movimentId, requestDTO);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(movimentId, result.getId());
+        assertEquals("Descrição atualizada", result.getDescricao());
+        assertEquals(newDate, result.getDate());
+        assertEquals(processId, result.getProcessId());
+        assertTrue(result.getVisibleToClient());
+        
+        verify(movimentRepository, times(1)).findById(movimentId);
+        verify(processRepository, times(1)).findById(processId);
+        verify(movimentRepository, times(1)).save(any(Moviment.class));
+    }
+
+    @Test
+    void testUpdate_WithMovimentNotFound_ThrowsException() {
+        // Arrange
+        Long movimentId = 999L;
+        MovimentRequestDTO requestDTO = new MovimentRequestDTO();
+        requestDTO.setDescricao("Descrição atualizada");
+        requestDTO.setDate(LocalDateTime.of(2023, 3, 15, 15, 30));
+        requestDTO.setProcessId(1L);
+
+        when(movimentRepository.findById(movimentId)).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            movimentService.update(movimentId, requestDTO);
+        });
+
+        assertTrue(exception.getMessage().contains("Movimentação não encontrada"));
+        verify(movimentRepository, times(1)).findById(movimentId);
+        verify(processRepository, never()).findById(any());
+        verify(movimentRepository, never()).save(any());
+    }
+
+    @Test
+    void testUpdate_WithProcessNotFound_ThrowsException() {
+        // Arrange
+        Long movimentId = 1L;
+        Long processId = 999L;
+        MovimentRequestDTO requestDTO = new MovimentRequestDTO();
+        requestDTO.setDescricao("Descrição atualizada");
+        requestDTO.setDate(LocalDateTime.of(2023, 3, 15, 15, 30));
+        requestDTO.setProcessId(processId);
+
+        when(movimentRepository.findById(movimentId)).thenReturn(java.util.Optional.of(moviment1));
+        when(processRepository.findById(processId)).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            movimentService.update(movimentId, requestDTO);
+        });
+
+        assertTrue(exception.getMessage().contains("Processo não encontrado"));
+        verify(movimentRepository, times(1)).findById(movimentId);
+        verify(processRepository, times(1)).findById(processId);
+        verify(movimentRepository, never()).save(any());
+    }
+
+    @Test
+    void testUpdate_WithNullVisibleToClient_PreservesExistingValue() {
+        // Arrange
+        Long movimentId = 1L;
+        Long processId = 1L;
+        LocalDateTime newDate = LocalDateTime.of(2023, 3, 15, 15, 30);
+        
+        MovimentRequestDTO requestDTO = new MovimentRequestDTO();
+        requestDTO.setDescricao("Descrição atualizada");
+        requestDTO.setDate(newDate);
+        requestDTO.setProcessId(processId);
+        requestDTO.setVisibleToClient(null); // null deve preservar valor existente
+
+        Process process = new Process();
+        process.setId(processId);
+
+        Moviment existingMoviment = new Moviment();
+        existingMoviment.setId(movimentId);
+        existingMoviment.setDescricao("Descrição antiga");
+        existingMoviment.setDate(LocalDateTime.of(2023, 1, 15, 10, 0));
+        existingMoviment.setProcess(process1);
+        existingMoviment.setVisibleToClient(false); // Valor existente
+
+        Moviment savedMoviment = new Moviment();
+        savedMoviment.setId(movimentId);
+        savedMoviment.setDescricao("Descrição atualizada");
+        savedMoviment.setDate(newDate);
+        savedMoviment.setProcess(process);
+        savedMoviment.setVisibleToClient(false); // Preservado
+
+        when(movimentRepository.findById(movimentId)).thenReturn(java.util.Optional.of(existingMoviment));
+        when(processRepository.findById(processId)).thenReturn(java.util.Optional.of(process));
+        when(movimentRepository.save(any(Moviment.class))).thenReturn(savedMoviment);
+
+        // Act
+        MovimentDTO result = movimentService.update(movimentId, requestDTO);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Descrição atualizada", result.getDescricao());
+        assertFalse(result.getVisibleToClient()); // Valor preservado
+        
+        verify(movimentRepository, times(1)).save(any(Moviment.class));
     }
 }
 

@@ -2,9 +2,22 @@
   <div class="process-details">
     <div class="container">
       <div class="header">
-        <button @click="goBack" class="btn btn-secondary">← Voltar</button>
-        <div>
-          <button @click="goToEdit" class="btn btn-secondary">Editar Processo</button>
+        <div class="header-left">
+          <button @click="goToHome" class="btn-home" title="Voltar para Home">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button @click="goBack" class="btn btn-secondary">← Voltar</button>
+        </div>
+        <div class="header-actions">
+          <button @click="goToEdit" class="btn-icon-edit" title="Editar Processo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
       
@@ -67,7 +80,11 @@
         <div class="section">
           <div class="section-header">
             <h2>Movimentações</h2>
-            <button @click="showNewMovimentForm = true" class="btn btn-primary">Nova Movimentação</button>
+            <button @click="showNewMovimentForm = true" class="btn-icon-add" title="Nova Movimentação">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
           
           <!-- Formulário de Nova Movimentação -->
@@ -80,6 +97,13 @@
             <div class="form-group">
               <label>Descrição:</label>
               <textarea v-model="newMoviment.descricao" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="newMoviment.visibleToClient" class="checkbox-input" />
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-text">Visível para o cliente</span>
+              </label>
             </div>
             <div class="form-actions">
               <button @click="saveNewMoviment" class="btn btn-primary" :disabled="saving">Salvar</button>
@@ -94,8 +118,18 @@
                 <div class="moviment-header">
                   <div class="moviment-date">{{ formatDate(moviment.date) }}</div>
                   <div class="moviment-actions">
-                    <button @click="startEditMoviment(moviment)" class="btn btn-sm btn-secondary">Editar</button>
-                    <button @click="deleteMoviment(moviment.id)" class="btn btn-sm btn-danger">Excluir</button>
+                    <button @click="startEditMoviment(moviment)" class="icon-btn edit-btn" title="Editar movimentação">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button @click="deleteMoviment(moviment.id)" class="icon-btn delete-btn" title="Excluir movimentação">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
                   </div>
                 </div>
                 <div class="moviment-description">{{ moviment.descricao }}</div>
@@ -110,6 +144,13 @@
                 <div class="form-group">
                   <label>Descrição:</label>
                   <textarea v-model="editingMoviment.descricao" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" v-model="editingMoviment.visibleToClient" class="checkbox-input" />
+                    <span class="checkbox-custom"></span>
+                    <span class="checkbox-text">Visível para o cliente</span>
+                  </label>
                 </div>
                 <div class="form-actions">
                   <button @click="saveEditMoviment" class="btn btn-primary" :disabled="saving">Salvar</button>
@@ -147,7 +188,8 @@ export default {
       newMoviment: {
         descricao: '',
         date: '',
-        processId: null
+        processId: null,
+        visibleToClient: true
       }
     }
   },
@@ -209,6 +251,9 @@ export default {
       // Se não conseguir encontrar o cliente, voltar para lista de processos
       this.$router.push('/processes')
     },
+    goToHome() {
+      this.$router.push('/dashboard')
+    },
     goToEdit() {
       this.$router.push(`/processes/${this.process.id}/edit`)
     },
@@ -239,7 +284,8 @@ export default {
       this.newMoviment = {
         descricao: '',
         date: '',
-        processId: this.process.id
+        processId: this.process.id,
+        visibleToClient: true
       }
     },
     startEditMoviment(moviment) {
@@ -255,7 +301,8 @@ export default {
         id: moviment.id,
         descricao: moviment.descricao,
         date: `${year}-${month}-${day}T${hours}:${minutes}`,
-        processId: moviment.processId
+        processId: moviment.processId,
+        visibleToClient: moviment.visibleToClient !== undefined ? moviment.visibleToClient : true
       }
     },
     async saveEditMoviment() {
@@ -314,6 +361,113 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-home {
+  background: transparent;
+  border: 1.5px solid #6c757d;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+}
+
+.btn-home:hover {
+  background-color: #f8f9fa;
+  color: #003d7a;
+  border-color: #003d7a;
+}
+
+.btn-home svg {
+  width: 20px;
+  height: 20px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn-icon-edit,
+.btn-icon-add {
+  background: #6c757d;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all 0.2s;
+  width: 48px;
+  height: 48px;
+}
+
+.btn-icon-edit:hover {
+  background-color: #545b62;
+}
+
+.btn-icon-add {
+  background: #007bff;
+}
+
+.btn-icon-add:hover {
+  background-color: #0056b3;
+}
+
+.btn-icon-edit svg,
+.btn-icon-add svg {
+  width: 24px;
+  height: 24px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.edit-btn {
+  color: #6c757d;
+}
+
+.edit-btn:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.delete-btn {
+  color: #dc3545;
+}
+
+.delete-btn:hover {
+  background-color: #fff5f5;
+  color: #c82333;
 }
 
 .section {
@@ -381,6 +535,76 @@ export default {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
+  color: #495057;
+}
+
+/* Checkbox customizado */
+.checkbox-group {
+  margin-bottom: 1.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0 !important;
+  font-weight: 500;
+  color: #495057;
+}
+
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-custom {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  background-color: #fff;
+  border: 2px solid #ced4da;
+  border-radius: 4px;
+  margin-right: 0.75rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.checkbox-label:hover .checkbox-custom {
+  border-color: #007bff;
+  background-color: #f0f7ff;
+}
+
+.checkbox-input:checked ~ .checkbox-custom {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.checkbox-input:checked ~ .checkbox-custom::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-input:focus ~ .checkbox-custom {
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.checkbox-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
   color: #495057;
 }
 
@@ -511,6 +735,228 @@ export default {
 
 .error {
   color: #dc3545;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .process-details {
+    padding: 1rem;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .header-left {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .btn-home {
+    width: 36px;
+    height: 36px;
+  }
+
+  .btn-home svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .btn-icon-edit,
+  .btn-icon-add {
+    width: 44px;
+    height: 44px;
+  }
+
+  .btn-icon-edit svg,
+  .btn-icon-add svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .section {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .section-header button {
+    width: 100%;
+  }
+
+  .section-header .btn-icon-add {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .moviment-form {
+    padding: 1rem;
+  }
+
+  .moviment-form h3 {
+    font-size: 1.1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .moviment-card {
+    padding: 0.75rem;
+  }
+
+  .moviment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .moviment-actions {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .moviment-actions .icon-btn {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0.5rem;
+  }
+
+  .moviment-actions .icon-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .moviment-edit-form {
+    gap: 0.75rem;
+  }
+
+  .btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .checkbox-label {
+    font-size: 0.9rem;
+  }
+
+  .checkbox-custom {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    margin-right: 0.5rem;
+  }
+
+  .checkbox-input:checked ~ .checkbox-custom::after {
+    left: 5px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .process-details {
+    padding: 0.5rem;
+  }
+
+  .header {
+    margin-bottom: 1rem;
+  }
+
+  .btn-home {
+    width: 32px;
+    height: 32px;
+  }
+
+  .btn-home svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .btn-icon-edit,
+  .btn-icon-add {
+    width: 40px;
+    height: 40px;
+  }
+
+  .btn-icon-edit svg,
+  .btn-icon-add svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .section {
+    padding: 0.75rem;
+  }
+
+  .section h2 {
+    font-size: 1.1rem;
+  }
+
+  .moviment-form h3 {
+    font-size: 1rem;
+  }
+
+  .form-control {
+    font-size: 0.9rem;
+    padding: 0.625rem;
+  }
+
+  .moviment-actions .icon-btn {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0.375rem;
+  }
+
+  .moviment-actions .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .checkbox-text {
+    font-size: 0.85rem;
+  }
 }
 </style>
 
