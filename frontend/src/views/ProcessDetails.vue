@@ -2,9 +2,22 @@
   <div class="process-details">
     <div class="container">
       <div class="header">
-        <button @click="goBack" class="btn btn-secondary">← Voltar</button>
-        <div>
-          <button @click="goToEdit" class="btn btn-secondary">Editar Processo</button>
+        <div class="header-left">
+          <button @click="goToHome" class="btn-home" title="Voltar para Home">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button @click="goBack" class="btn btn-secondary">← Voltar</button>
+        </div>
+        <div class="header-actions">
+          <button @click="goToEdit" class="btn-icon-edit" title="Editar Processo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
       
@@ -67,7 +80,11 @@
         <div class="section">
           <div class="section-header">
             <h2>Movimentações</h2>
-            <button @click="showNewMovimentForm = true" class="btn btn-primary">Nova Movimentação</button>
+            <button @click="showNewMovimentForm = true" class="btn-icon-add" title="Nova Movimentação">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
           
           <!-- Formulário de Nova Movimentação -->
@@ -101,8 +118,18 @@
                 <div class="moviment-header">
                   <div class="moviment-date">{{ formatDate(moviment.date) }}</div>
                   <div class="moviment-actions">
-                    <button @click="startEditMoviment(moviment)" class="btn btn-sm btn-secondary">Editar</button>
-                    <button @click="deleteMoviment(moviment.id)" class="btn btn-sm btn-danger">Excluir</button>
+                    <button @click="startEditMoviment(moviment)" class="icon-btn edit-btn" title="Editar movimentação">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button @click="deleteMoviment(moviment.id)" class="icon-btn delete-btn" title="Excluir movimentação">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
                   </div>
                 </div>
                 <div class="moviment-description">{{ moviment.descricao }}</div>
@@ -224,6 +251,9 @@ export default {
       // Se não conseguir encontrar o cliente, voltar para lista de processos
       this.$router.push('/processes')
     },
+    goToHome() {
+      this.$router.push('/dashboard')
+    },
     goToEdit() {
       this.$router.push(`/processes/${this.process.id}/edit`)
     },
@@ -285,10 +315,8 @@ export default {
       try {
         // Converter para formato ISO
         const dateISO = new Date(this.editingMoviment.date).toISOString()
-        // Remover o id do objeto antes de enviar, pois ele já está na URL
-        const { id, ...movimentData } = this.editingMoviment
         await movimentService.update(this.editingMoviment.id, {
-          ...movimentData,
+          ...this.editingMoviment,
           date: dateISO
         })
         await this.loadMoviments()
@@ -333,6 +361,113 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-home {
+  background: transparent;
+  border: 1.5px solid #6c757d;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+}
+
+.btn-home:hover {
+  background-color: #f8f9fa;
+  color: #003d7a;
+  border-color: #003d7a;
+}
+
+.btn-home svg {
+  width: 20px;
+  height: 20px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn-icon-edit,
+.btn-icon-add {
+  background: #6c757d;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all 0.2s;
+  width: 48px;
+  height: 48px;
+}
+
+.btn-icon-edit:hover {
+  background-color: #545b62;
+}
+
+.btn-icon-add {
+  background: #007bff;
+}
+
+.btn-icon-add:hover {
+  background-color: #0056b3;
+}
+
+.btn-icon-edit svg,
+.btn-icon-add svg {
+  width: 24px;
+  height: 24px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.edit-btn {
+  color: #6c757d;
+}
+
+.edit-btn:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.delete-btn {
+  color: #dc3545;
+}
+
+.delete-btn:hover {
+  background-color: #fff5f5;
+  color: #c82333;
 }
 
 .section {
@@ -618,9 +753,36 @@ export default {
     align-items: stretch;
   }
 
-  .header > div {
+  .header-left {
     display: flex;
     gap: 0.5rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .btn-home {
+    width: 36px;
+    height: 36px;
+  }
+
+  .btn-home svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .btn-icon-edit,
+  .btn-icon-add {
+    width: 44px;
+    height: 44px;
+  }
+
+  .btn-icon-edit svg,
+  .btn-icon-add svg {
+    width: 20px;
+    height: 20px;
   }
 
   .section {
@@ -640,6 +802,11 @@ export default {
 
   .section-header button {
     width: 100%;
+  }
+
+  .section-header .btn-icon-add {
+    width: 100%;
+    justify-content: center;
   }
 
   .info-grid {
@@ -679,11 +846,19 @@ export default {
 
   .moviment-actions {
     width: 100%;
-    justify-content: stretch;
+    justify-content: flex-end;
+    gap: 0.5rem;
   }
 
-  .moviment-actions button {
-    flex: 1;
+  .moviment-actions .icon-btn {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0.5rem;
+  }
+
+  .moviment-actions .icon-btn svg {
+    width: 20px;
+    height: 20px;
   }
 
   .moviment-edit-form {
@@ -725,6 +900,32 @@ export default {
     padding: 0.5rem;
   }
 
+  .header {
+    margin-bottom: 1rem;
+  }
+
+  .btn-home {
+    width: 32px;
+    height: 32px;
+  }
+
+  .btn-home svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .btn-icon-edit,
+  .btn-icon-add {
+    width: 40px;
+    height: 40px;
+  }
+
+  .btn-icon-edit svg,
+  .btn-icon-add svg {
+    width: 18px;
+    height: 18px;
+  }
+
   .section {
     padding: 0.75rem;
   }
@@ -740,6 +941,17 @@ export default {
   .form-control {
     font-size: 0.9rem;
     padding: 0.625rem;
+  }
+
+  .moviment-actions .icon-btn {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0.375rem;
+  }
+
+  .moviment-actions .icon-btn svg {
+    width: 18px;
+    height: 18px;
   }
 
   .checkbox-text {
