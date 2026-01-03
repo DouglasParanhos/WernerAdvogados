@@ -28,6 +28,9 @@ public class Moviment {
     @JoinColumn(name = "process_id", referencedColumnName = "process_id", nullable = false)
     private Process process;
     
+    @Column(name = "visible_to_client", nullable = false)
+    private Boolean visibleToClient = true;
+    
     @Column(name = "created_on", nullable = false)
     private LocalDateTime createdOn = LocalDateTime.now();
     

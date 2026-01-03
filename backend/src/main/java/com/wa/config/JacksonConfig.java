@@ -14,6 +14,7 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -50,6 +51,8 @@ public class JacksonConfig {
      * - "yyyy-MM-dd" (formato ISO, apenas data, converte para meia-noite)
      * - "yyyy-MM-dd'T'HH:mm:ss" (data e hora)
      * - "yyyy-MM-dd'T'HH:mm:ss.SSS" (data, hora e milissegundos)
+     * - "yyyy-MM-dd'T'HH:mm:ss.SSSZ" (formato ISO com timezone)
+     * - "yyyy-MM-dd'T'HH:mm:ssZ" (formato ISO com timezone, sem milissegundos)
      */
     static class LocalDateTimeFlexibleDeserializer extends StdDeserializer<LocalDateTime> {
         
@@ -66,7 +69,29 @@ public class JacksonConfig {
         public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             String dateString = p.getText().trim();
             
-            // Tenta primeiro com data e hora completa
+            // Se contém timezone (Z ou offset como +00:00), converter para LocalDateTime
+            if (dateString.contains("Z") || dateString.matches(".*[+-]\\d{2}:\\d{2}$")) {
+                try {
+                    // Usa o parser ISO que aceita timezone
+                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(dateString, DateTimeFormatter.ISO_DATE_TIME);
+                    return zonedDateTime.toLocalDateTime();
+                } catch (DateTimeParseException e) {
+                    // Tenta com formato alternativo
+                    try {
+                        // Remove o Z e tenta parse direto
+                        String withoutZ = dateString.replace("Z", "");
+                        if (withoutZ.contains(".")) {
+                            return LocalDateTime.parse(withoutZ, DATE_TIME_MILLIS);
+                        } else {
+                            return LocalDateTime.parse(withoutZ, DATE_TIME);
+                        }
+                    } catch (DateTimeParseException e2) {
+                        // Continua para outros formatos
+                    }
+                }
+            }
+            
+            // Tenta primeiro com data e hora completa (sem timezone)
             try {
                 if (dateString.contains("T") && dateString.contains(".")) {
                     return LocalDateTime.parse(dateString, DATE_TIME_MILLIS);
@@ -91,7 +116,7 @@ public class JacksonConfig {
                 return date.atStartOfDay();
             } catch (DateTimeParseException e) {
                 throw new IOException("Não foi possível deserializar data: " + dateString + 
-                    ". Formatos aceitos: dd/MM/yyyy, yyyy-MM-dd, yyyy-MM-dd'T'HH:mm:ss, yyyy-MM-dd'T'HH:mm:ss.SSS", e);
+                    ". Formatos aceitos: dd/MM/yyyy, yyyy-MM-dd, yyyy-MM-dd'T'HH:mm:ss, yyyy-MM-dd'T'HH:mm:ss.SSS, yyyy-MM-dd'T'HH:mm:ss.SSSZ", e);
             }
         }
     }

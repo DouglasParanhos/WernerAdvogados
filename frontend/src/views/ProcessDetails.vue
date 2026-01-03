@@ -81,6 +81,13 @@
               <label>Descrição:</label>
               <textarea v-model="newMoviment.descricao" class="form-control" rows="3"></textarea>
             </div>
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="newMoviment.visibleToClient" class="checkbox-input" />
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-text">Visível para o cliente</span>
+              </label>
+            </div>
             <div class="form-actions">
               <button @click="saveNewMoviment" class="btn btn-primary" :disabled="saving">Salvar</button>
               <button @click="cancelNewMoviment" class="btn btn-secondary">Cancelar</button>
@@ -110,6 +117,13 @@
                 <div class="form-group">
                   <label>Descrição:</label>
                   <textarea v-model="editingMoviment.descricao" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" v-model="editingMoviment.visibleToClient" class="checkbox-input" />
+                    <span class="checkbox-custom"></span>
+                    <span class="checkbox-text">Visível para o cliente</span>
+                  </label>
                 </div>
                 <div class="form-actions">
                   <button @click="saveEditMoviment" class="btn btn-primary" :disabled="saving">Salvar</button>
@@ -147,7 +161,8 @@ export default {
       newMoviment: {
         descricao: '',
         date: '',
-        processId: null
+        processId: null,
+        visibleToClient: true
       }
     }
   },
@@ -239,7 +254,8 @@ export default {
       this.newMoviment = {
         descricao: '',
         date: '',
-        processId: this.process.id
+        processId: this.process.id,
+        visibleToClient: true
       }
     },
     startEditMoviment(moviment) {
@@ -255,7 +271,8 @@ export default {
         id: moviment.id,
         descricao: moviment.descricao,
         date: `${year}-${month}-${day}T${hours}:${minutes}`,
-        processId: moviment.processId
+        processId: moviment.processId,
+        visibleToClient: moviment.visibleToClient !== undefined ? moviment.visibleToClient : true
       }
     },
     async saveEditMoviment() {
@@ -268,8 +285,10 @@ export default {
       try {
         // Converter para formato ISO
         const dateISO = new Date(this.editingMoviment.date).toISOString()
+        // Remover o id do objeto antes de enviar, pois ele já está na URL
+        const { id, ...movimentData } = this.editingMoviment
         await movimentService.update(this.editingMoviment.id, {
-          ...this.editingMoviment,
+          ...movimentData,
           date: dateISO
         })
         await this.loadMoviments()
@@ -381,6 +400,76 @@ export default {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
+  color: #495057;
+}
+
+/* Checkbox customizado */
+.checkbox-group {
+  margin-bottom: 1.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0 !important;
+  font-weight: 500;
+  color: #495057;
+}
+
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkbox-custom {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  background-color: #fff;
+  border: 2px solid #ced4da;
+  border-radius: 4px;
+  margin-right: 0.75rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.checkbox-label:hover .checkbox-custom {
+  border-color: #007bff;
+  background-color: #f0f7ff;
+}
+
+.checkbox-input:checked ~ .checkbox-custom {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.checkbox-input:checked ~ .checkbox-custom::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-input:focus ~ .checkbox-custom {
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.checkbox-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
   color: #495057;
 }
 
@@ -511,6 +600,151 @@ export default {
 
 .error {
   color: #dc3545;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .process-details {
+    padding: 1rem;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .header > div {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .section {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .section-header button {
+    width: 100%;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .moviment-form {
+    padding: 1rem;
+  }
+
+  .moviment-form h3 {
+    font-size: 1.1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .moviment-card {
+    padding: 0.75rem;
+  }
+
+  .moviment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .moviment-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .moviment-actions button {
+    flex: 1;
+  }
+
+  .moviment-edit-form {
+    gap: 0.75rem;
+  }
+
+  .btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .checkbox-label {
+    font-size: 0.9rem;
+  }
+
+  .checkbox-custom {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+    margin-right: 0.5rem;
+  }
+
+  .checkbox-input:checked ~ .checkbox-custom::after {
+    left: 5px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .process-details {
+    padding: 0.5rem;
+  }
+
+  .section {
+    padding: 0.75rem;
+  }
+
+  .section h2 {
+    font-size: 1.1rem;
+  }
+
+  .moviment-form h3 {
+    font-size: 1rem;
+  }
+
+  .form-control {
+    font-size: 0.9rem;
+    padding: 0.625rem;
+  }
+
+  .checkbox-text {
+    font-size: 0.85rem;
+  }
 }
 </style>
 

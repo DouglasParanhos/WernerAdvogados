@@ -53,6 +53,7 @@ public class MovimentService {
         moviment.setDescricao(request.getDescricao());
         moviment.setDate(request.getDate());
         moviment.setProcess(process);
+        moviment.setVisibleToClient(request.getVisibleToClient() != null ? request.getVisibleToClient() : true);
 
         moviment = movimentRepository.save(moviment);
         return convertToDTO(moviment);
@@ -69,6 +70,9 @@ public class MovimentService {
         moviment.setDescricao(request.getDescricao());
         moviment.setDate(request.getDate());
         moviment.setProcess(process);
+        if (request.getVisibleToClient() != null) {
+            moviment.setVisibleToClient(request.getVisibleToClient());
+        }
 
         moviment = movimentRepository.save(moviment);
         return convertToDTO(moviment);
@@ -87,6 +91,7 @@ public class MovimentService {
         dto.setDescricao(moviment.getDescricao());
         dto.setDate(moviment.getDate());
         dto.setProcessId(moviment.getProcess().getId());
+        dto.setVisibleToClient(moviment.getVisibleToClient());
         // Incluir informações do processo se disponível
         if (moviment.getProcess() != null) {
             dto.setProcessNumero(moviment.getProcess().getNumero());

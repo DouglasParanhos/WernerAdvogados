@@ -20,5 +20,7 @@ public class MovimentRequestDTO {
     
     @NotNull(message = "ID do processo é obrigatório")
     private Long processId;
+    
+    private Boolean visibleToClient;
 }
 
