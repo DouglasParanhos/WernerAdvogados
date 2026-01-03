@@ -216,6 +216,17 @@ public class ProcessService {
         dto.setDescricao(moviment.getDescricao());
         dto.setDate(moviment.getDate());
         dto.setProcessId(moviment.getProcess().getId());
+        // Incluir informações do processo se disponível
+        if (moviment.getProcess() != null) {
+            dto.setProcessNumero(moviment.getProcess().getNumero());
+            dto.setProcessComarca(moviment.getProcess().getComarca());
+            dto.setProcessVara(moviment.getProcess().getVara());
+            dto.setProcessTipoProcesso(moviment.getProcess().getTipoProcesso());
+            // Incluir informações da matrícula se disponível
+            if (moviment.getProcess().getMatriculation() != null) {
+                dto.setProcessMatriculationNumero(moviment.getProcess().getMatriculation().getNumero());
+            }
+        }
         return dto;
     }
 }

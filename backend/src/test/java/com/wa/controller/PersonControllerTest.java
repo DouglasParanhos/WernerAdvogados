@@ -12,14 +12,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = PersonController.class)
@@ -219,6 +225,132 @@ class PersonControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(3));
 
         verify(personService, times(1)).findAllPaginated(null, PageRequest.of(1, 2));
+    }
+
+    @Test
+    void testGetUsernameSuggestion_ReturnsSuggestion() throws Exception {
+        // Arrange
+        when(personService.generateUsernameSuggestion(1L)).thenReturn("joao.silva");
+
+        // Act & Assert
+        mockMvc.perform(get("/api/persons/1/username-suggestion")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("joao.silva"));
+
+        verify(personService, times(1)).generateUsernameSuggestion(1L);
+    }
+
+    @Test
+    void testConfigureCredentials_WithAdminRole_ReturnsOk() throws Exception {
+        // Arrange
+        String requestBody = """
+                {
+                    "username": "joao.silva",
+                    "password": "Test123!"
+                }
+                """;
+
+        // Mock SecurityContext with ADMIN role
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        SecurityContextHolder.setContext(securityContext);
+        
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getAuthorities()).thenAnswer(invocation -> 
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        doNothing().when(personService).createOrUpdateCredentials(eq(1L), any());
+
+        // Act & Assert
+        mockMvc.perform(post("/api/persons/1/credentials")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk());
+
+        verify(personService, times(1)).createOrUpdateCredentials(eq(1L), any());
+    }
+
+    @Test
+    void testConfigureCredentials_WithSuperAdminRole_ReturnsOk() throws Exception {
+        // Arrange
+        String requestBody = """
+                {
+                    "username": "joao.silva",
+                    "password": "Test123!"
+                }
+                """;
+
+        // Mock SecurityContext with SUPERADMIN role
+        Authentication authentication = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        SecurityContextHolder.setContext(securityContext);
+        
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getAuthorities()).thenAnswer(invocation -> 
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_SUPERADMIN")));
+
+        doNothing().when(personService).createOrUpdateCredentials(eq(1L), any());
+
+        // Act & Assert
+        mockMvc.perform(post("/api/persons/1/credentials")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk());
+
+        verify(personService, times(1)).createOrUpdateCredentials(eq(1L), any());
+    }
+
+    @Test
+    void testFindById_WithUsername_ReturnsUsername() throws Exception {
+        // Arrange
+        PersonDTO personWithUser = new PersonDTO();
+        personWithUser.setId(1L);
+        personWithUser.setFullname("João Silva");
+        personWithUser.setEmail("joao@example.com");
+        personWithUser.setCpf("12345678900");
+        personWithUser.setUsername("joao.silva");
+        personWithUser.setUserId(1L);
+
+        when(personService.findById(1L)).thenReturn(personWithUser);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/persons/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.fullname").value("João Silva"))
+                .andExpect(jsonPath("$.username").value("joao.silva"))
+                .andExpect(jsonPath("$.userId").value(1));
+
+        verify(personService, times(1)).findById(1L);
+    }
+
+    @Test
+    void testFindById_WithoutUsername_UsernameIsNull() throws Exception {
+        // Arrange
+        PersonDTO personWithoutUser = new PersonDTO();
+        personWithoutUser.setId(1L);
+        personWithoutUser.setFullname("João Silva");
+        personWithoutUser.setEmail("joao@example.com");
+        personWithoutUser.setCpf("12345678900");
+        personWithoutUser.setUsername(null);
+        personWithoutUser.setUserId(null);
+
+        when(personService.findById(1L)).thenReturn(personWithoutUser);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/persons/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.fullname").value("João Silva"))
+                .andExpect(jsonPath("$.username").doesNotExist())
+                .andExpect(jsonPath("$.userId").doesNotExist());
+
+        verify(personService, times(1)).findById(1L);
     }
 }
 

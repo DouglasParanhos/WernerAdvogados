@@ -64,9 +64,14 @@ export default {
     }
   },
   mounted() {
-    // Se já estiver autenticado, redirecionar para dashboard
+    // Se já estiver autenticado, redirecionar baseado na role
     if (authService.isAuthenticated()) {
-      router.push('/dashboard')
+      const user = authService.getUser()
+      if (user && user.role === 'CLIENT') {
+        router.push('/my-moviments')
+      } else {
+        router.push('/dashboard')
+      }
     }
   },
   methods: {
@@ -94,8 +99,14 @@ export default {
       this.loading = true
       
       try {
-        await authService.login(this.username, this.password)
-        router.push('/dashboard')
+        const response = await authService.login(this.username, this.password)
+        // Redirecionar baseado na role
+        const user = authService.getUser()
+        if (user && user.role === 'CLIENT') {
+          router.push('/my-moviments')
+        } else {
+          router.push('/dashboard')
+        }
       } catch (error) {
         if (error.response && error.response.status === 401) {
           this.errorMessage = 'Credenciais inválidas. Verifique seu usuário e senha.'

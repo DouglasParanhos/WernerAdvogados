@@ -1,5 +1,6 @@
 package com.wa.controller;
 
+import com.wa.annotation.RequiresNonClient;
 import com.wa.dto.MatriculationDTO;
 import com.wa.dto.MatriculationRequestDTO;
 import com.wa.service.MatriculationService;
@@ -19,6 +20,7 @@ public class MatriculationController {
     private final MatriculationService matriculationService;
     
     @GetMapping
+    @RequiresNonClient
     public ResponseEntity<List<MatriculationDTO>> findAll(@RequestParam(required = false) Long personId) {
         if (personId != null) {
             return ResponseEntity.ok(matriculationService.findByPersonId(personId));
@@ -27,21 +29,25 @@ public class MatriculationController {
     }
     
     @GetMapping("/{id}")
+    @RequiresNonClient
     public ResponseEntity<MatriculationDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(matriculationService.findById(id));
     }
     
     @PostMapping
+    @RequiresNonClient
     public ResponseEntity<MatriculationDTO> create(@Valid @RequestBody MatriculationRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(matriculationService.create(request));
     }
     
     @PutMapping("/{id}")
+    @RequiresNonClient
     public ResponseEntity<MatriculationDTO> update(@PathVariable Long id, @Valid @RequestBody MatriculationRequestDTO request) {
         return ResponseEntity.ok(matriculationService.update(id, request));
     }
     
     @DeleteMapping("/{id}")
+    @RequiresNonClient
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         matriculationService.delete(id);
         return ResponseEntity.noContent().build();

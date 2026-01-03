@@ -1,6 +1,7 @@
 package com.wa.service;
 
 import com.wa.dto.AddressDTO;
+import com.wa.dto.ClientCredentialsDTO;
 import com.wa.dto.MatriculationDTO;
 import com.wa.dto.MatriculationRequestDTO;
 import com.wa.dto.PersonDTO;
@@ -8,14 +9,17 @@ import com.wa.dto.PersonRequestDTO;
 import com.wa.model.Address;
 import com.wa.model.Matriculation;
 import com.wa.model.Person;
+import com.wa.model.User;
 import com.wa.repository.AddressRepository;
 import com.wa.repository.MatriculationRepository;
 import com.wa.repository.PersonRepository;
+import com.wa.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,6 +32,8 @@ public class PersonService {
     private final PersonRepository personRepository;
     private final AddressRepository addressRepository;
     private final MatriculationRepository matriculationRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<PersonDTO> findAll() {
         return personRepository.findAllWithRelations().stream()
@@ -252,6 +258,7 @@ public class PersonService {
         dto.setIdFuncional(person.getIdFuncional());
         dto.setNacionalidade(person.getNacionalidade());
         dto.setUserId(person.getUser() != null ? person.getUser().getId() : null);
+        dto.setUsername(person.getUser() != null ? person.getUser().getUsername() : null);
         dto.setAddressId(person.getAddress() != null ? person.getAddress().getId() : null);
 
         if (person.getAddress() != null) {
@@ -322,5 +329,64 @@ public class PersonService {
         address.setEstado(dto.getEstado());
         address.setCep(dto.getCep());
         return address;
+    }
+
+    public String generateUsernameSuggestion(Long personId) {
+        Person person = personRepository.findById(personId)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + personId));
+
+        String fullname = person.getFullname();
+        if (fullname == null || fullname.trim().isEmpty()) {
+            return "";
+        }
+
+        String[] names = fullname.trim().split("\\s+");
+        if (names.length == 0) {
+            return "";
+        }
+
+        String firstName = names[0].toLowerCase();
+        if (names.length == 1) {
+            return firstName;
+        }
+
+        String lastName = names[names.length - 1].toLowerCase();
+        return firstName + "." + lastName;
+    }
+
+    @Transactional
+    public void createOrUpdateCredentials(Long personId, ClientCredentialsDTO credentials) {
+        Person person = personRepository.findById(personId)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + personId));
+
+        // Verificar se username já existe (exceto se for o mesmo usuário)
+        User existingUser = userRepository.findByUsername(credentials.getUsername())
+                .orElse(null);
+
+        if (existingUser != null
+                && (person.getUser() == null || !existingUser.getId().equals(person.getUser().getId()))) {
+            throw new RuntimeException("Username já está em uso");
+        }
+
+        User user;
+        if (person.getUser() != null) {
+            // Atualizar usuário existente
+            user = person.getUser();
+            user.setUsername(credentials.getUsername());
+            // Sempre definir role como CLIENT para clientes
+            user.setRole("CLIENT");
+        } else {
+            // Criar novo usuário
+            user = new User();
+            user.setUsername(credentials.getUsername());
+            user.setRole("CLIENT");
+        }
+
+        // Hash da senha
+        user.setPassword(passwordEncoder.encode(credentials.getPassword()));
+
+        user = userRepository.save(user);
+        person.setUser(user);
+        personRepository.save(person);
     }
 }

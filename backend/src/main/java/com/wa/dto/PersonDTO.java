@@ -25,6 +25,7 @@ public class PersonDTO {
     private String idFuncional;
     private String nacionalidade;
     private Long userId;
+    private String username;
     private Long addressId;
     private AddressDTO address;
     private List<MatriculationDTO> matriculations;

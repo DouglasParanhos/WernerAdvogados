@@ -44,6 +44,14 @@
         </div>
       </div>
       
+      <!-- Modal de Configuração de Login -->
+      <ClientLoginModal
+        :show="showLoginModal"
+        :client="selectedClient"
+        @close="closeLoginModal"
+        @saved="handleLoginSaved"
+      />
+      
       <div v-if="!loading && !error" class="search-container">
         <div class="search-wrapper">
           <span class="search-icon">🔍</span>
@@ -102,6 +110,12 @@
               <td>{{ getProcessCount(client) }}</td>
               <td @click.stop>
                 <div class="action-buttons">
+                  <button @click="openLoginModal(client)" class="icon-btn login-btn" title="Configurar Login">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
                   <button @click="goToEditClient(client.id)" class="icon-btn edit-btn" title="Editar cliente">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -155,6 +169,13 @@
               </div>
             </div>
             <div class="card-actions" @click.stop>
+              <button @click="openLoginModal(client)" class="mobile-icon-btn login-btn" title="Configurar Login">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Login</span>
+              </button>
               <button @click="goToEditClient(client.id)" class="mobile-icon-btn edit-btn" title="Editar cliente">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -217,9 +238,13 @@
 <script>
 import { personService } from '../services/personService'
 import { backupService } from '../services/backupService'
+import ClientLoginModal from '../components/ClientLoginModal.vue'
 
 export default {
   name: 'ClientList',
+  components: {
+    ClientLoginModal
+  },
   data() {
     return {
       clients: [],
@@ -228,6 +253,8 @@ export default {
       searchQuery: '',
       showBackupModal: false,
       backupLoading: false,
+      showLoginModal: false,
+      selectedClient: null,
       currentPage: 0,
       pageSize: 10,
       paginationData: null,
@@ -351,6 +378,18 @@ export default {
       } finally {
         this.backupLoading = false
       }
+    },
+    openLoginModal(client) {
+      this.selectedClient = client
+      this.showLoginModal = true
+    },
+    closeLoginModal() {
+      this.showLoginModal = false
+      this.selectedClient = null
+    },
+    handleLoginSaved() {
+      // Recarregar lista de clientes após salvar credenciais
+      this.loadClients()
     }
   }
 }

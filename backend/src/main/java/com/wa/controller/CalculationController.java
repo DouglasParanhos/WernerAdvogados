@@ -1,5 +1,6 @@
 package com.wa.controller;
 
+import com.wa.annotation.RequiresNonClient;
 import com.wa.dto.NovaEscolaCalculationRequestDTO;
 import com.wa.dto.ParcelaCalculadaDTO;
 import com.wa.service.BcbCalculatorScraper;
@@ -34,6 +35,7 @@ public class CalculationController {
     private final BcbCalculatorScraper bcbCalculatorScraper;
 
     @PostMapping("/novaescola")
+    @RequiresNonClient
     public ResponseEntity<ByteArrayResource> calculateNovaEscola(
             @Valid @RequestBody NovaEscolaCalculationRequestDTO request) {
         try {
@@ -72,6 +74,7 @@ public class CalculationController {
      * Retorna o fator de correção IPCA-E fixo (2.88680560)
      */
     @GetMapping("/factors/ipcae")
+    @RequiresNonClient
     public ResponseEntity<Map<String, Object>> getIpcaEFactor(
             @RequestParam(required = false, defaultValue = "02/2003") String dataInicio) {
         try {
@@ -95,6 +98,7 @@ public class CalculationController {
      * Obtém o fator de correção SELIC da Calculadora do Cidadão do BCB (scraping)
      */
     @GetMapping("/factors/selic")
+    @RequiresNonClient
     public ResponseEntity<Map<String, Object>> getSelicFactor(
             @RequestParam(required = false, defaultValue = "09/12/2021") String dataInicio) {
         try {

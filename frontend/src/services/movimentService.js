@@ -24,6 +24,11 @@ export const movimentService = {
   
   async delete(id) {
     await api.delete(`/moviments/${id}`)
+  },
+  
+  async getMyMoviments() {
+    const response = await api.get('/moviments/my-moviments')
+    return response.data
   }
 }
 
