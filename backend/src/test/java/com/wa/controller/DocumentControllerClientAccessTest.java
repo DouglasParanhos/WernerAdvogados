@@ -6,6 +6,7 @@ import com.wa.repository.PersonRepository;
 import com.wa.repository.UserRepository;
 import com.wa.service.DocumentTemplateService;
 import com.wa.service.WordDocumentService;
+import com.wa.util.JWTUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,9 @@ class DocumentControllerClientAccessTest {
 
     @MockBean
     private UserRepository userRepository;
+
+    @MockBean
+    private JWTUtil jwtUtil;
 
     private User clientUser;
     private Person clientPerson;

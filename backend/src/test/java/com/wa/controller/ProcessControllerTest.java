@@ -2,6 +2,7 @@ package com.wa.controller;
 
 import com.wa.dto.ProcessDTO;
 import com.wa.service.ProcessService;
+import com.wa.util.JWTUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,9 @@ class ProcessControllerTest {
 
     @MockBean
     private ProcessService processService;
+
+    @MockBean
+    private JWTUtil jwtUtil;
 
     private ProcessDTO processDTO1;
     private ProcessDTO processDTO2;

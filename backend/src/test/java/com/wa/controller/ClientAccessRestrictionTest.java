@@ -31,6 +31,7 @@ import com.wa.service.BackupService;
 import com.wa.repository.PersonRepository;
 import com.wa.repository.UserRepository;
 import com.wa.repository.ProcessRepository;
+import com.wa.util.JWTUtil;
 
 import java.util.Collections;
 
@@ -103,6 +104,8 @@ class ClientAccessRestrictionTest {
     private UserRepository userRepository;
     @MockBean
     private ProcessRepository processRepository;
+    @MockBean
+    private JWTUtil jwtUtil;
 
     private Authentication clientAuthentication;
     private SecurityContext securityContext;

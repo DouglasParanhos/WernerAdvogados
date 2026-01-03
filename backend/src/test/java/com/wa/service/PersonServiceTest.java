@@ -430,9 +430,10 @@ class PersonServiceTest {
         person.setEmail("joao@example.com");
         person.setCpf("12345678900");
         person.setUser(user);
+        person.setMatriculations(new ArrayList<>());
 
         when(personRepository.findByIdWithRelations(1L)).thenReturn(Optional.of(person));
-        when(matriculationRepository.findByPersonIdWithProcesses(1L)).thenReturn(new ArrayList<>());
+        lenient().when(matriculationRepository.findByPersonIdWithProcesses(1L)).thenReturn(new ArrayList<>());
 
         // Act
         PersonDTO result = personService.findById(1L);
@@ -452,9 +453,10 @@ class PersonServiceTest {
         person.setEmail("joao@example.com");
         person.setCpf("12345678900");
         person.setUser(null);
+        person.setMatriculations(new ArrayList<>());
 
         when(personRepository.findByIdWithRelations(1L)).thenReturn(Optional.of(person));
-        when(matriculationRepository.findByPersonIdWithProcesses(1L)).thenReturn(new ArrayList<>());
+        lenient().when(matriculationRepository.findByPersonIdWithProcesses(1L)).thenReturn(new ArrayList<>());
 
         // Act
         PersonDTO result = personService.findById(1L);

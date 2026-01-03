@@ -12,31 +12,23 @@ Cria testes para funcionalidades recém criadas e executa todos os testes (backe
 
 ## Comandos
 
-### Executar Todos os Testes
-
 ```bash
 # Executar testes do backend
 cd backend
 mvn clean test
 
-# Executar testes do frontend
-cd ../frontend
+# Executar testes do frontend (voltar para raiz primeiro)
+cd ..
+cd frontend
 npm test
 ```
 
-### Executar em Sequência (Windows PowerShell)
+## Uso
 
-```powershell
-# Executar ambos em sequência
-cd backend; mvn clean test; cd ../frontend; npm test
-```
-
-### Executar em Sequência (Linux/Mac)
-
-```bash
-# Executar ambos em sequência
-cd backend && mvn clean test && cd ../frontend && npm test
-```
+- Execute os comandos na sequência mostrada acima
+- Os testes do backend devem ser executados primeiro
+- Se os testes do backend falharem, corrija antes de executar os do frontend
+- Certifique-se de estar na raiz do projeto antes de executar os comandos
 
 ## Estrutura de Testes
 
@@ -54,37 +46,7 @@ cd backend && mvn clean test && cd ../frontend && npm test
 - **Modo watch**: `npm run test:watch` ou `npx vitest`
 - **Com coverage**: `npm run test:coverage` ou `npx vitest --coverage`
 
-## Exemplo de Execução Completa
-
-```bash
-# 1. Executar testes do backend
-cd backend
-mvn clean test
-
-# Verificar se passou (exit code 0)
-if [ $? -eq 0 ]; then
-    echo "✅ Testes do backend passaram!"
-    
-    # 2. Executar testes do frontend
-    cd ../frontend
-    npm test
-    
-    if [ $? -eq 0 ]; then
-        echo "✅ Testes do frontend passaram!"
-        echo "✅ Todos os testes passaram com sucesso!"
-    else
-        echo "❌ Alguns testes do frontend falharam"
-        exit 1
-    fi
-else
-    echo "❌ Alguns testes do backend falharam"
-    exit 1
-fi
-```
-
 ## Verificação de Cobertura
-
-Para verificar a cobertura de testes:
 
 ```bash
 # Backend (se JaCoCo estiver configurado)
@@ -92,7 +54,8 @@ cd backend
 mvn test jacoco:report
 # Relatório em: target/site/jacoco/index.html
 
-# Frontend
+# Frontend (voltar para raiz primeiro)
+cd ..
 cd frontend
 npm run test:coverage
 # Relatório no terminal e em: coverage/
@@ -136,4 +99,3 @@ Ao criar uma nova funcionalidade, certifique-se de criar testes para:
 - Execute `npm test` no frontend para verificar erros
 
 --- End Command ---
-

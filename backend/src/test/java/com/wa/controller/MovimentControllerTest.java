@@ -6,6 +6,7 @@ import com.wa.model.User;
 import com.wa.repository.PersonRepository;
 import com.wa.repository.UserRepository;
 import com.wa.service.MovimentService;
+import com.wa.util.JWTUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,9 @@ class MovimentControllerTest {
 
     @MockBean
     private PersonRepository personRepository;
+
+    @MockBean
+    private JWTUtil jwtUtil;
 
     private MovimentDTO movimentDTO1;
     private MovimentDTO movimentDTO2;
