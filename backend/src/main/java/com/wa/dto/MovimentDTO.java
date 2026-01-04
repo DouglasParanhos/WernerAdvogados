@@ -14,5 +14,11 @@ public class MovimentDTO {
     private String descricao;
     private LocalDateTime date;
     private Long processId;
+    private String processNumero;
+    private String processComarca;
+    private String processVara;
+    private String processTipoProcesso;
+    private String processMatriculationNumero;
+    private String processStatus;
+    private Boolean visibleToClient;
 }
-

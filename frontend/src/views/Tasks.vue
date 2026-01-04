@@ -329,7 +329,7 @@ export default {
       }
     },
     goToHome() {
-      this.$router.push('/dashboard')
+      this.$router.push('/')
     },
     checkMobile() {
       this.isMobile = window.innerWidth <= 1024
@@ -355,26 +355,7 @@ export default {
   background: #f5f5f5;
 }
 
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
+/* Estilos específicos do Tasks - btn-home sem borda (diferente do layout.css) */
 .btn-home {
   background: transparent;
   border: none;
@@ -394,52 +375,6 @@ export default {
 .btn-home svg {
   width: 24px;
   height: 24px;
-}
-
-h1 {
-  font-size: 2rem;
-  color: #1a1a1a;
-  margin: 0;
-}
-
-.header-actions {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.filter-group label {
-  font-weight: 600;
-  color: #4a5568;
-  font-size: 0.875rem;
-}
-
-.filter-select {
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  background: white;
-  color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.filter-select:hover {
-  border-color: #003d7a;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: #003d7a;
-  box-shadow: 0 0 0 3px rgba(0, 61, 122, 0.1);
 }
 
 .btn-icon-add {
@@ -717,44 +652,6 @@ h1 {
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 2rem;
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #003d7a;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #002d5a;
-}
-
-.btn-secondary {
-  background: #e2e8f0;
-  color: #4a5568;
-}
-
-.btn-secondary:hover {
-  background: #cbd5e0;
-}
-
-.loading, .error {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.1rem;
-}
-
-.error {
-  color: #ef4444;
 }
 
 @media (max-width: 1024px) {

@@ -1,10 +1,14 @@
 package com.wa.controller;
 
+import com.wa.annotation.RequiresNonClient;
 import com.wa.dto.ClientDocumentGenerationRequestDTO;
 import com.wa.dto.DocumentGenerationRequestDTO;
 import com.wa.dto.DocumentTemplateDTO;
+import com.wa.model.Person;
+import com.wa.model.User;
 import com.wa.repository.PersonRepository;
 import com.wa.repository.ProcessRepository;
+import com.wa.repository.UserRepository;
 import com.wa.service.DocumentTemplateService;
 import com.wa.service.WordDocumentService;
 import jakarta.validation.Valid;
@@ -14,6 +18,10 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -29,11 +37,13 @@ public class DocumentController {
     private final WordDocumentService wordDocumentService;
     private final ProcessRepository processRepository;
     private final PersonRepository personRepository;
+    private final UserRepository userRepository;
     
     /**
      * Lista templates disponíveis para um processo específico
      */
     @GetMapping("/templates")
+    @RequiresNonClient
     public ResponseEntity<List<DocumentTemplateDTO>> getTemplates(@RequestParam Long processId) {
         try {
             log.debug("Buscando templates para processo ID: {}", processId);
@@ -66,6 +76,7 @@ public class DocumentController {
      * Gera um documento Word e retorna para download
      */
     @PostMapping("/generate")
+    @RequiresNonClient
     public ResponseEntity<ByteArrayResource> generateDocument(
             @Valid @RequestBody DocumentGenerationRequestDTO request) {
         try {
@@ -128,6 +139,27 @@ public class DocumentController {
     public ResponseEntity<ByteArrayResource> generateClientDocument(
             @Valid @RequestBody ClientDocumentGenerationRequestDTO request) {
         try {
+            // Verificar se o usuário autenticado tem role CLIENT
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                boolean isClient = authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .anyMatch(authority -> authority.equals("ROLE_CLIENT"));
+                
+                if (isClient) {
+                    // CLIENT só pode gerar documentos para si mesmo
+                    String username = authentication.getName();
+                    User user = userRepository.findByUsername(username)
+                            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                    Person person = personRepository.findByUserId(user.getId())
+                            .orElseThrow(() -> new RuntimeException("Cliente não encontrado para este usuário"));
+                    
+                    if (!person.getId().equals(request.getPersonId())) {
+                        throw new AccessDeniedException("Clientes só podem gerar documentos para si mesmos");
+                    }
+                }
+            }
+            
             // Gerar documento
             byte[] documentBytes = wordDocumentService.generateDocumentForClient(
                     request.getPersonId(), 

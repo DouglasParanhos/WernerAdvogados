@@ -1,5 +1,6 @@
 package com.wa.controller;
 
+import com.wa.annotation.RequiresNonClient;
 import com.wa.dto.ProcessStatusDTO;
 import com.wa.dto.StatisticsDTO;
 import com.wa.service.ProcessUpdateStatusService;
@@ -25,11 +26,13 @@ public class StatisticsController {
     private final ProcessUpdateStatusService processUpdateStatusService;
     
     @GetMapping
+    @RequiresNonClient
     public ResponseEntity<StatisticsDTO> getStatistics() {
         return ResponseEntity.ok(statisticsService.getStatistics());
     }
     
     @PostMapping("/update-process-values")
+    @RequiresNonClient
     public ResponseEntity<Map<String, String>> updateProcessValues() {
         Map<String, String> response = new HashMap<>();
         
@@ -53,6 +56,7 @@ public class StatisticsController {
     }
     
     @GetMapping("/process-status")
+    @RequiresNonClient
     public ResponseEntity<ProcessStatusDTO> getProcessStatus() {
         ProcessUpdateStatusService.StatusInfo statusInfo = processUpdateStatusService.getCurrentStatus();
         return ResponseEntity.ok(ProcessStatusDTO.fromStatusInfo(statusInfo));

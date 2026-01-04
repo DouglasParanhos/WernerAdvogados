@@ -18,6 +18,7 @@ import Tasks from '../views/Tasks.vue'
 import Statistics from '../views/Statistics.vue'
 import Calculations from '../views/Calculations.vue'
 import NovaEscolaCalculation from '../views/NovaEscolaCalculation.vue'
+import ClientMoviments from '../views/ClientMoviments.vue'
 
 const routes = [
   // Public routes with PublicLayout
@@ -142,6 +143,12 @@ const routes = [
     name: 'NovaEscolaCalculation',
     component: NovaEscolaCalculation,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/my-moviments',
+    name: 'ClientMoviments',
+    component: ClientMoviments,
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -154,16 +161,14 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const isAuthenticated = authService.isAuthenticated()
   
-  // Always allow access to public routes (including home page), regardless of authentication status
-  // Check if the route is public (doesn't require auth) or is the home page
-  if (!requiresAuth || to.path === '/' || to.name === 'HomePublic') {
-    // If trying to access login while authenticated, redirect to home
-    if (to.path === '/login' && isAuthenticated) {
-      next('/')
-      return
+  // If authenticated user tries to access public home page, redirect based on role
+  if (to.path === '/' && isAuthenticated && to.name === 'HomePublic') {
+    const user = authService.getUser()
+    if (user && user.role === 'CLIENT') {
+      next('/my-moviments')
+    } else {
+      next('/dashboard')
     }
-    // Allow access to public routes
-    next()
     return
   }
   
@@ -171,6 +176,22 @@ router.beforeEach((to, from, next) => {
   if (requiresAuth && !isAuthenticated) {
     // Redirect to login, but preserve the intended destination
     next('/login')
+  } else if (to.path === '/login' && isAuthenticated) {
+    // If authenticated and trying to access login, redirect based on role
+    const user = authService.getUser()
+    if (user && user.role === 'CLIENT') {
+      next('/my-moviments')
+    } else {
+      next('/dashboard')
+    }
+  } else if (requiresAuth && isAuthenticated) {
+    // If user is CLIENT and trying to access authenticated route that is not /my-moviments
+    const user = authService.getUser()
+    if (user && user.role === 'CLIENT' && to.path !== '/my-moviments') {
+      next('/my-moviments')
+      return
+    }
+    next()
   } else {
     next()
   }

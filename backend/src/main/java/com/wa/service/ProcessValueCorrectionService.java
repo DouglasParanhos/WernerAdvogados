@@ -2,6 +2,7 @@ package com.wa.service;
 
 import com.wa.model.Process;
 import com.wa.repository.ProcessRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +29,9 @@ public class ProcessValueCorrectionService {
     private final BCBCalculatorService bcbCalculatorService;
     private final ProcessUpdateStatusService processUpdateStatusService;
     private final TransactionTemplate transactionTemplate;
+    private final EntityManager entityManager;
 
-    @Value("${process.correction.batch.size:50}")
+    @Value("${process.correction.batch.size:20}")
     private int batchSize;
 
     @Value("${process.correction.parallel.enabled:true}")
@@ -41,45 +43,61 @@ public class ProcessValueCorrectionService {
     /**
      * Recalcula e atualiza os valores corrigidos de todos os processos
      * que possuem valorOriginal e distribuidoEm não nulos
+     * Processa em lotes para economizar memória
      */
     @Async("taskExecutor")
     public void recalculateAllProcessValues() {
         try {
             processUpdateStatusService.startProcessing();
-            log.info("Iniciando recálculo de valores corrigidos de todos os processos");
+            log.info("Iniciando recálculo de valores corrigidos de todos os processos (batch size: {})", batchSize);
             LocalDate dataFinal = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
 
-            // Buscar todos os processos que precisam de correção
-            List<Process> processes = processRepository.findAll().stream()
-                    .filter(p -> p.getValorOriginal() != null && p.getValorOriginal() > 0)
-                    .filter(p -> p.getDistribuidoEm() != null)
-                    .toList();
+            // Buscar apenas IDs dos processos que precisam de correção (query leve)
+            List<Long> processIds = processRepository.findIdsForCorrection();
 
-            if (processes.isEmpty()) {
+            if (processIds.isEmpty()) {
                 log.info("Nenhum processo encontrado para correção");
                 processUpdateStatusService.completeProcessing();
                 return;
             }
 
-            log.info("Encontrados {} processos para correção", processes.size());
+            log.info("Encontrados {} processos para correção", processIds.size());
 
             AtomicInteger successCount = new AtomicInteger(0);
             AtomicInteger errorCount = new AtomicInteger(0);
             AtomicInteger skippedCount = new AtomicInteger(0);
 
-            if (parallelEnabled && processes.size() > 1) {
-                // Processamento paralelo otimizado
-                log.info("Processando {} processos em paralelo usando {} threads", processes.size(), parallelThreads);
-                processInParallel(processes, dataFinal, successCount, errorCount, skippedCount);
-            } else {
-                // Processamento sequencial (fallback ou quando paralelo está desabilitado)
-                log.info("Processando {} processos sequencialmente", processes.size());
-                processSequentially(processes, dataFinal, successCount, errorCount, skippedCount);
+            // Processar em lotes para economizar memória
+            int totalBatches = (int) Math.ceil((double) processIds.size() / batchSize);
+            log.info("Processando {} processos em {} lotes de até {} processos cada",
+                    processIds.size(), totalBatches, batchSize);
+
+            for (int i = 0; i < processIds.size(); i += batchSize) {
+                int endIndex = Math.min(i + batchSize, processIds.size());
+                List<Long> batchIds = processIds.subList(i, endIndex);
+                int batchNumber = (i / batchSize) + 1;
+
+                log.info("Processando lote {}/{} ({} processos)", batchNumber, totalBatches, batchIds.size());
+
+                // Buscar processos do lote atual
+                List<Process> batchProcesses = processRepository.findByIds(batchIds);
+
+                // Processar o lote
+                if (parallelEnabled && batchProcesses.size() > 1) {
+                    processInParallel(batchProcesses, dataFinal, successCount, errorCount, skippedCount);
+                } else {
+                    processSequentially(batchProcesses, dataFinal, successCount, errorCount, skippedCount);
+                }
+
+                // Limpar cache do Hibernate para liberar memória
+                entityManager.clear();
+
+                log.debug("Lote {}/{} concluído. Memória liberada.", batchNumber, totalBatches);
             }
 
             log.info("Recálculo de valores corrigidos concluído. " +
                     "Sucesso: {}, Erros: {}, Ignorados: {}, Total: {}",
-                    successCount.get(), errorCount.get(), skippedCount.get(), processes.size());
+                    successCount.get(), errorCount.get(), skippedCount.get(), processIds.size());
 
             processUpdateStatusService.completeProcessing();
         } catch (Exception e) {
@@ -107,8 +125,28 @@ public class ProcessValueCorrectionService {
             return false;
         }
 
+        // Normalizar tipo de processo para comparação (case-insensitive)
+        String tipoProcesso = process.getTipoProcesso() != null ? process.getTipoProcesso().toUpperCase().trim() : null;
+
+        // Para NOVAESCOLA e INTERNIVEIS: valorCorrigido = valorOriginal (sem cálculo
+        // BCB)
+        if ("NOVAESCOLA".equals(tipoProcesso) || "INTERNIVEIS".equals(tipoProcesso)) {
+            Double valorCorrigido = process.getValorOriginal();
+            process.setValorCorrigido(valorCorrigido);
+            processRepository.save(process);
+            log.info("Valor corrigido do processo {} (tipo: {}) atualizado para R$ {} (igual ao valor original)",
+                    processId, tipoProcesso, valorCorrigido);
+            return true;
+        }
+
+        // Para PISO: calcular valor corrigido via BCB (requer data de distribuição)
+        if (!"PISO".equals(tipoProcesso)) {
+            log.warn("Processo {} tem tipo desconhecido: {}. Não é possível recalcular.", processId, tipoProcesso);
+            return false;
+        }
+
         if (process.getDistribuidoEm() == null) {
-            log.warn("Processo {} não possui data de distribuição", processId);
+            log.warn("Processo {} (tipo: PISO) não possui data de distribuição", processId);
             return false;
         }
 
@@ -129,10 +167,11 @@ public class ProcessValueCorrectionService {
             if (valorCorrigido != null && valorCorrigido > 0) {
                 process.setValorCorrigido(valorCorrigido);
                 processRepository.save(process);
-                log.info("Valor corrigido do processo {} atualizado para R$ {}", processId, valorCorrigido);
+                log.info("Valor corrigido do processo {} (tipo: PISO) atualizado para R$ {}", processId,
+                        valorCorrigido);
                 return true;
             } else {
-                log.warn("Não foi possível calcular valor corrigido para processo {}", processId);
+                log.warn("Não foi possível calcular valor corrigido para processo {} (tipo: PISO)", processId);
                 return false;
             }
         } catch (Exception e) {
@@ -187,6 +226,38 @@ public class ProcessValueCorrectionService {
     private void processSingleProcess(Process process, LocalDate dataFinal,
             AtomicInteger successCount, AtomicInteger errorCount, AtomicInteger skippedCount) {
         try {
+            // Normalizar tipo de processo para comparação (case-insensitive)
+            String tipoProcesso = process.getTipoProcesso() != null ? process.getTipoProcesso().toUpperCase().trim()
+                    : null;
+
+            // Para NOVAESCOLA e INTERNIVEIS: valorCorrigido = valorOriginal (sem cálculo
+            // BCB)
+            if ("NOVAESCOLA".equals(tipoProcesso) || "INTERNIVEIS".equals(tipoProcesso)) {
+                if (process.getValorOriginal() != null && process.getValorOriginal() > 0) {
+                    Double valorCorrigido = process.getValorOriginal();
+                    if (saveProcessValue(process.getId(), valorCorrigido)) {
+                        successCount.incrementAndGet();
+                        log.info("Processo {} (tipo: {}) atualizado: valor corrigido = valor original = R$ {}",
+                                process.getId(), tipoProcesso, valorCorrigido);
+                    } else {
+                        errorCount.incrementAndGet();
+                    }
+                } else {
+                    log.warn("Processo {} (tipo: {}) não possui valor original válido para atualização",
+                            process.getId(), tipoProcesso);
+                    errorCount.incrementAndGet();
+                }
+                return;
+            }
+
+            // Para PISO: calcular valor corrigido via BCB (comportamento original)
+            if (!"PISO".equals(tipoProcesso)) {
+                log.warn("Processo {} tem tipo desconhecido: {}. Pulando processamento.",
+                        process.getId(), tipoProcesso);
+                skippedCount.incrementAndGet();
+                return;
+            }
+
             LocalDate dataInicial = process.getDistribuidoEm().toLocalDate();
 
             // Validar se a data inicial não é futura
@@ -197,8 +268,8 @@ public class ProcessValueCorrectionService {
                 return;
             }
 
-            // Calcular valor corrigido
-            log.debug("Calculando correção para processo {} (valor: R$ {}, data: {})",
+            // Calcular valor corrigido via BCB para processos PISO
+            log.debug("Calculando correção BCB para processo {} (tipo: PISO, valor: R$ {}, data: {})",
                     process.getId(), process.getValorOriginal(), dataInicial);
 
             Double valorCorrigido = null;
@@ -218,14 +289,14 @@ public class ProcessValueCorrectionService {
                 // Chamar método transacional para salvar
                 if (saveProcessValue(process.getId(), valorCorrigido)) {
                     successCount.incrementAndGet();
-                    log.info("Processo {} atualizado: valor corrigido = R$ {} (valor original = R$ {})",
+                    log.info("Processo {} (tipo: PISO) atualizado: valor corrigido = R$ {} (valor original = R$ {})",
                             process.getId(), valorCorrigido, process.getValorOriginal());
                 } else {
                     errorCount.incrementAndGet();
                 }
             } else {
                 log.warn(
-                        "Não foi possível calcular valor corrigido para processo {} (valor original: R$ {}, distribuído em: {})",
+                        "Não foi possível calcular valor corrigido para processo {} (tipo: PISO, valor original: R$ {}, distribuído em: {})",
                         process.getId(), process.getValorOriginal(), dataInicial);
                 errorCount.incrementAndGet();
             }

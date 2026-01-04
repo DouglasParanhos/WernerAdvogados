@@ -1,19 +1,19 @@
 <template>
   <div class="process-form">
-    <div class="container">
+      <div class="container medium">
       <div class="header">
         <button @click="goBack" class="btn btn-secondary">← Voltar</button>
         <h1>{{ isEdit ? 'Editar Processo' : 'Novo Processo' }}</h1>
       </div>
       
       <div v-if="loading" class="loading">Carregando...</div>
-      <div v-if="error" class="error">{{ error }}</div>
+      <div v-if="error" class="error inline">{{ error }}</div>
       
       <!-- Modal de Sucesso -->
       <Teleport to="body">
         <div v-if="showSuccessModal" class="modal-overlay" @click="closeSuccessModal">
-          <div class="modal-content" @click.stop>
-            <h2>Sucesso!</h2>
+          <div class="modal-content small" @click.stop>
+            <h2 class="success">Sucesso!</h2>
             <p>{{ successMessage }}</p>
             <div class="modal-actions">
               <button @click="closeSuccessModal" class="btn btn-primary">OK</button>
@@ -322,13 +322,9 @@ export default {
 </script>
 
 <style scoped>
+/* Estilos específicos do componente ProcessForm */
 .process-form {
   padding: 2rem;
-}
-
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
 }
 
 .header {
@@ -338,191 +334,11 @@ export default {
   margin-bottom: 2rem;
 }
 
-.header h1 {
-  font-size: 2rem;
-  color: #333;
-}
-
-.form {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 2rem;
-}
-
-.section {
-  margin-bottom: 2rem;
-}
-
-.section h2 {
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #dee2e6;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-group label {
-  font-weight: 600;
-  color: #495057;
-  font-size: 0.875rem;
-}
-
-.form-group input,
-.form-group select {
-  padding: 0.75rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #007bff;
-}
-
-.form-group select:disabled {
-  background-color: #e9ecef;
-  cursor: not-allowed;
-}
-
-.error-text {
-  color: #dc3545;
-  font-size: 0.875rem;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid #dee2e6;
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #545b62;
-}
-
-.loading, .error {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.1rem;
-}
-
 .error {
-  color: #dc3545;
   background: #f8d7da;
   padding: 1rem;
   border-radius: 4px;
   margin-bottom: 1rem;
-}
-
-.modal-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background: rgba(0, 0, 0, 0.5) !important;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999 !important;
-  animation: fadeIn 0.2s ease;
-  pointer-events: auto !important;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.modal-content {
-  background: white;
-  border-radius: 8px;
-  padding: 2rem;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  animation: slideIn 0.3s ease;
-  position: relative;
-  z-index: 10000;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-.modal-content h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: #28a745;
-}
-
-.modal-content p {
-  margin-bottom: 1.5rem;
-  color: #333;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
 }
 </style>
 

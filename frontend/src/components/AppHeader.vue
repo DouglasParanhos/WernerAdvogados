@@ -26,7 +26,7 @@
         <!-- Links abaixo do outro -->
         <div class="mb-4">
           <router-link 
-            to="/" 
+            :to="getHomeRoute()" 
             :class="['block margemcima', isAuthenticated ? 'text-white' : '']"
             :style="!isAuthenticated ? 'color: silver' : ''"
           >
@@ -99,7 +99,7 @@
         <ul class="flex gap-4 items-center">
           <li>
             <router-link 
-              to="/" 
+              :to="getHomeRoute()" 
               :class="['margemcima hover:font-bold', isAuthenticated ? 'text-white' : '']"
             >
               • Início
@@ -192,6 +192,17 @@ export default {
     updateAuthState() {
       this.isAuthenticated = authService.isAuthenticated()
       this.user = authService.getUser()
+    },
+    getHomeRoute() {
+      if (!this.isAuthenticated) {
+        return '/'
+      }
+      // Se for cliente, redirecionar para página de movimentos
+      if (this.user && this.user.role === 'CLIENT') {
+        return '/my-moviments'
+      }
+      // Caso contrário, ir para dashboard
+      return '/dashboard'
     },
     handleLogout() {
       authService.logout()

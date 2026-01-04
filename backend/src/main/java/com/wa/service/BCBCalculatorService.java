@@ -200,6 +200,24 @@ public class BCBCalculatorService {
             // Remover espaços restantes
             valueStr = valueStr.trim();
 
+            // Garantir que valores sempre tenham duas casas decimais (.00)
+            if (!valueStr.contains(".")) {
+                // Se não contém ponto decimal, adicionar ".00"
+                valueStr = valueStr + ".00";
+            } else {
+                // Se contém ponto, verificar quantas casas decimais tem
+                int dotIndex = valueStr.indexOf(".");
+                String decimalPart = valueStr.substring(dotIndex + 1);
+                if (decimalPart.length() == 1) {
+                    // Se tem apenas uma casa decimal (ex: "123.0"), adicionar um zero (ex: "123.00")
+                    valueStr = valueStr + "0";
+                } else if (decimalPart.length() == 0) {
+                    // Se o ponto está no final sem casas decimais, adicionar "00"
+                    valueStr = valueStr + "00";
+                }
+                // Se já tem duas ou mais casas decimais, não alterar
+            }
+
             return Double.parseDouble(valueStr);
         } catch (NumberFormatException e) {
             log.warn("Não foi possível converter '{}' para número", valueStr);

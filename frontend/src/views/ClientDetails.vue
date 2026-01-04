@@ -23,6 +23,12 @@
             </svg>
           </button>
           <div class="action-buttons">
+            <button @click="openLoginModal" class="icon-btn login-btn" title="Configurar Login">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
             <button @click="goToEdit" class="icon-btn edit-btn" title="Editar cliente">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -93,6 +99,23 @@
             <div class="info-item" v-if="client.nacionalidade">
               <label>Nacionalidade:</label>
               <span>{{ client.nacionalidade }}</span>
+            </div>
+            <div class="info-item login-info">
+              <label>Login:</label>
+              <div v-if="client.username" class="login-details">
+                <span class="username-value">{{ client.username }}</span>
+              </div>
+              <div v-else class="login-not-configured">
+                <span class="no-login-text">Login não configurado</span>
+                <button @click="openLoginModal" class="btn btn-sm btn-primary">Configurar Login</button>
+              </div>
+            </div>
+            <div class="info-item login-info" v-if="client.username">
+              <label>Senha:</label>
+              <div class="password-info">
+                <span class="password-status">Senha configurada</span>
+                <button @click="regeneratePassword" class="btn btn-sm btn-secondary">Regenerar Senha</button>
+              </div>
             </div>
           </div>
         </div>
@@ -254,6 +277,14 @@
         :client="client"
         @close="closeClientDocumentModal"
       />
+      
+      <!-- Modal de Configuração de Login -->
+      <ClientLoginModal
+        :show="showLoginModal"
+        :client="client"
+        @close="closeLoginModal"
+        @saved="handleLoginSaved"
+      />
     </div>
   </div>
 </template>
@@ -263,12 +294,14 @@ import { personService } from '../services/personService'
 import { processService } from '../services/processService'
 import DocumentGeneratorModal from '../components/DocumentGeneratorModal.vue'
 import ClientDocumentGeneratorModal from '../components/ClientDocumentGeneratorModal.vue'
+import ClientLoginModal from '../components/ClientLoginModal.vue'
 
 export default {
   name: 'ClientDetails',
   components: {
     DocumentGeneratorModal,
-    ClientDocumentGeneratorModal
+    ClientDocumentGeneratorModal,
+    ClientLoginModal
   },
   data() {
     return {
@@ -281,7 +314,8 @@ export default {
       editingStatusId: null,
       editingStatus: '',
       statusSuggestions: [],
-      filteredStatusSuggestions: []
+      filteredStatusSuggestions: [],
+      showLoginModal: false
     }
   },
   async mounted() {
@@ -417,6 +451,20 @@ export default {
     isArchived(process) {
       const status = (process.status || '').toLowerCase()
       return status.includes('arquivado')
+    },
+    openLoginModal() {
+      this.showLoginModal = true
+    },
+    closeLoginModal() {
+      this.showLoginModal = false
+    },
+    async handleLoginSaved() {
+      // Recarregar dados do cliente após salvar credenciais
+      await this.loadClient()
+    },
+    regeneratePassword() {
+      // Abrir modal para regenerar senha (a senha será gerada automaticamente)
+      this.openLoginModal()
     }
   }
 }
@@ -594,6 +642,15 @@ export default {
   height: 18px;
 }
 
+.login-btn {
+  color: #007bff;
+}
+
+.login-btn:hover {
+  background-color: #f0f8ff;
+  color: #0056b3;
+}
+
 .edit-btn {
   color: #6c757d;
 }
@@ -740,42 +797,46 @@ export default {
   color: #dc3545;
 }
 
-/* Sempre mostrar apenas ícones */
-.header-actions .btn-generate-doc,
-.section-header .btn-new-process,
-.process-actions .btn-generate-process-doc {
-  padding: 0.75rem;
-  min-width: auto;
-  width: 48px;
-  height: 48px;
+.login-info {
+  grid-column: 1 / -1;
+}
+
+.login-details {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
 }
 
-.header-actions .btn-text,
-.section-header .btn-text,
-.process-actions .btn-text {
-  display: none;
+.username-value {
+  font-weight: 500;
+  color: #333;
 }
 
-.header-actions .btn-icon,
-.section-header .btn-icon,
-.process-actions .btn-icon {
-  display: block;
-  width: 20px;
-  height: 20px;
+.login-not-configured {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.process-actions .btn-sm {
-  width: 40px;
-  height: 40px;
-  padding: 0.5rem;
+.no-login-text {
+  color: #6c757d;
+  font-style: italic;
 }
 
-.process-actions .btn-icon {
-  width: 18px;
-  height: 18px;
+.password-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.password-status {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
 }
 </style>
 

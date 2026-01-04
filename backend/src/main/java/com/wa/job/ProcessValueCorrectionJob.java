@@ -3,7 +3,6 @@ package com.wa.job;
 import com.wa.service.ProcessValueCorrectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -21,8 +20,10 @@ public class ProcessValueCorrectionJob {
      * Job agendado para executar diariamente às 4h da manhã
      * Cron expression: segundo minuto hora dia mês dia-da-semana
      * 0 0 4 * * * = às 4:00:00 todos os dias
+     * 
+     * DESABILITADO: Agendamento comentado para não executar automaticamente
      */
-    @Scheduled(cron = "0 0 4 * * *", zone = "America/Sao_Paulo")
+    // @Scheduled(cron = "0 0 4 * * *", zone = "America/Sao_Paulo")
     public void executeDailyCorrection() {
         LocalDateTime startTime = LocalDateTime.now();
         log.info("========================================");

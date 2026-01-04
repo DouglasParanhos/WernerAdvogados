@@ -1,5 +1,6 @@
 package com.wa.controller;
 
+import com.wa.annotation.RequiresNonClient;
 import com.wa.dto.TaskDTO;
 import com.wa.dto.TaskRequestDTO;
 import com.wa.service.TaskService;
@@ -19,11 +20,13 @@ public class TaskController {
     private TaskService taskService;
     
     @GetMapping
+    @RequiresNonClient
     public ResponseEntity<List<TaskDTO>> getAll() {
         return ResponseEntity.ok(taskService.getAll());
     }
     
     @GetMapping("/{id}")
+    @RequiresNonClient
     public ResponseEntity<TaskDTO> getById(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(taskService.getById(id));
@@ -33,6 +36,7 @@ public class TaskController {
     }
     
     @PostMapping
+    @RequiresNonClient
     public ResponseEntity<TaskDTO> create(@RequestBody TaskRequestDTO request) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(taskService.create(request));
@@ -42,6 +46,7 @@ public class TaskController {
     }
     
     @PutMapping("/{id}")
+    @RequiresNonClient
     public ResponseEntity<TaskDTO> update(@PathVariable Long id, @RequestBody TaskRequestDTO request) {
         try {
             return ResponseEntity.ok(taskService.update(id, request));
@@ -51,6 +56,7 @@ public class TaskController {
     }
     
     @DeleteMapping("/{id}")
+    @RequiresNonClient
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         try {
             taskService.delete(id);
@@ -61,6 +67,7 @@ public class TaskController {
     }
     
     @PutMapping("/reorder")
+    @RequiresNonClient
     public ResponseEntity<List<TaskDTO>> updateOrder(@RequestBody List<TaskRequestDTO> tasks) {
         try {
             return ResponseEntity.ok(taskService.updateOrder(tasks));

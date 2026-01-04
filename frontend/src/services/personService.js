@@ -1,8 +1,12 @@
 import api from './api'
 
 export const personService = {
-  async getAll() {
-    const response = await api.get('/persons')
+  async getAll(page = null, size = null, search = null) {
+    const params = {}
+    if (page !== null) params.page = page
+    if (size !== null) params.size = size
+    if (search !== null && search.trim() !== '') params.search = search
+    const response = await api.get('/persons', { params })
     return response.data
   },
   
@@ -23,6 +27,16 @@ export const personService = {
   
   async delete(id) {
     await api.delete(`/persons/${id}`)
+  },
+  
+  async configureCredentials(personId, credentials) {
+    const response = await api.post(`/persons/${personId}/credentials`, credentials)
+    return response.data
+  },
+  
+  async getUsernameSuggestion(personId) {
+    const response = await api.get(`/persons/${personId}/username-suggestion`)
+    return response.data
   }
 }
 

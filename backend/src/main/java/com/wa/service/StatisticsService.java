@@ -1,7 +1,6 @@
 package com.wa.service;
 
 import com.wa.dto.*;
-import com.wa.model.Process;
 import com.wa.repository.MatriculationRepository;
 import com.wa.repository.MovimentRepository;
 import com.wa.repository.PersonRepository;
@@ -21,47 +20,32 @@ public class StatisticsService {
     private final MatriculationRepository matriculationRepository;
     private final MovimentRepository movimentRepository;
     
-    /**
-     * Retorna o valor efetivo do processo: valorCorrigido se disponível, caso contrário valorOriginal
-     */
-    private Double getValorEfetivo(Process process) {
-        return process.getValorCorrigido() != null ? process.getValorCorrigido() : process.getValorOriginal();
-    }
-    
     public StatisticsDTO getStatistics() {
         StatisticsDTO dto = new StatisticsDTO();
         
-        // Totais
+        // Totais (já são queries agregadas, não precisam mudança)
         dto.setTotalClients(personRepository.count());
         dto.setTotalProcesses(processRepository.count());
         dto.setTotalMatriculations(matriculationRepository.count());
         dto.setTotalMoviments(movimentRepository.count());
         
-        // Processos por Tipo
-        List<Process> allProcesses = processRepository.findAll();
-        Map<String, Long> processesByTypeMap = allProcesses.stream()
-                .filter(p -> p.getTipoProcesso() != null)
-                .collect(Collectors.groupingBy(
-                    Process::getTipoProcesso,
-                    Collectors.counting()
-                ));
-        
-        List<CountByTypeDTO> processesByType = processesByTypeMap.entrySet().stream()
-                .map(entry -> new CountByTypeDTO(entry.getKey(), entry.getValue()))
+        // Processos por Tipo - usando query agregada
+        List<Object[]> processesByTypeData = processRepository.countByType();
+        List<CountByTypeDTO> processesByType = processesByTypeData.stream()
+                .map(row -> new CountByTypeDTO((String) row[0], ((Number) row[1]).longValue()))
                 .sorted(Comparator.comparing(CountByTypeDTO::getType))
                 .collect(Collectors.toList());
         dto.setProcessesByType(processesByType);
         
-        // Processos por Comarca com subdivisão por Tipo
-        Map<String, Map<String, Long>> comarcaTypeMap = allProcesses.stream()
-                .filter(p -> p.getComarca() != null && p.getTipoProcesso() != null)
-                .collect(Collectors.groupingBy(
-                    Process::getComarca,
-                    Collectors.groupingBy(
-                        Process::getTipoProcesso,
-                        Collectors.counting()
-                    )
-                ));
+        // Processos por Comarca com subdivisão por Tipo - usando query agregada
+        List<Object[]> comarcaTypeData = processRepository.countByComarcaAndType();
+        Map<String, Map<String, Long>> comarcaTypeMap = new HashMap<>();
+        for (Object[] row : comarcaTypeData) {
+            String comarca = (String) row[0];
+            String tipo = (String) row[1];
+            Long count = ((Number) row[2]).longValue();
+            comarcaTypeMap.computeIfAbsent(comarca, k -> new HashMap<>()).put(tipo, count);
+        }
         
         List<ProcessByComarcaDTO> processesByComarca = comarcaTypeMap.entrySet().stream()
                 .map(entry -> {
@@ -75,16 +59,15 @@ public class StatisticsService {
                 .collect(Collectors.toList());
         dto.setProcessesByComarca(processesByComarca);
         
-        // Processos por Status com subdivisão por Tipo
-        Map<String, Map<String, Long>> statusTypeMap = allProcesses.stream()
-                .filter(p -> p.getStatus() != null && p.getTipoProcesso() != null)
-                .collect(Collectors.groupingBy(
-                    Process::getStatus,
-                    Collectors.groupingBy(
-                        Process::getTipoProcesso,
-                        Collectors.counting()
-                    )
-                ));
+        // Processos por Status com subdivisão por Tipo - usando query agregada
+        List<Object[]> statusTypeData = processRepository.countByStatusAndType();
+        Map<String, Map<String, Long>> statusTypeMap = new HashMap<>();
+        for (Object[] row : statusTypeData) {
+            String status = (String) row[0];
+            String tipo = (String) row[1];
+            Long count = ((Number) row[2]).longValue();
+            statusTypeMap.computeIfAbsent(status, k -> new HashMap<>()).put(tipo, count);
+        }
         
         List<ProcessByStatusDTO> processesByStatus = statusTypeMap.entrySet().stream()
                 .map(entry -> {
@@ -98,82 +81,75 @@ public class StatisticsService {
                 .collect(Collectors.toList());
         dto.setProcessesByStatus(processesByStatus);
         
-        // Total das Ações (soma dos valores ORIGINAIS de todos os processos)
-        // Sempre usa valorOriginal, independente de ter valorCorrigido ou não
-        Double totalAcoes = allProcesses.stream()
-                .map(Process::getValorOriginal)
-                .filter(valor -> valor != null)
-                .mapToDouble(Double::doubleValue)
-                .sum();
+        // Total das Ações (soma dos valores ORIGINAIS) - usando query agregada
+        Double totalAcoes = processRepository.sumValorOriginal();
+        if (totalAcoes == null) {
+            totalAcoes = 0.0;
+        }
         dto.setTotalValorProcessos(totalAcoes);
         dto.setTotalAcoes(totalAcoes);
         
-        // Total das Ações Corrigidas (soma apenas dos valores corrigidos)
-        // Usa APENAS valorCorrigido, sem fallback para valorOriginal
-        Double totalAcoesCorrigido = allProcesses.stream()
-                .map(Process::getValorCorrigido)
-                .filter(valor -> valor != null)
-                .mapToDouble(Double::doubleValue)
-                .sum();
+        // Total das Ações Corrigidas - usando query agregada
+        Double totalAcoesCorrigido = processRepository.sumValorCorrigido();
+        if (totalAcoesCorrigido == null) {
+            totalAcoesCorrigido = 0.0;
+        }
         dto.setTotalAcoesCorrigido(totalAcoesCorrigido);
         
-        // Honorários por Tipo (calculando quando contratual estiver vazio)
-        Map<String, List<Process>> processesByTipo = allProcesses.stream()
-                .filter(p -> p.getTipoProcesso() != null)
-                .collect(Collectors.groupingBy(Process::getTipoProcesso));
+        // Honorários por Tipo - precisa carregar dados específicos mas de forma otimizada
+        // Usa query que retorna apenas campos necessários ao invés de objetos completos
+        List<Object[]> honorariosData = processRepository.findProcessesForHonorarios();
+        
+        // Agrupar por tipo
+        Map<String, List<Object[]>> processesByTipo = honorariosData.stream()
+                .collect(Collectors.groupingBy(row -> (String) row[1]));
         
         Double totalHonorariosEsperados = 0.0;
         
         List<HonorariosByTypeDTO> honorariosByType = processesByTipo.entrySet().stream()
                 .map(entry -> {
                     String tipo = entry.getKey();
-                    List<Process> processos = entry.getValue();
+                    List<Object[]> processos = entry.getValue();
                     
-                    // Calcular honorários contratuais (considerando quando está vazio)
-                    Double totalContratuais = processos.stream()
-                            .mapToDouble(p -> {
-                                if (p.getPrevisaoHonorariosContratuais() != null) {
-                                    return p.getPrevisaoHonorariosContratuais();
-                                } else {
-                                    Double valorEfetivo = getValorEfetivo(p);
-                                    if (valorEfetivo != null && p.getTipoProcesso() != null) {
-                                        // Calcular baseado no tipo: 30% para PISO, 20% para outros
-                                        String tipoUpper = p.getTipoProcesso().toUpperCase();
-                                        if ("PISO".equals(tipoUpper)) {
-                                            return valorEfetivo * 0.30;
-                                        } else if ("NOVAESCOLA".equals(tipoUpper) || "INTERNIVEIS".equals(tipoUpper)) {
-                                            return valorEfetivo * 0.20;
-                                        }
-                                    }
-                                }
-                                return 0.0;
-                            })
-                            .sum();
+                    Double totalContratuais = 0.0;
+                    Double totalSucumbenciais = 0.0;
+                    Double totalAcoesPorTipo = 0.0;
                     
-                    // Calcular honorários sucumbenciais (considerando quando está vazio - 10% do valor)
-                    Double totalSucumbenciais = processos.stream()
-                            .mapToDouble(p -> {
-                                if (p.getPrevisaoHonorariosSucumbenciais() != null) {
-                                    return p.getPrevisaoHonorariosSucumbenciais();
-                                } else {
-                                    Double valorEfetivo = getValorEfetivo(p);
-                                    if (valorEfetivo != null) {
-                                        // Calcular 10% do valor da ação quando sucumbenciais estiver vazio
-                                        return valorEfetivo * 0.10;
-                                    }
-                                }
-                                return 0.0;
-                            })
-                            .sum();
+                    for (Object[] row : processos) {
+                        Double valorOriginal = row[2] != null ? ((Number) row[2]).doubleValue() : null;
+                        Double valorCorrigido = row[3] != null ? ((Number) row[3]).doubleValue() : null;
+                        Double previsaoContratuais = row[4] != null ? ((Number) row[4]).doubleValue() : null;
+                        Double previsaoSucumbenciais = row[5] != null ? ((Number) row[5]).doubleValue() : null;
+                        
+                        // Valor efetivo: valorCorrigido se disponível, caso contrário valorOriginal
+                        Double valorEfetivo = valorCorrigido != null ? valorCorrigido : valorOriginal;
+                        
+                        // Calcular honorários contratuais
+                        if (previsaoContratuais != null) {
+                            totalContratuais += previsaoContratuais;
+                        } else if (valorEfetivo != null && tipo != null) {
+                            String tipoUpper = tipo.toUpperCase();
+                            if ("PISO".equals(tipoUpper)) {
+                                totalContratuais += valorEfetivo * 0.30;
+                            } else if ("NOVAESCOLA".equals(tipoUpper) || "INTERNIVEIS".equals(tipoUpper)) {
+                                totalContratuais += valorEfetivo * 0.20;
+                            }
+                        }
+                        
+                        // Calcular honorários sucumbenciais
+                        if (previsaoSucumbenciais != null) {
+                            totalSucumbenciais += previsaoSucumbenciais;
+                        } else if (valorEfetivo != null) {
+                            totalSucumbenciais += valorEfetivo * 0.10;
+                        }
+                        
+                        // Total de ações por tipo
+                        if (valorEfetivo != null) {
+                            totalAcoesPorTipo += valorEfetivo;
+                        }
+                    }
                     
                     Double total = totalContratuais + totalSucumbenciais;
-                    
-                    // Calcular total de ações por tipo
-                    Double totalAcoesPorTipo = processos.stream()
-                            .map(this::getValorEfetivo)
-                            .filter(valor -> valor != null)
-                            .mapToDouble(Double::doubleValue)
-                            .sum();
                     
                     HonorariosByTypeDTO honorarios = new HonorariosByTypeDTO();
                     honorarios.setTipoProcesso(tipo);
