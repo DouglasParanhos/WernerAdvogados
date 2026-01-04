@@ -12,10 +12,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./werneradv20250511.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./werneradv-backup.sql:/docker-entrypoint-initdb.d/init.sql
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,4 +52,5 @@ services:
 
 volumes:
   postgres_data:
+
 

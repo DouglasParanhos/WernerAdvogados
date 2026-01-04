@@ -4,7 +4,14 @@
       <div class="header">
         <button @click="goBack" class="btn btn-secondary">← Voltar</button>
         <div class="header-actions">
-          <button @click="openClientDocumentModal" class="btn btn-primary">Gerar Documento do Cliente</button>
+          <button @click="openClientDocumentModal" class="icon-btn document-btn" title="Gerar Documento do Cliente">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
           <div class="action-buttons">
             <button @click="openLoginModal" class="icon-btn login-btn" title="Configurar Login">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -128,7 +135,11 @@
         <div class="section" v-if="client.matriculations && client.matriculations.length > 0">
           <div class="section-header">
             <h2>Matrículas e Processos</h2>
-            <button @click="goToNewProcess" class="btn btn-primary">Novo Processo</button>
+            <button @click="goToNewProcess" class="btn btn-primary btn-new-process-plus" title="Novo Processo">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
           
           <div v-for="matriculation in client.matriculations" :key="matriculation.id" class="matriculation-card">
@@ -155,7 +166,14 @@
                 <div class="process-header">
                   <strong @click="goToProcessDetails(process.id)" class="process-link">{{ process.numero }}</strong>
                   <div class="process-actions">
-                    <button @click.stop="openDocumentModal(process)" class="btn btn-sm btn-primary">Gerar Documento</button>
+                    <button @click.stop="openDocumentModal(process)" class="icon-btn document-btn" title="Gerar Documento">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </button>
                     <div class="action-buttons">
                       <button @click.stop="goToEditProcess(process.id)" class="icon-btn edit-btn" title="Editar processo">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -223,7 +241,11 @@
         <div v-else class="section">
           <div class="section-header">
             <h2>Matrículas e Processos</h2>
-            <button @click="goToNewProcess" class="btn btn-primary">Novo Processo</button>
+            <button @click="goToNewProcess" class="btn btn-primary btn-new-process-plus" title="Novo Processo">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
           <p class="empty-state">Nenhuma matrícula cadastrada</p>
         </div>
@@ -599,6 +621,30 @@ export default {
   color: #c82333;
 }
 
+.document-btn {
+  color: #003d7a;
+}
+
+.document-btn:hover {
+  background-color: #f0f8ff;
+  color: #002d5c;
+}
+
+.btn-new-process-plus {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-new-process-plus svg {
+  width: 24px;
+  height: 24px;
+}
+
 .process-header {
   display: flex;
   justify-content: space-between;
@@ -767,6 +813,88 @@ export default {
 .btn-sm {
   padding: 0.375rem 0.75rem;
   font-size: 0.875rem;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .client-details {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .section {
+    padding: 1rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .matriculation-info {
+    grid-template-columns: 1fr;
+  }
+
+  .process-info {
+    grid-template-columns: 1fr;
+  }
+
+  .process-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .process-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .client-details {
+    padding: 0.75rem;
+  }
+
+  .section {
+    padding: 0.75rem;
+  }
+
+  .section h2 {
+    font-size: 1.1rem;
+  }
+
+  .matriculation-card {
+    padding: 1rem;
+  }
+
+  .process-card {
+    padding: 0.75rem;
+  }
 }
 </style>
 
