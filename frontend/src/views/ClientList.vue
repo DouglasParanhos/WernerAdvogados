@@ -320,7 +320,7 @@ export default {
       }, 0)
     },
     goToHome() {
-      this.$router.push('/')
+      this.$router.push('/dashboard')
     },
     goToClientDetails(id) {
       this.$router.push(`/clients/${id}`)
@@ -412,6 +412,28 @@ export default {
   .client-list {
     padding: 0.75rem;
   }
+}
+
+/* Sempre mostrar apenas ícones */
+.header-actions .btn-backup,
+.header-actions .btn-new-client {
+  padding: 0.75rem;
+  min-width: auto;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-actions .btn-text {
+  display: none;
+}
+
+.header-actions .btn-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
 }
 </style>
 

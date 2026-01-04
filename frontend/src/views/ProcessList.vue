@@ -478,7 +478,7 @@ export default {
       return 'status-info'
     },
     goToHome() {
-      this.$router.push('/')
+      this.$router.push('/dashboard')
     },
     goToProcessDetails(id) {
       this.$router.push(`/processes/${id}`)

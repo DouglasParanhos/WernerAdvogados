@@ -46,15 +46,16 @@
           >
             • Áreas de Atuação
           </router-link>
-          <router-link
-            to="/publicacoes"
-            :class="['block margemcima', isAuthenticated ? 'text-white' : '']"
-            :style="!isAuthenticated ? 'color: silver' : ''"
-          >
-            • Nossas Publicações
-          </router-link>
           <br />
-          <!-- Quando autenticado, mostra usuário e botão sair -->
+          <!-- Sempre mostra Acesso Restrito, mas redireciona para dashboard se logado -->
+          <router-link
+            :to="isAuthenticated ? '/dashboard' : '/login'"
+            class="block margemcima btn-mobile font-semibold"
+            :style="isAuthenticated ? 'color: white; border: 1px solid rgba(255,255,255,0.3);' : 'color: #2e2b2b'"
+          >
+            Acesso Restrito
+          </router-link>
+          <!-- Quando autenticado, também mostra usuário e botão sair -->
           <template v-if="isAuthenticated">
             <div class="flex flex-col items-center gap-2 mt-2">
               <div class="text-white">
@@ -70,15 +71,6 @@
               </button>
             </div>
           </template>
-          <!-- Quando não autenticado, mostra link de login -->
-          <router-link
-            v-else
-            to="/login"
-            class="block margemcima btn-mobile font-semibold"
-            style="color: #2e2b2b"
-          >
-            Acesso Restrito
-          </router-link>
         </div>
       </div>
     </header>
@@ -130,17 +122,16 @@
             </router-link>
           </li>
           <li>
+            <!-- Sempre mostra Acesso Restrito, mas redireciona para dashboard se logado -->
             <router-link 
-              to="/publicacoes" 
-              :class="['margemcima hover:font-bold', isAuthenticated ? 'text-white' : '']"
+              :to="isAuthenticated ? '/dashboard' : '/login'" 
+              :class="['btn hover:font-bold', isAuthenticated ? 'text-white' : '']"
             >
-              • Nossas Publicações
+              Acesso Restrito
             </router-link>
-          </li>
-          <li>
-            <!-- Quando autenticado, mostra usuário e botão sair -->
+            <!-- Quando autenticado, também mostra usuário e botão sair -->
             <template v-if="isAuthenticated">
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 ml-3">
                 <div class="flex flex-col items-end text-white">
                   <span class="font-semibold text-sm">{{ user?.username }}</span>
                   <span class="text-xs opacity-90 uppercase">{{ user?.role }}</span>
@@ -158,14 +149,6 @@
                 </button>
               </div>
             </template>
-            <!-- Quando não autenticado, mostra link de login -->
-            <router-link 
-              v-else
-              to="/login" 
-              :class="['btn hover:font-bold', isAuthenticated ? 'text-white' : '']"
-            >
-              Acesso Restrito
-            </router-link>
           </li>
         </ul>
       </nav>
@@ -224,7 +207,7 @@ export default {
     handleLogout() {
       authService.logout()
       this.updateAuthState()
-      router.push('/login')
+      router.push('/')
     }
   }
 }

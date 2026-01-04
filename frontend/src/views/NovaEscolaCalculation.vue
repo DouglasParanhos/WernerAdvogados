@@ -2,12 +2,20 @@
   <div class="novaescola-calculation">
     <div class="calculation-container">
       <div class="calculation-header">
-        <button @click="goBack" class="back-button">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Voltar
-        </button>
+        <div class="header-left">
+          <button @click="goToHome" class="btn-home" title="Voltar para Home">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button @click="goBack" class="back-button">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Voltar
+          </button>
+        </div>
         <h1>Cálculo NOVAESCOLA</h1>
         <p class="subtitle">Gere uma planilha Excel detalhada com correção monetária e juros de mora</p>
       </div>
@@ -125,6 +133,9 @@ export default {
     }
   },
   methods: {
+    goToHome() {
+      this.$router.push('/dashboard')
+    },
     goBack() {
       this.$router.push('/calculations')
     },
@@ -209,6 +220,40 @@ export default {
   position: relative;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-home {
+  background: transparent;
+  border: 1.5px solid #6c757d;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+}
+
+.btn-home:hover {
+  background-color: #f8f9fa;
+  color: #003d7a;
+  border-color: #003d7a;
+}
+
+.btn-home svg {
+  width: 20px;
+  height: 20px;
+}
+
 .back-button {
   display: inline-flex;
   align-items: center;
@@ -221,7 +266,8 @@ export default {
   cursor: pointer;
   font-size: 0.9rem;
   transition: all 0.3s ease;
-  margin-bottom: 1rem;
+  margin: 0;
+  height: 40px;
 }
 
 .back-button:hover {

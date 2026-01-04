@@ -35,6 +35,8 @@ public class ExcelGenerationService {
             CellStyle currencyStyle = createCurrencyStyle(workbook);
             CellStyle dateStyle = createDateStyle(workbook);
             CellStyle totalStyle = createTotalStyle(workbook);
+            CellStyle wrapTextStyle = createWrapTextStyle(workbook);
+            CellStyle dateWrapStyle = createDateWrapStyle(workbook);
             
             int rowNum = 0;
             
@@ -178,66 +180,39 @@ public class ExcelGenerationService {
             // Data Inicial dos Juros
             if (!parcelas.isEmpty() && parcelas.get(0).getDataInicialJuros() != null) {
                 Row dataInicialRow = sheet.createRow(rowNum++);
-                createCell(dataInicialRow, 0, "Data Inicial dos Juros:", null);
-                createCell(dataInicialRow, 1, parcelas.get(0).getDataInicialJuros().format(DATE_FORMATTER), dateStyle);
+                createCell(dataInicialRow, 0, "Data Inicial dos Juros:", wrapTextStyle);
+                createCell(dataInicialRow, 1, parcelas.get(0).getDataInicialJuros().format(DATE_FORMATTER), dateWrapStyle);
             }
             
             // Período de Incidência dos Juros
             if (!parcelas.isEmpty() && parcelas.get(0).getPeriodoIncidenciaJuros() != null) {
                 Row periodoRow = sheet.createRow(rowNum++);
-                createCell(periodoRow, 0, "Período de Incidência dos Juros:", null);
-                createCell(periodoRow, 1, parcelas.get(0).getPeriodoIncidenciaJuros(), null);
+                createCell(periodoRow, 0, "Período de Incidência dos Juros:", wrapTextStyle);
+                createCell(periodoRow, 1, parcelas.get(0).getPeriodoIncidenciaJuros(), wrapTextStyle);
             }
             
             // Taxa de Juros Aplicada
             if (!parcelas.isEmpty() && parcelas.get(0).getTaxaJurosAplicada() != null) {
                 Row taxaRow = sheet.createRow(rowNum++);
-                createCell(taxaRow, 0, "Taxa de Juros Aplicada:", null);
-                createCell(taxaRow, 1, parcelas.get(0).getTaxaJurosAplicada(), null);
+                createCell(taxaRow, 0, "Taxa de Juros Aplicada:", wrapTextStyle);
+                createCell(taxaRow, 1, parcelas.get(0).getTaxaJurosAplicada(), wrapTextStyle);
             }
             
             // Fator de Juros
             if (!parcelas.isEmpty() && parcelas.get(0).getFatorJuros() != null) {
                 Row fatorRow = sheet.createRow(rowNum++);
-                createCell(fatorRow, 0, "Fator de Juros:", null);
-                createCell(fatorRow, 1, parcelas.get(0).getFatorJuros(), null);
+                createCell(fatorRow, 0, "Fator de Juros:", wrapTextStyle);
+                createCell(fatorRow, 1, parcelas.get(0).getFatorJuros(), wrapTextStyle);
             }
             
-            // Ajustar largura das colunas baseado na primeira linha de dados (linha 4, índice 3)
-            // Título linha 1, linha em branco linha 2, cabeçalho linha 3, primeira linha de dados linha 4
-            int primeiraLinhaDados = 3; // Índice 0-based (linha 4 no Excel)
+            // Ajustar largura das colunas para 2x a largura padrão do Excel
+            // A largura padrão do Excel é aproximadamente 8.43 caracteres (2048 unidades no Apache POI)
+            // 2x a largura padrão = aproximadamente 4096 unidades
+            int larguraPadrao = 2048; // Largura padrão do Excel
+            int larguraDesejada = larguraPadrao * 2; // 2x a largura padrão
             
-            if (!parcelas.isEmpty() && sheet.getRow(primeiraLinhaDados) != null) {
-                Row primeiraLinha = sheet.getRow(primeiraLinhaDados);
-                for (int i = 0; i < headers.length; i++) {
-                    Cell cell = primeiraLinha.getCell(i);
-                    if (cell != null) {
-                        // Calcular largura baseada no conteúdo da primeira linha de dados
-                        String cellValue = getCellValueAsString(cell);
-                        int estimatedWidth = Math.max(cellValue.length() * 256, 2000); // Mínimo 2000 (aproximadamente 2 caracteres)
-                        
-                        // Limitar largura máxima
-                        if (estimatedWidth > 15000) {
-                            estimatedWidth = 15000;
-                        }
-                        
-                        sheet.setColumnWidth(i, estimatedWidth);
-                    } else {
-                        // Se não houver célula, usar autoSize como fallback
-                        sheet.autoSizeColumn(i);
-                        if (sheet.getColumnWidth(i) > 15000) {
-                            sheet.setColumnWidth(i, 15000);
-                        }
-                    }
-                }
-            } else {
-                // Fallback: usar autoSize no cabeçalho se não houver dados
-                for (int i = 0; i < headers.length; i++) {
-                    sheet.autoSizeColumn(i);
-                    if (sheet.getColumnWidth(i) > 15000) {
-                        sheet.setColumnWidth(i, 15000);
-                    }
-                }
+            for (int i = 0; i < headers.length; i++) {
+                sheet.setColumnWidth(i, larguraDesejada);
             }
             
             // Converter para byte array
@@ -361,6 +336,28 @@ public class ExcelGenerationService {
         DataFormat format = workbook.createDataFormat();
         style.setDataFormat(format.getFormat("#,##0.00"));
         
+        return style;
+    }
+    
+    private CellStyle createWrapTextStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        style.setWrapText(true);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        return style;
+    }
+    
+    private CellStyle createDateWrapStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        DataFormat format = workbook.createDataFormat();
+        style.setDataFormat(format.getFormat("dd/mm/yyyy"));
+        style.setWrapText(true);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
         return style;
     }
 }

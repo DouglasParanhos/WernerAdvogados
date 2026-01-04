@@ -8,14 +8,6 @@ import About from '../views/About.vue'
 import Areas from '../views/Areas.vue'
 import Privacy from '../views/Privacy.vue'
 import Interniveis from '../views/Interniveis.vue'
-import NovaEscola from '../views/NovaEscola.vue'
-import Piso from '../views/Piso.vue'
-import Publications from '../views/Publications.vue'
-import PrimeiraAcao from '../views/publications/PrimeiraAcao.vue'
-import Piso1 from '../views/publications/Piso1.vue'
-import Piso2 from '../views/publications/Piso2.vue'
-import Piso3 from '../views/publications/Piso3.vue'
-import Interniveis1 from '../views/publications/Interniveis1.vue'
 import ClientList from '../views/ClientList.vue'
 import ClientDetails from '../views/ClientDetails.vue'
 import ClientForm from '../views/ClientForm.vue'
@@ -62,54 +54,6 @@ const routes = [
         path: 'interniveis',
         name: 'Interniveis',
         component: Interniveis,
-        meta: { requiresAuth: false }
-      },
-      {
-        path: 'novaescola',
-        name: 'NovaEscola',
-        component: NovaEscola,
-        meta: { requiresAuth: false }
-      },
-      {
-        path: 'piso',
-        name: 'Piso',
-        component: Piso,
-        meta: { requiresAuth: false }
-      },
-      {
-        path: 'publicacoes',
-        name: 'Publications',
-        component: Publications,
-        meta: { requiresAuth: false }
-      },
-      {
-        path: 'publicacoes/primeiraacao',
-        name: 'PrimeiraAcao',
-        component: PrimeiraAcao,
-        meta: { requiresAuth: false }
-      },
-      {
-        path: 'publicacoes/piso1',
-        name: 'Piso1',
-        component: Piso1,
-        meta: { requiresAuth: false }
-      },
-      {
-        path: 'publicacoes/piso2',
-        name: 'Piso2',
-        component: Piso2,
-        meta: { requiresAuth: false }
-      },
-      {
-        path: 'publicacoes/piso3',
-        name: 'Piso3',
-        component: Piso3,
-        meta: { requiresAuth: false }
-      },
-      {
-        path: 'publicacoes/interniveis1',
-        name: 'Interniveis1',
-        component: Interniveis1,
         meta: { requiresAuth: false }
       }
     ]
@@ -228,6 +172,7 @@ router.beforeEach((to, from, next) => {
     return
   }
   
+  // For routes that require authentication
   if (requiresAuth && !isAuthenticated) {
     // Redirect to login, but preserve the intended destination
     next('/login')
@@ -253,4 +198,3 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
-

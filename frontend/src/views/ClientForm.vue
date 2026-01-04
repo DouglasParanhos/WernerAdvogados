@@ -116,6 +116,126 @@
         </div>
         
         <div class="section">
+          <h2>Matrículas</h2>
+          <div class="matriculation-section">
+            <div class="matriculation-form">
+              <h3>Primeira Matrícula</h3>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Número *</label>
+                  <input v-model="form.matriculation1.numero" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Cargo *</label>
+                  <input v-model="form.matriculation1.cargo" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Início ERJ *</label>
+                  <input 
+                    v-model="form.matriculation1.inicioErj" 
+                    type="text" 
+                    placeholder="dd/mm/aaaa"
+                    @input="formatDateInput($event, 'matriculation1', 'inicioErj')"
+                    maxlength="10"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label>Data de Aposentadoria *</label>
+                  <input 
+                    v-model="form.matriculation1.dataAposentadoria" 
+                    type="text" 
+                    placeholder="dd/mm/aaaa"
+                    @input="formatDateInput($event, 'matriculation1', 'dataAposentadoria')"
+                    maxlength="10"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label>Nível Atual *</label>
+                  <input v-model="form.matriculation1.nivelAtual" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Triênio Atual *</label>
+                  <input v-model="form.matriculation1.trienioAtual" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Referência *</label>
+                  <input v-model="form.matriculation1.referencia" type="text" />
+                </div>
+              </div>
+            </div>
+            
+            <div class="checkbox-group">
+              <label>
+                <input 
+                  type="checkbox" 
+                  v-model="form.hasSecondMatriculation"
+                  @change="toggleSecondMatriculation"
+                />
+                Adicionar Segunda Matrícula
+              </label>
+            </div>
+            
+            <div v-if="form.hasSecondMatriculation" class="matriculation-form">
+              <h3>Segunda Matrícula</h3>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Número *</label>
+                  <input v-model="form.matriculation2.numero" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Cargo *</label>
+                  <input v-model="form.matriculation2.cargo" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Início ERJ *</label>
+                  <input 
+                    v-model="form.matriculation2.inicioErj" 
+                    type="text" 
+                    placeholder="dd/mm/aaaa"
+                    @input="formatDateInput($event, 'matriculation2', 'inicioErj')"
+                    maxlength="10"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label>Data de Aposentadoria *</label>
+                  <input 
+                    v-model="form.matriculation2.dataAposentadoria" 
+                    type="text" 
+                    placeholder="dd/mm/aaaa"
+                    @input="formatDateInput($event, 'matriculation2', 'dataAposentadoria')"
+                    maxlength="10"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label>Nível Atual *</label>
+                  <input v-model="form.matriculation2.nivelAtual" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Triênio Atual *</label>
+                  <input v-model="form.matriculation2.trienioAtual" type="text" />
+                </div>
+                
+                <div class="form-group">
+                  <label>Referência *</label>
+                  <input v-model="form.matriculation2.referencia" type="text" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
           <h2>Endereço</h2>
           <div class="form-grid">
             <div class="form-group">
@@ -642,6 +762,47 @@ export default {
   padding: 1rem;
   border-radius: 4px;
   margin-bottom: 1rem;
+}
+
+.matriculation-section {
+  margin-top: 1rem;
+}
+
+.matriculation-form {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #dee2e6;
+}
+
+.matriculation-form h3 {
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.checkbox-group {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #e9ecef;
+  border-radius: 4px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 
 .matriculation-section {
