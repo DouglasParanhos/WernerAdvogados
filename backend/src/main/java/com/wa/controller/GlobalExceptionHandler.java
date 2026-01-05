@@ -7,6 +7,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
@@ -72,11 +73,35 @@ public class GlobalExceptionHandler {
         log.debug("Timeout em requisição assíncrona: {}", e.getMessage());
     }
     
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(
+            AccessDeniedException e, 
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        // Não processar exceções em endpoints SSE ou quando a resposta já foi commitada
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            log.debug("AccessDeniedException em requisição SSE ou resposta já commitada, ignorando handler global: {}", 
+                    e.getMessage());
+            return null;
+        }
+        
+        log.warn("Acesso negado: {}", e.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getMessage() != null ? e.getMessage() : "Acesso negado");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+    
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(
             RuntimeException e, 
             HttpServletRequest request,
             HttpServletResponse response) {
+        
+        // Não processar AccessDeniedException aqui (já tratado acima)
+        if (e instanceof AccessDeniedException) {
+            return null;
+        }
         
         // Não processar exceções em endpoints SSE ou quando a resposta já foi commitada
         // Nesses casos, deixar o Spring usar o comportamento padrão

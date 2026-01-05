@@ -2,6 +2,8 @@ package com.wa.controller;
 
 import com.wa.annotation.RequiresNonClient;
 import com.wa.dto.ClientDocumentGenerationRequestDTO;
+import com.wa.dto.DocumentContentDTO;
+import com.wa.dto.DocumentContentResponseDTO;
 import com.wa.dto.DocumentGenerationRequestDTO;
 import com.wa.dto.DocumentTemplateDTO;
 import com.wa.model.Person;
@@ -178,11 +180,147 @@ public class DocumentController {
                     .contentLength(documentBytes.length)
                     .body(resource);
                     
+        } catch (AccessDeniedException e) {
+            // Deixar o GlobalExceptionHandler tratar AccessDeniedException
+            throw e;
         } catch (RuntimeException e) {
             log.error("Erro ao gerar documento do cliente: {}", e.getMessage(), e);
             return ResponseEntity.notFound().build();
         } catch (IOException e) {
             log.error("Erro de IO ao gerar documento do cliente: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Retorna conteúdo do documento com dados do cliente substituídos
+     * Para uso no editor de documentos
+     */
+    @GetMapping("/client-content")
+    public ResponseEntity<DocumentContentResponseDTO> getClientDocumentContent(
+            @RequestParam Long personId,
+            @RequestParam String templateName) {
+        try {
+            // Verificar se o usuário autenticado tem role CLIENT
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                boolean isClient = authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .anyMatch(authority -> authority.equals("ROLE_CLIENT"));
+                
+                if (isClient) {
+                    // CLIENT só pode acessar seus próprios dados
+                    String username = authentication.getName();
+                    User user = userRepository.findByUsername(username)
+                            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                    Person person = personRepository.findByUserId(user.getId())
+                            .orElseThrow(() -> new RuntimeException("Cliente não encontrado para este usuário"));
+                    
+                    if (!person.getId().equals(personId)) {
+                        throw new AccessDeniedException("Clientes só podem acessar seus próprios dados");
+                    }
+                }
+            }
+            
+            // Validar templateName
+            if (!com.wa.util.DocumentSanitizer.validateTemplateName(templateName)) {
+                log.warn("Nome de template inválido: {}", templateName);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Obter conteúdo do documento
+            DocumentContentResponseDTO content = wordDocumentService.getDocumentContentForClient(
+                    personId, 
+                    templateName
+            );
+            
+            return ResponseEntity.ok(content);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("Argumento inválido: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (AccessDeniedException e) {
+            // Deixar o GlobalExceptionHandler tratar AccessDeniedException
+            throw e;
+        } catch (RuntimeException e) {
+            log.error("Erro ao obter conteúdo do documento: {}", e.getMessage(), e);
+            return ResponseEntity.notFound().build();
+        } catch (IOException e) {
+            log.error("Erro de IO ao obter conteúdo do documento: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Gera documento Word a partir de conteúdo editado (Quill Delta)
+     */
+    @PostMapping("/generate-client-custom")
+    public ResponseEntity<ByteArrayResource> generateCustomClientDocument(
+            @Valid @RequestBody DocumentContentDTO request) {
+        try {
+            // Verificar se o usuário autenticado tem role CLIENT
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated()) {
+                boolean isClient = authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .anyMatch(authority -> authority.equals("ROLE_CLIENT"));
+                
+                if (isClient) {
+                    // CLIENT só pode gerar documentos para si mesmo
+                    String username = authentication.getName();
+                    User user = userRepository.findByUsername(username)
+                            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                    Person person = personRepository.findByUserId(user.getId())
+                            .orElseThrow(() -> new RuntimeException("Cliente não encontrado para este usuário"));
+                    
+                    if (!person.getId().equals(request.getPersonId())) {
+                        throw new AccessDeniedException("Clientes só podem gerar documentos para si mesmos");
+                    }
+                }
+            }
+            
+            // Validar templateName
+            if (!com.wa.util.DocumentSanitizer.validateTemplateName(request.getTemplateName())) {
+                log.warn("Nome de template inválido: {}", request.getTemplateName());
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Validar conteúdo Quill Delta
+            if (!com.wa.util.DocumentSanitizer.validateQuillDelta(request.getContent())) {
+                log.warn("Conteúdo Quill Delta inválido");
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Gerar documento customizado
+            byte[] documentBytes = wordDocumentService.generateCustomDocumentForClient(
+                    request.getPersonId(),
+                    request.getTemplateName(),
+                    request
+            );
+            
+            // Criar recurso para download
+            ByteArrayResource resource = new ByteArrayResource(documentBytes);
+            
+            // Nome do arquivo gerado
+            String fileName = request.getTemplateName().replace(".docx", "") + "_customizado.docx";
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentLength(documentBytes.length)
+                    .body(resource);
+                    
+        } catch (IllegalArgumentException e) {
+            log.warn("Argumento inválido ao gerar documento customizado: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (AccessDeniedException e) {
+            // Deixar o GlobalExceptionHandler tratar AccessDeniedException
+            throw e;
+        } catch (RuntimeException e) {
+            log.error("Erro ao gerar documento customizado: {}", e.getMessage(), e);
+            return ResponseEntity.notFound().build();
+        } catch (IOException e) {
+            log.error("Erro de IO ao gerar documento customizado: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
