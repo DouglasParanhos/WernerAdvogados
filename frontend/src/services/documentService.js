@@ -113,6 +113,64 @@ export const documentService = {
       console.error('Erro ao gerar documento do cliente:', error)
       throw error
     }
+  },
+
+  /**
+   * Obtém o conteúdo de um documento do cliente para edição
+   */
+  async getClientDocumentContent(personId, templateName) {
+    const response = await api.get('/documents/client-content', {
+      params: { personId, templateName }
+    })
+    return response.data
+  },
+
+  /**
+   * Gera um documento customizado a partir de conteúdo editado (Quill Delta)
+   */
+  async generateCustomClientDocument(personId, templateName, content) {
+    try {
+      const response = await api.post(
+        '/documents/generate-client-custom',
+        {
+          personId,
+          templateName,
+          content
+        },
+        {
+          responseType: 'blob'
+        }
+      )
+
+      // Criar URL temporária para download
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      
+      // Extrair nome do arquivo do header Content-Disposition
+      const contentDisposition = response.headers['content-disposition']
+      let fileName = templateName.replace('.docx', '') + '_customizado.docx'
+      
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/i)
+        if (fileNameMatch && fileNameMatch[1]) {
+          fileName = fileNameMatch[1]
+        }
+      }
+      
+      link.setAttribute('download', fileName)
+      document.body.appendChild(link)
+      link.click()
+      
+      // Limpar
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      
+      return { success: true, fileName }
+    } catch (error) {
+      console.error('Erro ao gerar documento customizado:', error)
+      throw error
+    }
   }
 }
 

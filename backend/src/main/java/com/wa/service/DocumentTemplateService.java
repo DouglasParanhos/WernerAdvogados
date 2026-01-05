@@ -501,11 +501,30 @@ public class DocumentTemplateService {
             if (resource.exists()) {
                 return true;
             }
-            // Tentar apenas com nome do arquivo (na raiz)
+            
+            // Se templateName contém caminho, tentar apenas o nome do arquivo
             String fileName = templateName.contains("/") ? 
                 templateName.substring(templateName.lastIndexOf("/") + 1) : templateName;
+            
+            // Tentar apenas com nome do arquivo (na raiz)
             resource = resourceLoader.getResource(DOCUMENTS_PATH + fileName);
-            return resource.exists();
+            if (resource.exists()) {
+                return true;
+            }
+            
+            // Se não encontrou, procurar em todos os templates escaneados (incluindo subdiretórios)
+            List<DocumentTemplateDTO> allTemplates = scanTemplates();
+            for (DocumentTemplateDTO template : allTemplates) {
+                if (template.getFileName().equals(fileName) || template.getFileName().equals(templateName)) {
+                    // Verificar se o recurso realmente existe
+                    Resource foundResource = resourceLoader.getResource(DOCUMENTS_PATH + template.getRelativePath());
+                    if (foundResource.exists()) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
         } catch (Exception e) {
             log.error("Erro ao verificar template: {}", e.getMessage(), e);
             return false;

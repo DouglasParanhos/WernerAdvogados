@@ -477,6 +477,14 @@ public class WordDocumentService {
                     block.setClientData(isClientData);
                     block.setFormatting(new HashMap<>());
                     contentBlocks.add(block);
+                    
+                    // Adicionar quebra de linha após o parágrafo
+                    DocumentContentResponseDTO.ContentBlock lineBreak = 
+                        new DocumentContentResponseDTO.ContentBlock();
+                    lineBreak.setText("\n");
+                    lineBreak.setClientData(false);
+                    lineBreak.setFormatting(new HashMap<>());
+                    contentBlocks.add(lineBreak);
                 }
             }
             
@@ -496,6 +504,14 @@ public class WordDocumentService {
                                 block.setClientData(isClientData);
                                 block.setFormatting(new HashMap<>());
                                 contentBlocks.add(block);
+                                
+                                // Adicionar quebra de linha após célula
+                                DocumentContentResponseDTO.ContentBlock lineBreak = 
+                                    new DocumentContentResponseDTO.ContentBlock();
+                                lineBreak.setText("\n");
+                                lineBreak.setClientData(false);
+                                lineBreak.setFormatting(new HashMap<>());
+                                contentBlocks.add(lineBreak);
                             }
                         })
                     )

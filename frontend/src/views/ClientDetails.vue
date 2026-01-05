@@ -271,6 +271,15 @@
         :show="showClientDocumentModal"
         :client="client"
         @close="closeClientDocumentModal"
+        @open-editor="openDocumentEditor"
+      />
+      
+      <!-- Modal de Editor de Documentos -->
+      <DocumentEditorModal
+        :show="showDocumentEditorModal"
+        :client="client"
+        :template-name="selectedTemplateName"
+        @close="closeDocumentEditor"
       />
       
       <!-- Modal de Configuração de Login -->
@@ -289,6 +298,7 @@ import { personService } from '../services/personService'
 import { processService } from '../services/processService'
 import DocumentGeneratorModal from '../components/DocumentGeneratorModal.vue'
 import ClientDocumentGeneratorModal from '../components/ClientDocumentGeneratorModal.vue'
+import DocumentEditorModal from '../components/DocumentEditorModal.vue'
 import ClientLoginModal from '../components/ClientLoginModal.vue'
 
 export default {
@@ -296,6 +306,7 @@ export default {
   components: {
     DocumentGeneratorModal,
     ClientDocumentGeneratorModal,
+    DocumentEditorModal,
     ClientLoginModal
   },
   data() {
@@ -306,6 +317,8 @@ export default {
       showDocumentModal: false,
       selectedProcess: null,
       showClientDocumentModal: false,
+      showDocumentEditorModal: false,
+      selectedTemplateName: null,
       editingStatusId: null,
       editingStatus: '',
       statusSuggestions: [],
@@ -392,6 +405,15 @@ export default {
     },
     closeClientDocumentModal() {
       this.showClientDocumentModal = false
+    },
+    openDocumentEditor(templateName) {
+      this.selectedTemplateName = templateName
+      this.showClientDocumentModal = false
+      this.showDocumentEditorModal = true
+    },
+    closeDocumentEditor() {
+      this.showDocumentEditorModal = false
+      this.selectedTemplateName = null
     },
     async loadStatusSuggestions() {
       try {
