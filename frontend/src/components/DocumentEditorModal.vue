@@ -18,7 +18,7 @@
         <div v-if="!loading && !error && contentLoaded" class="editor-container">
           <div class="editor-toolbar">
             <p class="info-text">
-              Edite o conteúdo do documento abaixo. Os dados do cliente aparecem em <strong>negrito e maiúsculas</strong>.
+              Edite o conteúdo do documento abaixo. Os dados {{ entityType === 'process' ? 'do processo' : 'do cliente' }} aparecem em <strong>negrito e maiúsculas</strong>.
             </p>
           </div>
           
@@ -66,11 +66,23 @@ export default {
     },
     client: {
       type: Object,
-      required: true
+      required: false
+    },
+    process: {
+      type: Object,
+      required: false
     },
     templateName: {
       type: String,
       required: true
+    }
+  },
+  computed: {
+    entityType() {
+      return this.process ? 'process' : 'client'
+    },
+    entityId() {
+      return this.process ? this.process.id : (this.client ? this.client.id : null)
     }
   },
   data() {
@@ -98,7 +110,7 @@ export default {
   },
   watch: {
     show(newVal) {
-      if (newVal && this.client?.id && this.templateName) {
+      if (newVal && this.entityId && this.templateName) {
         this.loadDocumentContent()
       } else if (!newVal) {
         this.resetState()
@@ -107,8 +119,8 @@ export default {
   },
   methods: {
     async loadDocumentContent() {
-      if (!this.client?.id || !this.templateName) {
-        this.error = 'Cliente ou template não informado'
+      if (!this.entityId || !this.templateName) {
+        this.error = `${this.entityType === 'process' ? 'Processo' : 'Cliente'} ou template não informado`
         return
       }
       
@@ -117,10 +129,18 @@ export default {
       this.contentLoaded = false
       
       try {
-        const response = await documentService.getClientDocumentContent(
-          this.client.id,
-          this.templateName
-        )
+        let response
+        if (this.entityType === 'process') {
+          response = await documentService.getProcessDocumentContent(
+            this.process.id,
+            this.templateName
+          )
+        } else {
+          response = await documentService.getClientDocumentContent(
+            this.client.id,
+            this.templateName
+          )
+        }
         
         // Converter o conteúdo para formato Quill Delta
         this.editorContent = this.convertToQuillDelta(response)
@@ -150,7 +170,7 @@ export default {
                 insert: line
               }
               
-              // Aplicar formatação se for dado do cliente
+              // Aplicar formatação se for dado do cliente/processo
               if (block.isClientData) {
                 op.attributes = {
                   bold: true
@@ -185,7 +205,7 @@ export default {
     },
     
     async generateDocument() {
-      if (!this.client?.id || !this.templateName || !this.editorContent) {
+      if (!this.entityId || !this.templateName || !this.editorContent) {
         alert('Erro: Dados incompletos para gerar documento')
         return
       }
@@ -193,11 +213,19 @@ export default {
       this.generating = true
       
       try {
-        await documentService.generateCustomClientDocument(
-          this.client.id,
-          this.templateName,
-          this.editorContent
-        )
+        if (this.entityType === 'process') {
+          await documentService.generateCustomProcessDocument(
+            this.process.id,
+            this.templateName,
+            this.editorContent
+          )
+        } else {
+          await documentService.generateCustomClientDocument(
+            this.client.id,
+            this.templateName,
+            this.editorContent
+          )
+        }
         
         // Fechar modal após gerar documento
         this.$emit('close')

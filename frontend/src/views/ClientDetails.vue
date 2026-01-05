@@ -264,6 +264,7 @@
         :show="showDocumentModal"
         :process="selectedProcess"
         @close="closeDocumentModal"
+        @open-editor="openProcessDocumentEditor"
       />
       
       <!-- Modal de Geração de Documentos do Cliente -->
@@ -277,7 +278,8 @@
       <!-- Modal de Editor de Documentos -->
       <DocumentEditorModal
         :show="showDocumentEditorModal"
-        :client="client"
+        :client="selectedEditorClient"
+        :process="selectedEditorProcess"
         :template-name="selectedTemplateName"
         @close="closeDocumentEditor"
       />
@@ -319,6 +321,8 @@ export default {
       showClientDocumentModal: false,
       showDocumentEditorModal: false,
       selectedTemplateName: null,
+      selectedEditorClient: null,
+      selectedEditorProcess: null,
       editingStatusId: null,
       editingStatus: '',
       statusSuggestions: [],
@@ -408,12 +412,23 @@ export default {
     },
     openDocumentEditor(templateName) {
       this.selectedTemplateName = templateName
+      this.selectedEditorClient = this.client
+      this.selectedEditorProcess = null
       this.showClientDocumentModal = false
+      this.showDocumentEditorModal = true
+    },
+    openProcessDocumentEditor(templateName) {
+      this.selectedTemplateName = templateName
+      this.selectedEditorProcess = this.selectedProcess
+      this.selectedEditorClient = null
+      this.showDocumentModal = false
       this.showDocumentEditorModal = true
     },
     closeDocumentEditor() {
       this.showDocumentEditorModal = false
       this.selectedTemplateName = null
+      this.selectedEditorClient = null
+      this.selectedEditorProcess = null
     },
     async loadStatusSuggestions() {
       try {

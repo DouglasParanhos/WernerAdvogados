@@ -724,5 +724,201 @@ public class WordDocumentService {
         
         return paragraphs;
     }
+    
+    /**
+     * Extrai conteúdo do documento Word com dados do processo substituídos
+     * Retorna estrutura com texto e identificação de dados do processo
+     */
+    public DocumentContentResponseDTO getDocumentContentForProcess(Long processId, String templateName) throws IOException {
+        // Validar templateName
+        if (!DocumentSanitizer.validateTemplateName(templateName)) {
+            throw new IllegalArgumentException("Nome de template inválido: " + templateName);
+        }
+        
+        // Buscar processo com todos os relacionamentos necessários
+        Process process = processRepository.findByIdWithRelations(processId)
+                .orElseThrow(() -> new RuntimeException("Processo não encontrado com ID: " + processId));
+        
+        // Verificar se template existe
+        if (!templateService.templateExists(templateName)) {
+            throw new RuntimeException("Template não encontrado: " + templateName);
+        }
+        
+        // Obter recurso do template
+        Resource templateResource = templateService.getTemplateResource(templateName);
+        
+        // Criar mapa de dados para substituição (sanitizado)
+        Map<String, String> dataMap = buildDataMap(process);
+        Map<String, String> sanitizedDataMap = new HashMap<>();
+        for (Map.Entry<String, String> entry : dataMap.entrySet()) {
+            sanitizedDataMap.put(entry.getKey(), DocumentSanitizer.sanitizeText(entry.getValue()));
+        }
+        
+        // Criar mapa de valores originais (não sanitizados) para identificar dados do processo
+        Map<String, String> originalDataMap = buildDataMap(process);
+        Set<String> processDataValues = new HashSet<>(originalDataMap.values());
+        processDataValues.remove(""); // Remover valores vazios
+        
+        // Extrair conteúdo do documento
+        List<DocumentContentResponseDTO.ContentBlock> contentBlocks = new ArrayList<>();
+        
+        try (InputStream inputStream = templateResource.getInputStream();
+             XWPFDocument document = new XWPFDocument(inputStream)) {
+            
+            // Processar parágrafos
+            for (XWPFParagraph paragraph : document.getParagraphs()) {
+                String paragraphText = extractTextFromParagraph(paragraph, sanitizedDataMap);
+                if (paragraphText != null && !paragraphText.trim().isEmpty()) {
+                    // Identificar se contém dados do processo
+                    boolean isProcessData = processDataValues.stream()
+                            .anyMatch(value -> paragraphText.contains(value));
+                    
+                    DocumentContentResponseDTO.ContentBlock block = new DocumentContentResponseDTO.ContentBlock();
+                    block.setText(paragraphText);
+                    block.setClientData(isProcessData); // Reutilizando o campo para dados do processo
+                    block.setFormatting(new HashMap<>());
+                    contentBlocks.add(block);
+                    
+                    // Adicionar quebra de linha após o parágrafo
+                    DocumentContentResponseDTO.ContentBlock lineBreak = 
+                        new DocumentContentResponseDTO.ContentBlock();
+                    lineBreak.setText("\n");
+                    lineBreak.setClientData(false);
+                    lineBreak.setFormatting(new HashMap<>());
+                    contentBlocks.add(lineBreak);
+                }
+            }
+            
+            // Processar tabelas
+            document.getTables().forEach(table -> 
+                table.getRows().forEach(row -> 
+                    row.getTableCells().forEach(cell -> 
+                        cell.getParagraphs().forEach(paragraph -> {
+                            String cellText = extractTextFromParagraph(paragraph, sanitizedDataMap);
+                            if (cellText != null && !cellText.trim().isEmpty()) {
+                                boolean isProcessData = processDataValues.stream()
+                                        .anyMatch(value -> cellText.contains(value));
+                                
+                                DocumentContentResponseDTO.ContentBlock block = 
+                                    new DocumentContentResponseDTO.ContentBlock();
+                                block.setText(cellText);
+                                block.setClientData(isProcessData);
+                                block.setFormatting(new HashMap<>());
+                                contentBlocks.add(block);
+                                
+                                // Adicionar quebra de linha após célula
+                                DocumentContentResponseDTO.ContentBlock lineBreak = 
+                                    new DocumentContentResponseDTO.ContentBlock();
+                                lineBreak.setText("\n");
+                                lineBreak.setClientData(false);
+                                lineBreak.setFormatting(new HashMap<>());
+                                contentBlocks.add(lineBreak);
+                            }
+                        })
+                    )
+                )
+            );
+        }
+        
+        // Criar mapa de dados do processo (em maiúsculas para destacar)
+        Map<String, String> processDataMap = new HashMap<>();
+        for (Map.Entry<String, String> entry : originalDataMap.entrySet()) {
+            if (entry.getValue() != null && !entry.getValue().isEmpty()) {
+                processDataMap.put(entry.getKey(), entry.getValue().toUpperCase());
+            }
+        }
+        
+        DocumentContentResponseDTO response = new DocumentContentResponseDTO();
+        response.setTemplateName(templateName);
+        response.setContent(contentBlocks);
+        response.setClientData(processDataMap); // Reutilizando o campo para dados do processo
+        
+        return response;
+    }
+    
+    /**
+     * Gera documento Word a partir de conteúdo editado (Quill Delta) para processo
+     */
+    public byte[] generateCustomDocumentForProcess(Long processId, String templateName, JsonNode content) throws IOException {
+        // Validar e sanitizar templateName
+        if (!DocumentSanitizer.validateTemplateName(templateName)) {
+            throw new IllegalArgumentException("Nome de template inválido: " + templateName);
+        }
+        
+        // Validar e sanitizar Quill Delta
+        if (!DocumentSanitizer.validateQuillDelta(content)) {
+            throw new IllegalArgumentException("Conteúdo Quill Delta inválido");
+        }
+        
+        JsonNode sanitizedDelta = DocumentSanitizer.sanitizeQuillDelta(content);
+        
+        // Verificar se processo existe (validação básica)
+        if (!processRepository.existsById(processId)) {
+            throw new RuntimeException("Processo não encontrado com ID: " + processId);
+        }
+        
+        // Verificar se template existe
+        if (!templateService.templateExists(templateName)) {
+            throw new RuntimeException("Template não encontrado: " + templateName);
+        }
+        
+        // Obter recurso do template
+        Resource templateResource = templateService.getTemplateResource(templateName);
+        
+        // Criar novo documento baseado no template
+        try (InputStream inputStream = templateResource.getInputStream();
+             XWPFDocument document = new XWPFDocument(inputStream);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            
+            // Converter Quill Delta para conteúdo Word
+            JsonNode ops = sanitizedDelta.get("ops");
+            List<ParagraphContent> paragraphs = convertDeltaToParagraphsWithFormatting(ops);
+            
+            // Limpar parágrafos existentes e aplicar novo conteúdo
+            List<XWPFParagraph> existingParagraphs = new ArrayList<>(document.getParagraphs());
+            
+            // Limpar todos os runs dos parágrafos existentes
+            for (XWPFParagraph paragraph : existingParagraphs) {
+                int runsCount = paragraph.getRuns().size();
+                for (int i = runsCount - 1; i >= 0; i--) {
+                    paragraph.removeRun(i);
+                }
+            }
+            
+            // Aplicar conteúdo aos parágrafos existentes
+            int paragraphIndex = 0;
+            for (XWPFParagraph paragraph : existingParagraphs) {
+                if (paragraphIndex < paragraphs.size()) {
+                    ParagraphContent paraContent = paragraphs.get(paragraphIndex);
+                    XWPFRun run = paragraph.createRun();
+                    run.setText(paraContent.getText());
+                    if (paraContent.isBold()) run.setBold(true);
+                    if (paraContent.isItalic()) run.setItalic(true);
+                    if (paraContent.isUnderline()) {
+                        run.setUnderline(org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE);
+                    }
+                    paragraphIndex++;
+                }
+            }
+            
+            // Se há mais parágrafos no Delta do que no template, criar novos
+            while (paragraphIndex < paragraphs.size()) {
+                XWPFParagraph newParagraph = document.createParagraph();
+                ParagraphContent paraContent = paragraphs.get(paragraphIndex);
+                XWPFRun run = newParagraph.createRun();
+                run.setText(paraContent.getText());
+                if (paraContent.isBold()) run.setBold(true);
+                if (paraContent.isItalic()) run.setItalic(true);
+                if (paraContent.isUnderline()) {
+                    run.setUnderline(org.apache.poi.xwpf.usermodel.UnderlinePatterns.SINGLE);
+                }
+                paragraphIndex++;
+            }
+            
+            // Salvar documento
+            document.write(outputStream);
+            return outputStream.toByteArray();
+        }
+    }
 }
 

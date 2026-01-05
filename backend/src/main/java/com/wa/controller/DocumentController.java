@@ -6,6 +6,7 @@ import com.wa.dto.DocumentContentDTO;
 import com.wa.dto.DocumentContentResponseDTO;
 import com.wa.dto.DocumentGenerationRequestDTO;
 import com.wa.dto.DocumentTemplateDTO;
+import com.wa.dto.ProcessDocumentContentDTO;
 import com.wa.model.Person;
 import com.wa.model.User;
 import com.wa.repository.PersonRepository;
@@ -316,6 +317,93 @@ public class DocumentController {
         } catch (AccessDeniedException e) {
             // Deixar o GlobalExceptionHandler tratar AccessDeniedException
             throw e;
+        } catch (RuntimeException e) {
+            log.error("Erro ao gerar documento customizado: {}", e.getMessage(), e);
+            return ResponseEntity.notFound().build();
+        } catch (IOException e) {
+            log.error("Erro de IO ao gerar documento customizado: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Retorna conteúdo do documento com dados do processo substituídos
+     * Para uso no editor de documentos
+     */
+    @GetMapping("/process-content")
+    @RequiresNonClient
+    public ResponseEntity<DocumentContentResponseDTO> getProcessDocumentContent(
+            @RequestParam Long processId,
+            @RequestParam String templateName) {
+        try {
+            // Validar templateName
+            if (!com.wa.util.DocumentSanitizer.validateTemplateName(templateName)) {
+                log.warn("Nome de template inválido: {}", templateName);
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Obter conteúdo do documento
+            DocumentContentResponseDTO content = wordDocumentService.getDocumentContentForProcess(
+                    processId, 
+                    templateName
+            );
+            
+            return ResponseEntity.ok(content);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("Argumento inválido: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            log.error("Erro ao obter conteúdo do documento: {}", e.getMessage(), e);
+            return ResponseEntity.notFound().build();
+        } catch (IOException e) {
+            log.error("Erro de IO ao obter conteúdo do documento: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Gera documento Word a partir de conteúdo editado (Quill Delta) para processo
+     */
+    @PostMapping("/generate-process-custom")
+    @RequiresNonClient
+    public ResponseEntity<ByteArrayResource> generateCustomProcessDocument(
+            @Valid @RequestBody ProcessDocumentContentDTO request) {
+        try {
+            // Validar templateName
+            if (!com.wa.util.DocumentSanitizer.validateTemplateName(request.getTemplateName())) {
+                log.warn("Nome de template inválido: {}", request.getTemplateName());
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Validar conteúdo Quill Delta
+            if (!com.wa.util.DocumentSanitizer.validateQuillDelta(request.getContent())) {
+                log.warn("Conteúdo Quill Delta inválido");
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Gerar documento customizado
+            byte[] documentBytes = wordDocumentService.generateCustomDocumentForProcess(
+                    request.getProcessId(),
+                    request.getTemplateName(),
+                    request.getContent()
+            );
+            
+            // Criar recurso para download
+            ByteArrayResource resource = new ByteArrayResource(documentBytes);
+            
+            // Nome do arquivo gerado
+            String fileName = request.getTemplateName().replace(".docx", "") + "_customizado.docx";
+            
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentLength(documentBytes.length)
+                    .body(resource);
+                    
+        } catch (IllegalArgumentException e) {
+            log.warn("Argumento inválido ao gerar documento customizado: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
             log.error("Erro ao gerar documento customizado: {}", e.getMessage(), e);
             return ResponseEntity.notFound().build();
