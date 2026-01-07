@@ -100,28 +100,28 @@ class DocumentControllerSecurityTest {
         when(personRepository.existsById(1L)).thenReturn(true);
 
         // Teste com ../
-        mockMvc.perform(get("/api/documents/client-content")
+        mockMvc.perform(get("/api/v1/documents/client-content")
                         .param("personId", "1")
                         .param("templateName", "../../etc/passwd")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         // Teste com ..\\
-        mockMvc.perform(get("/api/documents/client-content")
+        mockMvc.perform(get("/api/v1/documents/client-content")
                         .param("personId", "1")
                         .param("templateName", "..\\..\\windows\\system32")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         // Teste com caminho absoluto
-        mockMvc.perform(get("/api/documents/client-content")
+        mockMvc.perform(get("/api/v1/documents/client-content")
                         .param("personId", "1")
                         .param("templateName", "/etc/passwd")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         // Teste com caminho absoluto Windows
-        mockMvc.perform(get("/api/documents/client-content")
+        mockMvc.perform(get("/api/v1/documents/client-content")
                         .param("personId", "1")
                         .param("templateName", "C:\\windows\\system32")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -144,7 +144,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -157,14 +157,14 @@ class DocumentControllerSecurityTest {
         when(personRepository.existsById(1L)).thenReturn(true);
 
         // Teste com caracteres especiais
-        mockMvc.perform(get("/api/documents/client-content")
+        mockMvc.perform(get("/api/v1/documents/client-content")
                         .param("personId", "1")
                         .param("templateName", "template<script>.docx")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
         // Teste sem extensão .docx
-        mockMvc.perform(get("/api/documents/client-content")
+        mockMvc.perform(get("/api/v1/documents/client-content")
                         .param("personId", "1")
                         .param("templateName", "template")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -192,7 +192,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBodyXSS))
                 .andExpect(status().isBadRequest());
@@ -219,7 +219,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBodyScript))
                 .andExpect(status().isOk());
@@ -245,7 +245,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBodyInvalid))
                 .andExpect(status().isBadRequest());
@@ -277,7 +277,7 @@ class DocumentControllerSecurityTest {
                 }
                 """, ops.toString());
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -304,7 +304,7 @@ class DocumentControllerSecurityTest {
                 }
                 """, longText);
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -329,7 +329,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBodyNoOps))
                 .andExpect(status().isBadRequest());
@@ -345,7 +345,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBodyOpsNotArray))
                 .andExpect(status().isBadRequest());
@@ -370,7 +370,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBodyInvalidOp))
                 .andExpect(status().isBadRequest());
@@ -388,7 +388,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBodyMultipleOps))
                 .andExpect(status().isBadRequest());
@@ -415,7 +415,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -440,7 +440,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -465,7 +465,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -490,7 +490,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -519,7 +519,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());
@@ -553,7 +553,7 @@ class DocumentControllerSecurityTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());

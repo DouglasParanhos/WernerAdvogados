@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/statistics")
+@RequestMapping("/api/v1/statistics")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class StatisticsController {

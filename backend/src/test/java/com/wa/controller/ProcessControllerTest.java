@@ -82,7 +82,7 @@ class ProcessControllerTest {
                 .thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("page", "0")
                         .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -109,7 +109,7 @@ class ProcessControllerTest {
                 .thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("page", "0")
                         .param("size", "10")
                         .param("numero", numero)
@@ -133,7 +133,7 @@ class ProcessControllerTest {
                 .thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("page", "0")
                         .param("size", "10")
                         .param("comarca", comarca)
@@ -156,7 +156,7 @@ class ProcessControllerTest {
                 .thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("page", "0")
                         .param("size", "10")
                         .param("status", status)
@@ -179,7 +179,7 @@ class ProcessControllerTest {
                 .thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("page", "0")
                         .param("size", "10")
                         .param("showArchived", "true")
@@ -203,7 +203,7 @@ class ProcessControllerTest {
                 .thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("page", "0")
                         .param("size", "10")
                         .param("comarca", comarca)
@@ -234,21 +234,21 @@ class ProcessControllerTest {
                 .thenReturn(page100);
 
         // Act & Assert - Size 10
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(10));
 
         // Act & Assert - Size 50
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("page", "0")
                         .param("size", "50"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(50));
 
         // Act & Assert - Size 100
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("page", "0")
                         .param("size", "100"))
                 .andExpect(status().isOk())
@@ -262,7 +262,7 @@ class ProcessControllerTest {
         when(processService.findAll()).thenReturn(processes);
 
         // Act & Assert
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -280,7 +280,7 @@ class ProcessControllerTest {
         when(processService.findByPersonId(personId)).thenReturn(processes);
 
         // Act & Assert
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .param("personId", String.valueOf(personId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

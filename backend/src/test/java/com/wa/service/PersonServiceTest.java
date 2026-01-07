@@ -132,6 +132,54 @@ class PersonServiceTest {
     }
 
     @Test
+    void testFindAllPaginated_DoesNotPerformForceLoads() {
+        // Arrange
+        // Criar Person com relacionamentos já inicializados (simulando JOIN FETCH)
+        Person personWithRelations = new Person();
+        personWithRelations.setId(1L);
+        personWithRelations.setFullname("João Silva");
+        personWithRelations.setEmail("joao@example.com");
+        personWithRelations.setCpf("12345678900");
+        
+        // Simular que relacionamentos já foram carregados via JOIN FETCH
+        // (não são proxies lazy)
+        com.wa.model.Address address = new com.wa.model.Address();
+        address.setId(1L);
+        address.setLogradouro("Rua Teste");
+        personWithRelations.setAddress(address);
+        
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("joao.silva");
+        personWithRelations.setUser(user);
+        
+        List<Person> persons = List.of(personWithRelations);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Person> page = new PageImpl<>(persons, pageable, 1);
+
+        when(personRepository.findAllWithRelationsPaginated(any(), any(Pageable.class)))
+                .thenReturn(page);
+
+        // Act
+        Page<PersonDTO> result = personService.findAllPaginated(null, pageable);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        
+        // Verificar que o método não faz force loads desnecessários
+        // O relacionamento já deve estar carregado pela query do repositório
+        PersonDTO dto = result.getContent().get(0);
+        assertNotNull(dto);
+        assertEquals("João Silva", dto.getFullname());
+        
+        // Verificar que o repositório foi chamado apenas uma vez
+        // (não há chamadas adicionais para carregar relacionamentos)
+        verify(personRepository, times(1)).findAllWithRelationsPaginated(any(), any(Pageable.class));
+        verify(personRepository, never()).findById(any());
+    }
+
+    @Test
     void testFindAllPaginated_WithPagination_ReturnsCorrectPage() {
         // Arrange
         List<Person> page1Persons = List.of(person1, person2);

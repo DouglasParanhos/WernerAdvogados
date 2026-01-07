@@ -47,15 +47,7 @@ public class PersonService {
     @Transactional
     public Page<PersonDTO> findAllPaginated(String search, Pageable pageable) {
         Page<Person> page = personRepository.findAllWithRelationsPaginated(search, pageable);
-        // Carregar relacionamentos explicitamente para evitar N+1
-        page.getContent().forEach(person -> {
-            if (person.getAddress() != null) {
-                person.getAddress().getId(); // Force load
-            }
-            if (person.getMatriculations() != null) {
-                person.getMatriculations().size(); // Force load
-            }
-        });
+        // Relacionamentos já são carregados via JOIN FETCH na query
         List<PersonDTO> dtos = page.getContent().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

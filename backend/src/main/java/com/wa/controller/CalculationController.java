@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/calculations")
+@RequestMapping("/api/v1/calculations")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 @Slf4j

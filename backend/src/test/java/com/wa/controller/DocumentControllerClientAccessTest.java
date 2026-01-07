@@ -112,7 +112,7 @@ class DocumentControllerClientAccessTest {
         when(securityContext.getAuthentication()).thenReturn(clientAuthentication);
         when(personRepository.existsById(1L)).thenReturn(true);
 
-        mockMvc.perform(get("/api/documents/client-templates")
+        mockMvc.perform(get("/api/v1/documents/client-templates")
                         .param("personId", "1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -132,7 +132,7 @@ class DocumentControllerClientAccessTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client")
+        mockMvc.perform(post("/api/v1/documents/generate-client")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());
@@ -153,7 +153,7 @@ class DocumentControllerClientAccessTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client")
+        mockMvc.perform(post("/api/v1/documents/generate-client")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden()); // AccessDeniedException agora retorna 403
@@ -173,7 +173,7 @@ class DocumentControllerClientAccessTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client")
+        mockMvc.perform(post("/api/v1/documents/generate-client")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());
@@ -188,7 +188,7 @@ class DocumentControllerClientAccessTest {
         // então o endpoint retorna 200. Em produção, com filtros ativos, retornaria 403.
         // Este teste verifica que o endpoint existe e funciona, mas a proteção real
         // é testada em ClientAccessRestrictionTest que tem filtros habilitados.
-        mockMvc.perform(get("/api/documents/templates")
+        mockMvc.perform(get("/api/v1/documents/templates")
                         .param("processId", "1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk()); // Com filtros desabilitados, retorna 200
@@ -212,7 +212,7 @@ class DocumentControllerClientAccessTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate")
+        mockMvc.perform(post("/api/v1/documents/generate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound()); // Com filtros desabilitados, retorna 404 quando serviço retorna null
@@ -228,7 +228,7 @@ class DocumentControllerClientAccessTest {
         responseDTO.setTemplateName("template.docx");
         when(wordDocumentService.getDocumentContentForClient(eq(1L), any())).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/api/documents/client-content")
+        mockMvc.perform(get("/api/v1/documents/client-content")
                         .param("personId", "1")
                         .param("templateName", "template.docx")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -243,7 +243,7 @@ class DocumentControllerClientAccessTest {
         when(userRepository.findByUsername("client.user")).thenReturn(Optional.of(clientUser));
         when(personRepository.findByUserId(1L)).thenReturn(Optional.of(clientPerson));
 
-        mockMvc.perform(get("/api/documents/client-content")
+        mockMvc.perform(get("/api/v1/documents/client-content")
                         .param("personId", "2")
                         .param("templateName", "template.docx")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -272,7 +272,7 @@ class DocumentControllerClientAccessTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());
@@ -298,7 +298,7 @@ class DocumentControllerClientAccessTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate-client-custom")
+        mockMvc.perform(post("/api/v1/documents/generate-client-custom")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden()); // AccessDeniedException agora retorna 403
@@ -310,7 +310,7 @@ class DocumentControllerClientAccessTest {
     void testGetClientDocumentContent_WithInvalidTemplateName_ReturnsBadRequest() throws Exception {
         when(securityContext.getAuthentication()).thenReturn(adminAuthentication);
 
-        mockMvc.perform(get("/api/documents/client-content")
+        mockMvc.perform(get("/api/v1/documents/client-content")
                         .param("personId", "1")
                         .param("templateName", "../../etc/passwd")
                         .contentType(MediaType.APPLICATION_JSON))

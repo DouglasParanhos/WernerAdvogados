@@ -36,7 +36,7 @@ class GlobalExceptionHandlerTest {
 
     @BeforeEach
     void setUp() {
-        when(request.getRequestURI()).thenReturn("/api/persons");
+        when(request.getRequestURI()).thenReturn("/api/v1/persons");
         when(request.getHeader("Accept")).thenReturn("application/json");
         when(response.isCommitted()).thenReturn(false);
     }
@@ -216,7 +216,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void testHandleException_IgnoresSseRequest() {
         // Arrange
-        when(request.getRequestURI()).thenReturn("/api/process-status/stream");
+        when(request.getRequestURI()).thenReturn("/api/v1/statistics/process-status/stream");
         Exception exception = new RuntimeException("Test error");
 
         // Act

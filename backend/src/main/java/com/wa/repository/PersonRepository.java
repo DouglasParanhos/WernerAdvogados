@@ -20,8 +20,9 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
     Optional<Person> findByIdWithRelations(@Param("id") Long id);
 
     @Query("SELECT DISTINCT p FROM Person p " +
-            "LEFT JOIN p.address " +
-            "LEFT JOIN p.matriculations " +
+            "LEFT JOIN FETCH p.address " +
+            "LEFT JOIN FETCH p.user " +
+            "LEFT JOIN FETCH p.matriculations " +
             "WHERE (:search IS NULL OR :search = '' OR LOWER(p.fullname) LIKE LOWER(CONCAT('%', :search, '%'))) " +
             "ORDER BY p.fullname")
     Page<Person> findAllWithRelationsPaginated(@Param("search") String search, Pageable pageable);

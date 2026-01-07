@@ -42,7 +42,7 @@
       </div>
       
       <div v-if="loading" class="loading">Carregando...</div>
-      <div v-if="error" class="error">{{ error }}</div>
+      <div v-if="error" class="error">{{ error?.message || error }}</div>
       
       <div v-if="!loading && !error" class="board-container">
         <div 
@@ -161,14 +161,22 @@
 
 <script>
 import { taskService } from '../services/taskService'
+import { useLoading } from '../composables/useLoading'
 
 export default {
   name: 'Tasks',
+  setup() {
+    const { loading, error, execute } = useLoading()
+    
+    return {
+      loading,
+      error,
+      execute
+    }
+  },
   data() {
     return {
       tasks: [],
-      loading: false,
-      error: null,
       showNewTaskModal: false,
       showEditTaskModal: false,
       draggedTask: null,
@@ -207,16 +215,13 @@ export default {
   },
   methods: {
     async loadTasks() {
-      this.loading = true
-      this.error = null
-      try {
+      await this.execute(async () => {
         this.tasks = await taskService.getAll()
-      } catch (err) {
-        this.error = 'Erro ao carregar tarefas: ' + (err.response?.data?.message || err.message)
+      }).catch(err => {
+        const errorMessage = 'Erro ao carregar tarefas: ' + (err.response?.data?.message || err.message)
+        this.error.value = new Error(errorMessage)
         console.error(err)
-      } finally {
-        this.loading = false
-      }
+      })
     },
     getTasksByStatus(status) {
       return this.tasks
