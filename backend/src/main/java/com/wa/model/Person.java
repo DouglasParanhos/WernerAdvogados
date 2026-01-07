@@ -1,6 +1,8 @@
 package com.wa.model;
 
+import com.wa.validation.Cpf;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,9 +25,11 @@ public class Person {
     private String fullname;
     
     @Column(nullable = true, length = 255)
+    @Email(message = "Email deve ter um formato válido")
     private String email;
     
     @Column(unique = true, nullable = false, length = 16)
+    @Cpf(message = "CPF inválido")
     private String cpf;
     
     @Column(unique = true, nullable = false, length = 16)

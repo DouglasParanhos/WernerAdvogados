@@ -128,20 +128,6 @@
             <version>0.12.3</version>
             <scope>runtime</scope>
         </dependency>
-        
-        <!-- Selenium WebDriver for BCB Calculator Integration -->
-        <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-java</artifactId>
-            <version>4.15.0</version>
-        </dependency>
-        
-        <!-- WebDriverManager for managing browser drivers -->
-        <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
-            <version>5.6.2</version>
-        </dependency>
     </dependencies>
     
     <build>

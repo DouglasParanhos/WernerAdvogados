@@ -6,6 +6,9 @@ import com.wa.dto.MatriculationDTO;
 import com.wa.dto.MatriculationRequestDTO;
 import com.wa.dto.PersonDTO;
 import com.wa.dto.PersonRequestDTO;
+import com.wa.exception.AddressNotFoundException;
+import com.wa.exception.PersonNotFoundException;
+import com.wa.exception.UsernameAlreadyExistsException;
 import com.wa.model.Address;
 import com.wa.model.Matriculation;
 import com.wa.model.Person;
@@ -62,7 +65,7 @@ public class PersonService {
     @Transactional
     public PersonDTO findById(Long id) {
         Person person = personRepository.findByIdWithRelations(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
+                .orElseThrow(() -> new PersonNotFoundException(id));
 
         // Carregar processos das matrículas em uma query separada para evitar
         // MultipleBagFetchException
@@ -107,7 +110,7 @@ public class PersonService {
             person.setAddress(address);
         } else if (request.getAddressId() != null) {
             Address address = addressRepository.findById(request.getAddressId())
-                    .orElseThrow(() -> new RuntimeException("Endereço não encontrado"));
+                    .orElseThrow(() -> new AddressNotFoundException(request.getAddressId()));
             person.setAddress(address);
         }
 
@@ -122,7 +125,7 @@ public class PersonService {
     @Transactional
     public PersonDTO update(Long id, PersonRequestDTO request) {
         Person person = personRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
+                .orElseThrow(() -> new PersonNotFoundException(id));
 
         person.setFullname(request.getFullname());
         // Converte string vazia para null para evitar violação de constraint UNIQUE
@@ -149,7 +152,7 @@ public class PersonService {
             person.setAddress(address);
         } else if (request.getAddressId() != null) {
             Address address = addressRepository.findById(request.getAddressId())
-                    .orElseThrow(() -> new RuntimeException("Endereço não encontrado"));
+                    .orElseThrow(() -> new AddressNotFoundException(request.getAddressId()));
             person.setAddress(address);
         }
 
@@ -238,7 +241,7 @@ public class PersonService {
     @Transactional
     public void delete(Long id) {
         Person person = personRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
+                .orElseThrow(() -> new PersonNotFoundException(id));
         personRepository.delete(person);
     }
 
@@ -333,7 +336,7 @@ public class PersonService {
 
     public String generateUsernameSuggestion(Long personId) {
         Person person = personRepository.findById(personId)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + personId));
+                .orElseThrow(() -> new PersonNotFoundException(personId));
 
         String fullname = person.getFullname();
         if (fullname == null || fullname.trim().isEmpty()) {
@@ -357,7 +360,7 @@ public class PersonService {
     @Transactional
     public void createOrUpdateCredentials(Long personId, ClientCredentialsDTO credentials) {
         Person person = personRepository.findById(personId)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + personId));
+                .orElseThrow(() -> new PersonNotFoundException(personId));
 
         // Verificar se username já existe (exceto se for o mesmo usuário)
         User existingUser = userRepository.findByUsername(credentials.getUsername())
@@ -365,7 +368,7 @@ public class PersonService {
 
         if (existingUser != null
                 && (person.getUser() == null || !existingUser.getId().equals(person.getUser().getId()))) {
-            throw new RuntimeException("Username já está em uso");
+            throw new UsernameAlreadyExistsException("Username já está em uso: " + credentials.getUsername());
         }
 
         User user;

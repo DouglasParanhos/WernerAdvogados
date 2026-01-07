@@ -1,6 +1,7 @@
 import axios from 'axios'
 import router from '../router'
 import { authService } from './authService'
+import { getErrorMessage, logError, isAuthenticationError } from '../utils/errorHandler'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -8,6 +9,11 @@ const api = axios.create({
     'Content-Type': 'application/json'
   }
 })
+
+// Validar variável de ambiente obrigatória em produção
+if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
+  console.warn('VITE_API_URL não está definida. Usando URL relativa.')
+}
 
 // Interceptor para adicionar token em todas as requisições
 api.interceptors.request.use(
@@ -19,15 +25,20 @@ api.interceptors.request.use(
     return config
   },
   error => {
+    logError(error, 'Request Interceptor')
     return Promise.reject(error)
   }
 )
 
-// Interceptor para tratar erros 401 (não autorizado)
+// Interceptor para tratar erros de resposta
 api.interceptors.response.use(
   response => response,
   error => {
-    if (error.response && error.response.status === 401) {
+    // Log do erro para debug
+    logError(error, 'Response Interceptor')
+    
+    // Tratar erro de autenticação (401)
+    if (isAuthenticationError(error)) {
       // Só redirecionar para login se não estiver em uma rota pública
       const currentRoute = router.currentRoute.value
       const isPublicRoute = currentRoute.path === '/' || 
@@ -45,6 +56,12 @@ api.interceptors.response.use(
         router.push('/login')
       }
     }
+    
+    // Adicionar mensagem de erro formatada ao objeto de erro
+    if (error.response) {
+      error.userMessage = getErrorMessage(error)
+    }
+    
     return Promise.reject(error)
   }
 )

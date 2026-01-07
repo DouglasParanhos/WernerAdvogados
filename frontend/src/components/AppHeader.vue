@@ -177,16 +177,13 @@ export default {
     this.updateAuthState()
     // Observar mudanças no localStorage para atualizar o header quando o usuário fizer login/logout
     window.addEventListener('storage', this.updateAuthState)
-    // Também verificar periodicamente (para mudanças na mesma aba)
-    this.authCheckInterval = setInterval(() => {
+    // Observar mudanças de rota para atualizar estado de autenticação
+    this.$watch('$route', () => {
       this.updateAuthState()
-    }, 300)
+    }, { immediate: false })
   },
   beforeUnmount() {
     window.removeEventListener('storage', this.updateAuthState)
-    if (this.authCheckInterval) {
-      clearInterval(this.authCheckInterval)
-    }
   },
   methods: {
     updateAuthState() {

@@ -2,6 +2,8 @@ package com.wa.service;
 
 import com.wa.dto.ClientCredentialsDTO;
 import com.wa.dto.PersonDTO;
+import com.wa.exception.PersonNotFoundException;
+import com.wa.exception.UsernameAlreadyExistsException;
 import com.wa.model.Person;
 import com.wa.model.User;
 import com.wa.repository.AddressRepository;
@@ -271,7 +273,7 @@ class PersonServiceTest {
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(PersonNotFoundException.class, () -> {
             personService.generateUsernameSuggestion(999L);
         });
     }
@@ -364,10 +366,11 @@ class PersonServiceTest {
         when(userRepository.findByUsername("joao.silva")).thenReturn(Optional.of(existingUser));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        UsernameAlreadyExistsException exception = assertThrows(UsernameAlreadyExistsException.class, () -> {
             personService.createOrUpdateCredentials(1L, credentials);
-        }, "Username já está em uso");
-
+        });
+        
+        assertTrue(exception.getMessage().contains("Username já está em uso"));
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -411,7 +414,7 @@ class PersonServiceTest {
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(PersonNotFoundException.class, () -> {
             personService.createOrUpdateCredentials(999L, credentials);
         });
     }

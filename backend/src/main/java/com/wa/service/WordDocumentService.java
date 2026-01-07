@@ -3,6 +3,9 @@ package com.wa.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.wa.dto.DocumentContentDTO;
 import com.wa.dto.DocumentContentResponseDTO;
+import com.wa.exception.DocumentTemplateNotFoundException;
+import com.wa.exception.PersonNotFoundException;
+import com.wa.exception.ProcessNotFoundException;
 import com.wa.model.Address;
 import com.wa.model.Matriculation;
 import com.wa.model.Person;
@@ -44,11 +47,11 @@ public class WordDocumentService {
     public byte[] generateDocument(Long processId, String templateName) throws IOException {
         // Buscar processo com todos os relacionamentos necessários
         Process process = processRepository.findByIdWithRelations(processId)
-                .orElseThrow(() -> new RuntimeException("Processo não encontrado com ID: " + processId));
+                .orElseThrow(() -> new ProcessNotFoundException(processId));
         
         // Verificar se template existe
         if (!templateService.templateExists(templateName)) {
-            throw new RuntimeException("Template não encontrado: " + templateName);
+            throw new DocumentTemplateNotFoundException("Template não encontrado: " + templateName);
         }
         
         // Obter recurso do template
@@ -252,11 +255,11 @@ public class WordDocumentService {
     public byte[] generateDocumentForClient(Long personId, String templateName) throws IOException {
         // Buscar pessoa com todos os relacionamentos necessários
         Person person = personRepository.findByIdWithRelations(personId)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + personId));
+                .orElseThrow(() -> new PersonNotFoundException(personId));
         
         // Verificar se template existe
         if (!templateService.templateExists(templateName)) {
-            throw new RuntimeException("Template não encontrado: " + templateName);
+            throw new DocumentTemplateNotFoundException("Template não encontrado: " + templateName);
         }
         
         // Obter recurso do template
@@ -436,11 +439,11 @@ public class WordDocumentService {
         
         // Buscar pessoa com todos os relacionamentos necessários
         Person person = personRepository.findByIdWithRelations(personId)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + personId));
+                .orElseThrow(() -> new PersonNotFoundException(personId));
         
         // Verificar se template existe
         if (!templateService.templateExists(templateName)) {
-            throw new RuntimeException("Template não encontrado: " + templateName);
+            throw new DocumentTemplateNotFoundException("Template não encontrado: " + templateName);
         }
         
         // Obter recurso do template
@@ -571,12 +574,12 @@ public class WordDocumentService {
         
         // Verificar se pessoa existe (validação básica)
         if (!personRepository.existsById(personId)) {
-            throw new RuntimeException("Cliente não encontrado com ID: " + personId);
+            throw new PersonNotFoundException(personId);
         }
         
         // Verificar se template existe
         if (!templateService.templateExists(templateName)) {
-            throw new RuntimeException("Template não encontrado: " + templateName);
+            throw new DocumentTemplateNotFoundException("Template não encontrado: " + templateName);
         }
         
         // Obter recurso do template
@@ -737,11 +740,11 @@ public class WordDocumentService {
         
         // Buscar processo com todos os relacionamentos necessários
         Process process = processRepository.findByIdWithRelations(processId)
-                .orElseThrow(() -> new RuntimeException("Processo não encontrado com ID: " + processId));
+                .orElseThrow(() -> new ProcessNotFoundException(processId));
         
         // Verificar se template existe
         if (!templateService.templateExists(templateName)) {
-            throw new RuntimeException("Template não encontrado: " + templateName);
+            throw new DocumentTemplateNotFoundException("Template não encontrado: " + templateName);
         }
         
         // Obter recurso do template
@@ -854,12 +857,12 @@ public class WordDocumentService {
         
         // Verificar se processo existe (validação básica)
         if (!processRepository.existsById(processId)) {
-            throw new RuntimeException("Processo não encontrado com ID: " + processId);
+            throw new ProcessNotFoundException(processId);
         }
         
         // Verificar se template existe
         if (!templateService.templateExists(templateName)) {
-            throw new RuntimeException("Template não encontrado: " + templateName);
+            throw new DocumentTemplateNotFoundException("Template não encontrado: " + templateName);
         }
         
         // Obter recurso do template
