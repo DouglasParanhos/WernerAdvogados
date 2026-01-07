@@ -78,122 +78,120 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch } from 'vue'
 import { personService } from '../services/personService'
+import { useLoading } from '../composables/useLoading'
 
-export default {
-  name: 'ClientLoginModal',
-  props: {
-    show: {
-      type: Boolean,
-      default: false
-    },
-    client: {
-      type: Object,
-      required: true
-    }
+const props = defineProps({
+  show: {
+    type: Boolean,
+    default: false
   },
-  data() {
-    return {
-      credentials: {
-        username: '',
-        password: ''
-      },
-      usernamePlaceholder: '',
-      loading: false,
-      saving: false,
-      error: null,
-      showPassword: false
+  client: {
+    type: Object,
+    required: true
+  }
+})
+
+const emit = defineEmits(['saved', 'close'])
+
+const { loading, setLoading } = useLoading()
+
+const credentials = ref({
+  username: '',
+  password: ''
+})
+const usernamePlaceholder = ref('')
+const saving = ref(false)
+const error = ref(null)
+const showPassword = ref(false)
+
+const loadUsernameSuggestion = async () => {
+  if (!props.client?.id) return
+  
+  setLoading(true)
+  error.value = null
+  
+  try {
+    const response = await personService.getUsernameSuggestion(props.client.id)
+    usernamePlaceholder.value = response.username || ''
+    if (!credentials.value.username) {
+      credentials.value.username = response.username || ''
     }
-  },
-  watch: {
-    show(newVal) {
-      if (newVal && this.client?.id) {
-        this.loadUsernameSuggestion()
-        this.generatePassword()
-      } else {
-        this.reset()
-      }
-    }
-  },
-  methods: {
-    async loadUsernameSuggestion() {
-      if (!this.client?.id) return
-      
-      this.loading = true
-      this.error = null
-      
-      try {
-        const response = await personService.getUsernameSuggestion(this.client.id)
-        this.usernamePlaceholder = response.username || ''
-        if (!this.credentials.username) {
-          this.credentials.username = response.username || ''
-        }
-      } catch (err) {
-        console.error('Erro ao carregar sugestão de username:', err)
-        // Não mostrar erro, apenas usar placeholder vazio
-        this.usernamePlaceholder = ''
-      } finally {
-        this.loading = false
-      }
-    },
-    
-    generatePassword() {
-      const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
-      let password = ''
-      for (let i = 0; i < 8; i++) {
-        password += characters.charAt(Math.floor(Math.random() * characters.length))
-      }
-      this.credentials.password = password
-      this.showPassword = true // Mostrar senha gerada automaticamente
-    },
-    
-    togglePasswordVisibility() {
-      this.showPassword = !this.showPassword
-    },
-    
-    async save() {
-      if (!this.credentials.username || !this.credentials.password) {
-        this.error = 'Por favor, preencha todos os campos'
-        return
-      }
-      
-      if (this.credentials.password.length < 8) {
-        this.error = 'A senha deve ter no mínimo 8 caracteres'
-        return
-      }
-      
-      this.saving = true
-      this.error = null
-      
-      try {
-        await personService.configureCredentials(this.client.id, this.credentials)
-        this.$emit('saved')
-        this.close()
-      } catch (err) {
-        this.error = 'Erro ao salvar credenciais: ' + (err.response?.data?.message || err.message)
-        console.error(err)
-      } finally {
-        this.saving = false
-      }
-    },
-    
-    close() {
-      this.$emit('close')
-    },
-    
-    reset() {
-      this.credentials = {
-        username: '',
-        password: ''
-      }
-      this.usernamePlaceholder = ''
-      this.error = null
-      this.saving = false
-      this.showPassword = false
-    }
+  } catch (err) {
+    console.error('Erro ao carregar sugestão de username:', err)
+    // Não mostrar erro, apenas usar placeholder vazio
+    usernamePlaceholder.value = ''
+  } finally {
+    setLoading(false)
   }
 }
+
+const generatePassword = () => {
+  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
+  let password = ''
+  for (let i = 0; i < 8; i++) {
+    password += characters.charAt(Math.floor(Math.random() * characters.length))
+  }
+  credentials.value.password = password
+  showPassword.value = true // Mostrar senha gerada automaticamente
+}
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
+}
+
+const save = async () => {
+  if (!credentials.value.username || !credentials.value.password) {
+    error.value = 'Por favor, preencha todos os campos'
+    return
+  }
+  
+  if (credentials.value.password.length < 8) {
+    error.value = 'A senha deve ter no mínimo 8 caracteres'
+    return
+  }
+  
+  saving.value = true
+  error.value = null
+  
+  try {
+    await personService.configureCredentials(props.client.id, credentials.value)
+    emit('saved')
+    close()
+  } catch (err) {
+    error.value = 'Erro ao salvar credenciais: ' + (err.response?.data?.message || err.message)
+    console.error(err)
+  } finally {
+    saving.value = false
+  }
+}
+
+const close = () => {
+  emit('close')
+}
+
+const reset = () => {
+  credentials.value = {
+    username: '',
+    password: ''
+  }
+  usernamePlaceholder.value = ''
+  error.value = null
+  saving.value = false
+  showPassword.value = false
+}
+
+// Observar mudanças na prop show
+watch(() => props.show, (newVal) => {
+  if (newVal && props.client?.id) {
+    loadUsernameSuggestion()
+    generatePassword()
+  } else {
+    reset()
+  }
+})
 </script>
 
 <style scoped>

@@ -156,58 +156,24 @@
   </div>
 </template>
 
-<script>
-import { authService } from '../services/authService'
-import router from '../router'
+<script setup>
+import { onMounted, onBeforeUnmount } from 'vue'
+import { useAuth } from '../composables/useAuth'
 
-export default {
-  name: 'AppHeader',
-  data() {
-    return {
-      user: null,
-      isAuthenticated: false
-    }
-  },
-  watch: {
-    '$route'() {
-      this.updateAuthState()
-    }
-  },
-  mounted() {
-    this.updateAuthState()
-    // Observar mudanças no localStorage para atualizar o header quando o usuário fizer login/logout
-    window.addEventListener('storage', this.updateAuthState)
-    // Observar mudanças de rota para atualizar estado de autenticação
-    this.$watch('$route', () => {
-      this.updateAuthState()
-    }, { immediate: false })
-  },
-  beforeUnmount() {
-    window.removeEventListener('storage', this.updateAuthState)
-  },
-  methods: {
-    updateAuthState() {
-      this.isAuthenticated = authService.isAuthenticated()
-      this.user = authService.getUser()
-    },
-    getHomeRoute() {
-      if (!this.isAuthenticated) {
-        return '/'
-      }
-      // Se for cliente, redirecionar para página de movimentos
-      if (this.user && this.user.role === 'CLIENT') {
-        return '/my-moviments'
-      }
-      // Caso contrário, ir para dashboard
-      return '/dashboard'
-    },
-    handleLogout() {
-      authService.logout()
-      this.updateAuthState()
-      router.push('/')
-    }
-  }
+// Usar useAuth com watchStorage=true para observar mudanças no localStorage
+const { user, isAuthenticated, updateAuthState, logout, getHomeRoute } = useAuth({ 
+  watchRoute: true, 
+  watchStorage: true 
+})
+
+const handleLogout = () => {
+  logout()
 }
+
+// Atualizar estado na montagem do componente
+onMounted(() => {
+  updateAuthState()
+})
 </script>
 
 <style scoped>
