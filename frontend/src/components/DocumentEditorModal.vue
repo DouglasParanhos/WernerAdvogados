@@ -162,36 +162,64 @@ export default {
         response.content.forEach(block => {
           if (block.text) {
             const text = block.text
-            const lines = text.split('\n')
             
-            lines.forEach((line, index) => {
-              // Adicionar linha (mesmo que vazia, para preservar quebras de linha)
+            // Preservar marcadores de tabela como texto especial para processamento no backend
+            // Eles serão processados e removidos durante a reconstrução do documento
+            if (text === '[TABLE_START]' || text === '[TABLE_END]' || text === '[CELL_SEP]' || text === '[ROW_END]') {
+              // Incluir marcador como operação especial para processamento no backend
+              ops.push({ insert: text })
+              return
+            }
+            
+            // Preparar atributos de formatação
+            const attributes = {}
+            
+            // Aplicar formatação se for dado do cliente/processo
+            if (block.isClientData) {
+              attributes.bold = true
+            }
+            
+            // Adicionar formatação adicional se existir
+            if (block.formatting) {
+              // Converter valores booleanos do formato do backend
+              if (block.formatting.bold === true) attributes.bold = true
+              if (block.formatting.italic === true) attributes.italic = true
+              if (block.formatting.underline === true) attributes.underline = true
+            }
+            
+            // Processar texto preservando quebras de linha
+            if (text.includes('\n')) {
+              const lines = text.split('\n')
+              lines.forEach((line, index) => {
+                const op = {
+                  insert: line
+                }
+                
+                // Adicionar atributos apenas se houver formatação
+                if (Object.keys(attributes).length > 0) {
+                  op.attributes = { ...attributes }
+                }
+                
+                ops.push(op)
+                
+                // Adicionar quebra de linha após cada linha (exceto a última se for vazia)
+                if (index < lines.length - 1 || (index === lines.length - 1 && line === '' && lines.length > 1)) {
+                  ops.push({ insert: '\n' })
+                }
+              })
+            } else {
+              // Texto sem quebras de linha
               const op = {
-                insert: line
+                insert: text
               }
               
-              // Aplicar formatação se for dado do cliente/processo
-              if (block.isClientData) {
-                op.attributes = {
-                  bold: true
-                }
-              }
-              
-              // Adicionar formatação adicional se existir
-              if (block.formatting) {
-                op.attributes = {
-                  ...op.attributes,
-                  ...block.formatting
-                }
+              // Adicionar atributos apenas se houver formatação
+              if (Object.keys(attributes).length > 0) {
+                op.attributes = { ...attributes }
               }
               
               ops.push(op)
-              
-              // Adicionar quebra de linha após cada linha (exceto a última do bloco)
-              if (index < lines.length - 1) {
-                ops.push({ insert: '\n' })
-              }
-            })
+            }
           }
         })
       }

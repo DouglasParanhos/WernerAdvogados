@@ -1,5 +1,28 @@
 import api from './api'
 
+/**
+ * Extrai o nome do arquivo do header Content-Disposition
+ * @param {string} contentDisposition - Header Content-Disposition
+ * @returns {string|null} - Nome do arquivo extraído ou null
+ */
+function extractFileName(contentDisposition) {
+  if (!contentDisposition) return null
+  
+  // Tentar primeiro com filename entre aspas: filename="..."
+  let match = contentDisposition.match(/filename="([^"]+)"/i)
+  if (match && match[1]) {
+    return match[1]
+  }
+  
+  // Tentar com filename sem aspas: filename=...
+  match = contentDisposition.match(/filename=([^;\s]+)/i)
+  if (match && match[1]) {
+    return match[1].trim()
+  }
+  
+  return null
+}
+
 export const documentService = {
   /**
    * Busca templates disponíveis para um processo
@@ -37,9 +60,9 @@ export const documentService = {
       let fileName = templateName.replace('.docx', '') + '_gerado.docx'
       
       if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/i)
-        if (fileNameMatch && fileNameMatch[1]) {
-          fileName = fileNameMatch[1]
+        const extractedFileName = extractFileName(contentDisposition)
+        if (extractedFileName) {
+          fileName = extractedFileName
         }
       }
       
@@ -69,7 +92,8 @@ export const documentService = {
   },
 
   /**
-   * Gera um documento usando dados do cliente e faz download automático
+   * Gera um documento PDF usando dados do cliente e faz download automático
+   * Retorna PDF conforme implementação do backend
    */
   async generateClientDocument(personId, templateName) {
     try {
@@ -85,18 +109,25 @@ export const documentService = {
       )
 
       // Criar URL temporária para download
-      const url = window.URL.createObjectURL(new Blob([response.data]))
+      // Verificar se é PDF pelo Content-Type
+      const contentType = response.headers['content-type'] || ''
+      const isPdf = contentType.includes('pdf') || contentType.includes('application/pdf')
+      
+      const blob = new Blob([response.data], { 
+        type: isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      })
+      const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       
       // Extrair nome do arquivo do header Content-Disposition ou usar templateName
       const contentDisposition = response.headers['content-disposition']
-      let fileName = templateName.replace('.docx', '') + '_gerado.docx'
+      let fileName = templateName.replace('.docx', '') + '_gerado.pdf'
       
       if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/i)
-        if (fileNameMatch && fileNameMatch[1]) {
-          fileName = fileNameMatch[1]
+        const extractedFileName = extractFileName(contentDisposition)
+        if (extractedFileName) {
+          fileName = extractedFileName
         }
       }
       
@@ -127,6 +158,7 @@ export const documentService = {
 
   /**
    * Gera um documento customizado a partir de conteúdo editado (Quill Delta)
+   * Retorna PDF para documentos editados de clientes
    */
   async generateCustomClientDocument(personId, templateName, content) {
     try {
@@ -143,18 +175,25 @@ export const documentService = {
       )
 
       // Criar URL temporária para download
-      const url = window.URL.createObjectURL(new Blob([response.data]))
+      // Verificar se é PDF pelo Content-Type
+      const contentType = response.headers['content-type'] || ''
+      const isPdf = contentType.includes('pdf') || contentType.includes('application/pdf')
+      
+      const blob = new Blob([response.data], { 
+        type: isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      })
+      const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       
       // Extrair nome do arquivo do header Content-Disposition
       const contentDisposition = response.headers['content-disposition']
-      let fileName = templateName.replace('.docx', '') + '_customizado.docx'
+      let fileName = templateName.replace('.docx', '') + '_customizado.pdf'
       
       if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/i)
-        if (fileNameMatch && fileNameMatch[1]) {
-          fileName = fileNameMatch[1]
+        const extractedFileName = extractFileName(contentDisposition)
+        if (extractedFileName) {
+          fileName = extractedFileName
         }
       }
       
@@ -185,6 +224,7 @@ export const documentService = {
 
   /**
    * Gera um documento customizado a partir de conteúdo editado (Quill Delta) para processo
+   * Retorna PDF para documentos editados
    */
   async generateCustomProcessDocument(processId, templateName, content) {
     try {
@@ -201,18 +241,25 @@ export const documentService = {
       )
 
       // Criar URL temporária para download
-      const url = window.URL.createObjectURL(new Blob([response.data]))
+      // Verificar se é PDF pelo Content-Type
+      const contentType = response.headers['content-type'] || ''
+      const isPdf = contentType.includes('pdf') || contentType.includes('application/pdf')
+      
+      const blob = new Blob([response.data], { 
+        type: isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      })
+      const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       
       // Extrair nome do arquivo do header Content-Disposition
       const contentDisposition = response.headers['content-disposition']
-      let fileName = templateName.replace('.docx', '') + '_customizado.docx'
+      let fileName = templateName.replace('.docx', '') + '_customizado.pdf'
       
       if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/i)
-        if (fileNameMatch && fileNameMatch[1]) {
-          fileName = fileNameMatch[1]
+        const extractedFileName = extractFileName(contentDisposition)
+        if (extractedFileName) {
+          fileName = extractedFileName
         }
       }
       
