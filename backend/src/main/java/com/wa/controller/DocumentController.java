@@ -136,7 +136,8 @@ public class DocumentController {
     }
     
     /**
-     * Gera um documento Word usando dados do cliente e retorna para download
+     * Gera um documento PDF usando dados do cliente e retorna para download
+     * Converte DOCX para PDF usando Docx4J conforme artigo javathinking.com
      */
     @PostMapping("/generate-client")
     public ResponseEntity<ByteArrayResource> generateClientDocument(
@@ -163,7 +164,7 @@ public class DocumentController {
                 }
             }
             
-            // Gerar documento
+            // Gerar documento PDF (conversão DOCX -> PDF feita internamente)
             byte[] documentBytes = wordDocumentService.generateDocumentForClient(
                     request.getPersonId(), 
                     request.getTemplateName()
@@ -172,12 +173,12 @@ public class DocumentController {
             // Criar recurso para download
             ByteArrayResource resource = new ByteArrayResource(documentBytes);
             
-            // Nome do arquivo gerado
-            String fileName = request.getTemplateName().replace(".docx", "") + "_gerado.docx";
+            // Nome do arquivo gerado (PDF)
+            String fileName = request.getTemplateName().replace(".docx", "") + "_gerado.pdf";
             
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentType(MediaType.APPLICATION_PDF)
                     .contentLength(documentBytes.length)
                     .body(resource);
                     
@@ -292,7 +293,7 @@ public class DocumentController {
                 return ResponseEntity.badRequest().build();
             }
             
-            // Gerar documento customizado
+            // Gerar documento customizado (retorna PDF para documentos editados)
             byte[] documentBytes = wordDocumentService.generateCustomDocumentForClient(
                     request.getPersonId(),
                     request.getTemplateName(),
@@ -302,12 +303,12 @@ public class DocumentController {
             // Criar recurso para download
             ByteArrayResource resource = new ByteArrayResource(documentBytes);
             
-            // Nome do arquivo gerado
-            String fileName = request.getTemplateName().replace(".docx", "") + "_customizado.docx";
+            // Nome do arquivo gerado (PDF para documentos editados)
+            String fileName = request.getTemplateName().replace(".docx", "") + "_customizado.pdf";
             
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentType(MediaType.APPLICATION_PDF)
                     .contentLength(documentBytes.length)
                     .body(resource);
                     
@@ -392,12 +393,12 @@ public class DocumentController {
             // Criar recurso para download
             ByteArrayResource resource = new ByteArrayResource(documentBytes);
             
-            // Nome do arquivo gerado
-            String fileName = request.getTemplateName().replace(".docx", "") + "_customizado.docx";
+            // Nome do arquivo gerado (PDF para documentos editados)
+            String fileName = request.getTemplateName().replace(".docx", "") + "_customizado.pdf";
             
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentType(MediaType.APPLICATION_PDF)
                     .contentLength(documentBytes.length)
                     .body(resource);
                     

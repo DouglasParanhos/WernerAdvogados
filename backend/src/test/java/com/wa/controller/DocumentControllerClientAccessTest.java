@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -135,7 +136,8 @@ class DocumentControllerClientAccessTest {
         mockMvc.perform(post("/api/documents/generate-client")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"));
 
         verify(wordDocumentService, times(1)).generateDocumentForClient(eq(1L), any());
     }
@@ -176,7 +178,8 @@ class DocumentControllerClientAccessTest {
         mockMvc.perform(post("/api/documents/generate-client")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"));
 
         verify(wordDocumentService, times(1)).generateDocumentForClient(eq(2L), any());
     }
