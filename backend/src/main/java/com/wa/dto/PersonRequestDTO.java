@@ -1,5 +1,7 @@
 package com.wa.dto;
 
+import com.wa.validation.Cpf;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -15,9 +17,11 @@ public class PersonRequestDTO {
     @NotBlank(message = "Nome completo é obrigatório")
     private String fullname;
     
+    @Email(message = "Email deve ter um formato válido")
     private String email;
     
     @NotBlank(message = "CPF é obrigatório")
+    @Cpf(message = "CPF inválido")
     private String cpf;
     
     @NotBlank(message = "RG é obrigatório")

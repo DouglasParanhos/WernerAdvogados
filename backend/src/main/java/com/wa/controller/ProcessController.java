@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/processes")
+@RequestMapping("/api/v1/processes")
 @RequiredArgsConstructor
 public class ProcessController {
     

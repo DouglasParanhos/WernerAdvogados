@@ -2,6 +2,7 @@ package com.wa.service;
 
 import com.wa.dto.AuthResponseDTO;
 import com.wa.dto.LoginRequestDTO;
+import com.wa.exception.InvalidCredentialsException;
 import com.wa.model.User;
 import com.wa.repository.UserRepository;
 import com.wa.util.JWTUtil;
@@ -25,7 +26,7 @@ public class AuthService {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Usuário não encontrado: {}", loginRequest.getUsername());
-                    return new RuntimeException("Credenciais inválidas");
+                    return new InvalidCredentialsException();
                 });
         
         log.debug("Usuário encontrado: {}, role: {}", user.getUsername(), user.getRole());
@@ -37,7 +38,7 @@ public class AuthService {
         
         if (!passwordMatches) {
             log.warn("Senha incorreta para usuário: {}", loginRequest.getUsername());
-            throw new RuntimeException("Credenciais inválidas");
+            throw new InvalidCredentialsException();
         }
         
         log.info("Login bem-sucedido para usuário: {}", loginRequest.getUsername());

@@ -5,14 +5,29 @@ Sistema full-stack para advogados acompanharem seus clientes e processos jurídi
 ## Tecnologias
 
 - **Backend**: Spring Boot 3.2.0, Java 17, PostgreSQL, Apache POI (geração de documentos Word)
-- **Frontend**: Vue 3, Vite, Vue Router, Axios
+- **Frontend**: Vue 3 (Composition API), Vite, Vue Router, Axios
 
 ## Estrutura do Projeto
 
 ```
 wa/
 ├── backend/          # Aplicação Spring Boot
+│   └── src/main/java/com/wa/
+│       ├── controller/    # Controllers REST (API versionada em /api/v1)
+│       ├── service/        # Lógica de negócio
+│       ├── repository/     # Repositórios JPA
+│       ├── model/          # Entidades JPA
+│       ├── exception/      # Exceções customizadas
+│       ├── validation/     # Validações customizadas (CPF, etc.)
+│       └── config/         # Configurações (JWT, CORS, etc.)
 ├── frontend/         # Aplicação Vue 3
+│   └── src/
+│       ├── components/     # Componentes Vue (migrando para Composition API)
+│       ├── composables/    # Composables reutilizáveis (useAuth, useLoading)
+│       ├── services/       # Serviços de API
+│       ├── utils/          # Utilitários (errorHandler, etc.)
+│       ├── views/          # Páginas/Views
+│       └── router/         # Configuração de rotas
 └── generate_database.sql  # Script SQL para criar o banco de dados
 ```
 
@@ -49,11 +64,18 @@ Ou execute o script diretamente no PostgreSQL.
 cd backend
 ```
 
-2. Configure as credenciais do banco de dados no arquivo `src/main/resources/application.properties`:
+2. Configure as credenciais do banco de dados e outras variáveis no arquivo `src/main/resources/application.properties`:
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/wa_db
 spring.datasource.username=seu_usuario
 spring.datasource.password=sua_senha
+
+# JWT Secret (obrigatório em produção)
+jwt.secret=seu_jwt_secret_aqui
+
+# Flyway - Validação de migrações
+spring.flyway.validate-on-migrate=true
+spring.flyway.validate-migration-naming=true
 ```
 
 3. Compile e execute o backend:
@@ -63,6 +85,8 @@ mvn spring-boot:run
 ```
 
 O backend estará disponível em `http://localhost:8081`
+
+**Nota:** A API está versionada em `/api/v1/`. Todas as requisições devem usar este prefixo.
 
 ## Configuração do Frontend
 
@@ -132,42 +156,81 @@ Os nomes dos documentos são formatados automaticamente para exibição amigáve
 
 ## API Endpoints
 
+**Base URL:** `/api/v1`
+
+Todas as rotas abaixo devem ser prefixadas com `/api/v1`. A API está versionada para facilitar evolução futura sem quebrar compatibilidade.
+
+### Autenticação (Auth)
+- `POST /api/v1/auth/login` - Autenticação de usuário (body: `{username, password}`)
+  - Retorna: `{token, username, role}`
+
 ### Clientes (Persons)
-- `GET /api/persons` - Lista todos os clientes
-- `GET /api/persons/{id}` - Detalhes do cliente
-- `POST /api/persons` - Criar cliente
-- `PUT /api/persons/{id}` - Atualizar cliente
-- `DELETE /api/persons/{id}` - Excluir cliente
+- `GET /api/v1/persons` - Lista todos os clientes
+- `GET /api/v1/persons/{id}` - Detalhes do cliente
+- `POST /api/v1/persons` - Criar cliente (validação de CPF e email)
+- `PUT /api/v1/persons/{id}` - Atualizar cliente
+- `DELETE /api/v1/persons/{id}` - Excluir cliente
+
+**Validações:**
+- CPF: Validado com algoritmo customizado
+- Email: Validado com formato padrão
+- Campos obrigatórios retornam erros estruturados com campo e mensagem
 
 ### Processos (Processes)
-- `GET /api/processes` - Lista todos os processos
-- `GET /api/processes?personId={id}` - Processos de um cliente
-- `GET /api/processes/{id}` - Detalhes do processo
-- `POST /api/processes` - Criar processo
-- `PUT /api/processes/{id}` - Atualizar processo
-- `DELETE /api/processes/{id}` - Excluir processo
+- `GET /api/v1/processes` - Lista todos os processos
+- `GET /api/v1/processes?personId={id}` - Processos de um cliente
+- `GET /api/v1/processes/{id}` - Detalhes do processo
+- `POST /api/v1/processes` - Criar processo
+- `PUT /api/v1/processes/{id}` - Atualizar processo
+- `DELETE /api/v1/processes/{id}` - Excluir processo
 
 ### Matrículas (Matriculations)
-- `GET /api/matriculations` - Lista todas as matrículas
-- `GET /api/matriculations?personId={id}` - Matrículas de um cliente
-- `GET /api/matriculations/{id}` - Detalhes da matrícula
-- `POST /api/matriculations` - Criar matrícula
-- `PUT /api/matriculations/{id}` - Atualizar matrícula
-- `DELETE /api/matriculations/{id}` - Excluir matrícula
+- `GET /api/v1/matriculations` - Lista todas as matrículas
+- `GET /api/v1/matriculations?personId={id}` - Matrículas de um cliente
+- `GET /api/v1/matriculations/{id}` - Detalhes da matrícula
+- `POST /api/v1/matriculations` - Criar matrícula
+- `PUT /api/v1/matriculations/{id}` - Atualizar matrícula
+- `DELETE /api/v1/matriculations/{id}` - Excluir matrícula
 
 ### Movimentações (Moviments)
-- `GET /api/moviments` - Lista todas as movimentações
-- `GET /api/moviments?processId={id}` - Movimentações de um processo
-- `GET /api/moviments/{id}` - Detalhes da movimentação
-- `POST /api/moviments` - Criar movimentação
-- `PUT /api/moviments/{id}` - Atualizar movimentação
-- `DELETE /api/moviments/{id}` - Excluir movimentação
+- `GET /api/v1/moviments` - Lista todas as movimentações
+- `GET /api/v1/moviments?processId={id}` - Movimentações de um processo
+- `GET /api/v1/moviments/{id}` - Detalhes da movimentação
+- `POST /api/v1/moviments` - Criar movimentação
+- `PUT /api/v1/moviments/{id}` - Atualizar movimentação
+- `DELETE /api/v1/moviments/{id}` - Excluir movimentação
 
 ### Documentos (Documents)
-- `GET /api/documents/templates?processId={id}` - Lista templates disponíveis para um processo específico
-- `POST /api/documents/generate` - Gera documento Word para um processo (body: `{processId, templateName}`)
-- `GET /api/documents/client-templates?personId={id}` - Lista templates disponíveis para um cliente
-- `POST /api/documents/generate-client` - Gera documento Word para um cliente (body: `{personId, templateName}`)
+- `GET /api/v1/documents/templates?processId={id}` - Lista templates disponíveis para um processo específico
+- `POST /api/v1/documents/generate` - Gera documento Word para um processo (body: `{processId, templateName}`)
+- `GET /api/v1/documents/client-templates?personId={id}` - Lista templates disponíveis para um cliente
+- `POST /api/v1/documents/generate-client` - Gera documento Word para um cliente (body: `{personId, templateName}`)
+
+### Tratamento de Erros
+
+A API retorna erros estruturados com códigos HTTP apropriados:
+
+- **400 Bad Request**: Erros de validação (retorna lista de erros por campo)
+- **401 Unauthorized**: Credenciais inválidas ou token ausente
+- **404 Not Found**: Recurso não encontrado (exceções específicas: `PersonNotFoundException`, `ProcessNotFoundException`, etc.)
+- **409 Conflict**: Conflitos (ex: `UsernameAlreadyExistsException`)
+- **500 Internal Server Error**: Erros internos do servidor
+
+**Formato de erro de validação:**
+```json
+{
+  "errors": [
+    {
+      "field": "cpf",
+      "message": "CPF inválido"
+    },
+    {
+      "field": "email",
+      "message": "Email deve ser um endereço válido"
+    }
+  ]
+}
+```
 
 **Tipos de Processo Suportados:**
 - `PISO` - Processos relacionados ao Piso Salarial
@@ -201,7 +264,7 @@ chmod +x *.sh
 
 5. Acesse a aplicação em:
    - Frontend: http://localhost:5000
-   - Backend API: http://localhost:8081/api
+   - Backend API: http://localhost:8081/api/v1
 
 **Scripts disponíveis:**
 - `./start.sh` - Inicia a aplicação
@@ -227,7 +290,7 @@ docker compose up -d
 
 4. Acesse a aplicação em:
    - Frontend: http://localhost:5000
-   - Backend API: http://localhost:8081/api
+   - Backend API: http://localhost:8081/api/v1
 
 5. Para parar os serviços:
 ```bash
@@ -274,12 +337,49 @@ Os templates usam placeholders que são substituídos automaticamente pelos dado
 - `{numeroProcesso}` - Número do processo
 - E outros campos disponíveis nas entidades
 
+## Autenticação
+
+O sistema utiliza autenticação JWT (JSON Web Tokens):
+
+- **Login**: `POST /api/v1/auth/login` com `{username, password}`
+- **Token**: Retornado no header `Authorization: Bearer <token>` após login
+- **Proteção**: Rotas protegidas requerem token válido no header
+- **Frontend**: O composable `useAuth` gerencia automaticamente o estado de autenticação
+
+## Composables Vue 3
+
+O projeto utiliza Composition API com composables reutilizáveis:
+
+### `useAuth`
+Gerencia autenticação e estado do usuário:
+```javascript
+import { useAuth } from '@/composables/useAuth'
+const { user, isAuthenticated, logout, getHomeRoute } = useAuth()
+```
+
+### `useLoading`
+Gerencia estados de loading e erro:
+```javascript
+import { useLoading } from '@/composables/useLoading'
+const { loading, error, execute } = useLoading()
+```
+
+## Validação de Dados
+
+- **CPF**: Validação customizada com algoritmo de verificação de dígitos
+- **Email**: Validação de formato padrão
+- **Erros**: Retornados de forma estruturada com campo e mensagem específica
+- **Frontend**: Tratamento centralizado de erros via `errorHandler.js`
+
 ## Observações
 
-- O sistema não possui autenticação na versão inicial
+- A API está versionada em `/api/v1/` para facilitar evolução futura
 - Os processos são exibidos agrupados por matrícula na página de detalhes do cliente
 - O CORS está configurado para permitir requisições do frontend (localhost:5173 e localhost:5000)
 - No Docker, o frontend faz proxy das requisições `/api` para o backend automaticamente
 - Os documentos gerados são baixados automaticamente pelo navegador
 - Os nomes dos templates são formatados automaticamente para exibição amigável na interface
+- Migrações do banco são validadas automaticamente pelo Flyway
+- O frontend está em processo de migração para Composition API (Vue 3)
+- Exceções customizadas garantem tratamento adequado de erros com códigos HTTP apropriados
 

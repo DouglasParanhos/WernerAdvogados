@@ -127,14 +127,14 @@ class ClientAccessRestrictionTest {
     // PersonController Tests
     @Test
     void testPersonController_FindAll_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testPersonController_FindById_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/persons/1")
+        mockMvc.perform(get("/api/v1/persons/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -149,7 +149,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/persons")
+        mockMvc.perform(post("/api/v1/persons")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -164,7 +164,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/persons/1")
+        mockMvc.perform(put("/api/v1/persons/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -172,14 +172,14 @@ class ClientAccessRestrictionTest {
 
     @Test
     void testPersonController_Delete_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(delete("/api/persons/1")
+        mockMvc.perform(delete("/api/v1/persons/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testPersonController_GetUsernameSuggestion_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/persons/1/username-suggestion")
+        mockMvc.perform(get("/api/v1/persons/1/username-suggestion")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -187,14 +187,14 @@ class ClientAccessRestrictionTest {
     // ProcessController Tests
     @Test
     void testProcessController_FindAll_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/processes")
+        mockMvc.perform(get("/api/v1/processes")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testProcessController_FindById_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/processes/1")
+        mockMvc.perform(get("/api/v1/processes/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -209,7 +209,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/processes")
+        mockMvc.perform(post("/api/v1/processes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -224,7 +224,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/processes/1")
+        mockMvc.perform(put("/api/v1/processes/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -232,14 +232,14 @@ class ClientAccessRestrictionTest {
 
     @Test
     void testProcessController_Delete_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(delete("/api/processes/1")
+        mockMvc.perform(delete("/api/v1/processes/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testProcessController_GetDistinctStatuses_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/processes/status/distinct")
+        mockMvc.perform(get("/api/v1/processes/status/distinct")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -252,7 +252,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(patch("/api/processes/1/status")
+        mockMvc.perform(patch("/api/v1/processes/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -261,14 +261,14 @@ class ClientAccessRestrictionTest {
     // TaskController Tests
     @Test
     void testTaskController_GetAll_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/tasks")
+        mockMvc.perform(get("/api/v1/tasks")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testTaskController_GetById_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/tasks/1")
+        mockMvc.perform(get("/api/v1/tasks/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -282,7 +282,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/tasks")
+        mockMvc.perform(post("/api/v1/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -296,7 +296,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/tasks/1")
+        mockMvc.perform(put("/api/v1/tasks/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -304,7 +304,7 @@ class ClientAccessRestrictionTest {
 
     @Test
     void testTaskController_Delete_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(delete("/api/tasks/1")
+        mockMvc.perform(delete("/api/v1/tasks/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -320,7 +320,7 @@ class ClientAccessRestrictionTest {
                 ]
                 """;
 
-        mockMvc.perform(put("/api/tasks/reorder")
+        mockMvc.perform(put("/api/v1/tasks/reorder")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -329,21 +329,21 @@ class ClientAccessRestrictionTest {
     // StatisticsController Tests
     @Test
     void testStatisticsController_GetStatistics_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/statistics")
+        mockMvc.perform(get("/api/v1/statistics")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testStatisticsController_UpdateProcessValues_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(post("/api/statistics/update-process-values")
+        mockMvc.perform(post("/api/v1/statistics/update-process-values")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testStatisticsController_GetProcessStatus_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/statistics/process-status")
+        mockMvc.perform(get("/api/v1/statistics/process-status")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -359,7 +359,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/calculations/novaescola")
+        mockMvc.perform(post("/api/v1/calculations/novaescola")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -367,14 +367,14 @@ class ClientAccessRestrictionTest {
 
     @Test
     void testCalculationController_GetIpcaEFactor_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/calculations/factors/ipcae")
+        mockMvc.perform(get("/api/v1/calculations/factors/ipcae")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testCalculationController_GetSelicFactor_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/calculations/factors/selic")
+        mockMvc.perform(get("/api/v1/calculations/factors/selic")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -382,14 +382,14 @@ class ClientAccessRestrictionTest {
     // MatriculationController Tests
     @Test
     void testMatriculationController_FindAll_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/matriculations")
+        mockMvc.perform(get("/api/v1/matriculations")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testMatriculationController_FindById_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/matriculations/1")
+        mockMvc.perform(get("/api/v1/matriculations/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -403,7 +403,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/matriculations")
+        mockMvc.perform(post("/api/v1/matriculations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -417,7 +417,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/matriculations/1")
+        mockMvc.perform(put("/api/v1/matriculations/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -425,7 +425,7 @@ class ClientAccessRestrictionTest {
 
     @Test
     void testMatriculationController_Delete_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(delete("/api/matriculations/1")
+        mockMvc.perform(delete("/api/v1/matriculations/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -433,14 +433,14 @@ class ClientAccessRestrictionTest {
     // MovimentController Tests (except getMyMoviments)
     @Test
     void testMovimentController_FindAll_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/moviments")
+        mockMvc.perform(get("/api/v1/moviments")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void testMovimentController_FindById_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/moviments/1")
+        mockMvc.perform(get("/api/v1/moviments/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -454,7 +454,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/moviments")
+        mockMvc.perform(post("/api/v1/moviments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -468,7 +468,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/moviments/1")
+        mockMvc.perform(put("/api/v1/moviments/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -476,7 +476,7 @@ class ClientAccessRestrictionTest {
 
     @Test
     void testMovimentController_Delete_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(delete("/api/moviments/1")
+        mockMvc.perform(delete("/api/v1/moviments/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -484,7 +484,7 @@ class ClientAccessRestrictionTest {
     // DocumentController Tests
     @Test
     void testDocumentController_GetTemplates_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/documents/templates")
+        mockMvc.perform(get("/api/v1/documents/templates")
                         .param("processId", "1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
@@ -499,7 +499,7 @@ class ClientAccessRestrictionTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/documents/generate")
+        mockMvc.perform(post("/api/v1/documents/generate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isForbidden());
@@ -508,7 +508,7 @@ class ClientAccessRestrictionTest {
     // BackupController Tests
     @Test
     void testBackupController_CreateBackup_WithClientRole_ReturnsForbidden() throws Exception {
-        mockMvc.perform(post("/api/backup")
+        mockMvc.perform(post("/api/v1/backup")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }

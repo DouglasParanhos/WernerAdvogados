@@ -1,19 +1,24 @@
 package com.wa.controller;
 
+import com.wa.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Order(1) // Prioridade baixa para permitir que handlers específicos tenham prioridade
@@ -90,6 +95,174 @@ public class GlobalExceptionHandler {
         Map<String, String> error = new HashMap<>();
         error.put("message", e.getMessage() != null ? e.getMessage() : "Acesso negado");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+    
+    @ExceptionHandler(PersonNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handlePersonNotFoundException(
+            PersonNotFoundException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        
+        log.warn("Cliente não encontrado: {}", e.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    
+    @ExceptionHandler(TaskNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleTaskNotFoundException(
+            TaskNotFoundException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        
+        log.warn("Tarefa não encontrada: {}", e.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    
+    @ExceptionHandler(DocumentTemplateNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleDocumentTemplateNotFoundException(
+            DocumentTemplateNotFoundException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        
+        log.warn("Template não encontrado: {}", e.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    
+    @ExceptionHandler(ProcessNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleProcessNotFoundException(
+            ProcessNotFoundException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        
+        log.warn("Processo não encontrado: {}", e.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidCredentialsException(
+            InvalidCredentialsException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        
+        log.warn("Credenciais inválidas: {}", e.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+    
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleUsernameAlreadyExistsException(
+            UsernameAlreadyExistsException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        
+        log.warn("Username já existe: {}", e.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+    
+    @ExceptionHandler(AddressNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleAddressNotFoundException(
+            AddressNotFoundException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        
+        log.warn("Endereço não encontrado: {}", e.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+    
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        
+        log.warn("Erro de validação: {}", e.getMessage());
+        
+        Map<String, Object> error = new HashMap<>();
+        error.put("message", "Erro de validação");
+        
+        Map<String, String> fieldErrors = e.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        fieldError -> fieldError.getDefaultMessage() != null 
+                                ? fieldError.getDefaultMessage() 
+                                : "Erro de validação",
+                        (existing, replacement) -> existing + "; " + replacement
+                ));
+        
+        error.put("errors", fieldErrors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+    
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolationException(
+            ConstraintViolationException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        
+        log.warn("Violação de constraint: {}", e.getMessage());
+        
+        Map<String, Object> error = new HashMap<>();
+        error.put("message", "Erro de validação");
+        
+        Map<String, String> violations = e.getConstraintViolations().stream()
+                .collect(Collectors.toMap(
+                        violation -> violation.getPropertyPath().toString(),
+                        violation -> violation.getMessage() != null 
+                                ? violation.getMessage() 
+                                : "Erro de validação",
+                        (existing, replacement) -> existing + "; " + replacement
+                ));
+        
+        error.put("errors", violations);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
     
     @ExceptionHandler(RuntimeException.class)

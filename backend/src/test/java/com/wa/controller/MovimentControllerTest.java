@@ -113,7 +113,7 @@ class MovimentControllerTest {
         when(movimentService.findByPersonId(1L)).thenReturn(moviments);
 
         // Act & Assert
-        mockMvc.perform(get("/api/moviments/my-moviments")
+        mockMvc.perform(get("/api/v1/moviments/my-moviments")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -146,7 +146,7 @@ class MovimentControllerTest {
         when(movimentService.findByPersonId(1L)).thenReturn(List.of());
 
         // Act & Assert
-        mockMvc.perform(get("/api/moviments/my-moviments")
+        mockMvc.perform(get("/api/v1/moviments/my-moviments")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -169,7 +169,7 @@ class MovimentControllerTest {
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
 
         // Act & Assert
-        mockMvc.perform(get("/api/moviments/my-moviments")
+        mockMvc.perform(get("/api/v1/moviments/my-moviments")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
 
@@ -192,7 +192,7 @@ class MovimentControllerTest {
         when(userRepository.findByUsername("unknown.user")).thenReturn(Optional.empty());
 
         // Act & Assert
-        mockMvc.perform(get("/api/moviments/my-moviments")
+        mockMvc.perform(get("/api/v1/moviments/my-moviments")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
 
@@ -216,7 +216,7 @@ class MovimentControllerTest {
         when(personRepository.findByUserId(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        mockMvc.perform(get("/api/moviments/my-moviments")
+        mockMvc.perform(get("/api/v1/moviments/my-moviments")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is5xxServerError());
 
@@ -246,7 +246,7 @@ class MovimentControllerTest {
         when(movimentService.update(eq(movimentId), any())).thenReturn(updatedDTO);
 
         // Act & Assert
-        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+        mockMvc.perform(put("/api/v1/moviments/{id}", movimentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -281,7 +281,7 @@ class MovimentControllerTest {
         when(movimentService.update(eq(movimentId), any())).thenReturn(updatedDTO);
 
         // Act & Assert
-        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+        mockMvc.perform(put("/api/v1/moviments/{id}", movimentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -303,7 +303,7 @@ class MovimentControllerTest {
             """;
 
         // Act & Assert
-        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+        mockMvc.perform(put("/api/v1/moviments/{id}", movimentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -323,7 +323,7 @@ class MovimentControllerTest {
             """;
 
         // Act & Assert
-        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+        mockMvc.perform(put("/api/v1/moviments/{id}", movimentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -343,7 +343,7 @@ class MovimentControllerTest {
             """;
 
         // Act & Assert
-        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+        mockMvc.perform(put("/api/v1/moviments/{id}", movimentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest());
@@ -374,7 +374,7 @@ class MovimentControllerTest {
         when(movimentService.update(eq(movimentId), any())).thenReturn(updatedDTO);
 
         // Act & Assert
-        mockMvc.perform(put("/api/moviments/{id}", movimentId)
+        mockMvc.perform(put("/api/v1/moviments/{id}", movimentId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())

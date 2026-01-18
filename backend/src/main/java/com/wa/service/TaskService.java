@@ -2,6 +2,7 @@ package com.wa.service;
 
 import com.wa.dto.TaskDTO;
 import com.wa.dto.TaskRequestDTO;
+import com.wa.exception.TaskNotFoundException;
 import com.wa.model.Task;
 import com.wa.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class TaskService {
     
     public TaskDTO getById(Long id) {
         Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
+                .orElseThrow(() -> new TaskNotFoundException(id));
         return convertToDTO(task);
     }
     
@@ -58,7 +59,7 @@ public class TaskService {
     @Transactional
     public TaskDTO update(Long id, TaskRequestDTO request) {
         Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tarefa não encontrada"));
+                .orElseThrow(() -> new TaskNotFoundException(id));
         
         if (request.getTitulo() != null) task.setTitulo(request.getTitulo());
         if (request.getDescricao() != null) task.setDescricao(request.getDescricao());
@@ -74,7 +75,7 @@ public class TaskService {
     @Transactional
     public void delete(Long id) {
         if (!taskRepository.existsById(id)) {
-            throw new RuntimeException("Tarefa não encontrada");
+            throw new TaskNotFoundException(id);
         }
         taskRepository.deleteById(id);
     }
@@ -86,7 +87,7 @@ public class TaskService {
                 continue;
             }
             Task task = taskRepository.findById(taskDTO.getId())
-                    .orElseThrow(() -> new RuntimeException("Tarefa não encontrada: " + taskDTO.getId()));
+                    .orElseThrow(() -> new TaskNotFoundException(taskDTO.getId()));
             if (taskDTO.getStatus() != null) {
                 task.setStatus(taskDTO.getStatus());
             }

@@ -37,8 +37,8 @@
           <p>Deseja realizar o backup do banco de dados?</p>
           <div class="modal-actions">
             <button @click="closeBackupModal" class="btn btn-secondary">Cancelar</button>
-            <button @click="performBackup" class="btn btn-primary" :disabled="backupLoading">
-              {{ backupLoading ? 'Fazendo backup...' : 'Sim, fazer backup' }}
+            <button @click="performBackup" class="btn btn-primary" :disabled="backupLoading.value">
+              {{ backupLoading.value ? 'Fazendo backup...' : 'Sim, fazer backup' }}
             </button>
           </div>
         </div>
@@ -66,7 +66,7 @@
       </div>
       
       <div v-if="loading" class="loading">Carregando...</div>
-      <div v-if="error" class="error">{{ error }}</div>
+      <div v-if="error" class="error">{{ error?.message || error }}</div>
       
       <div v-if="!loading && !error" class="pagination-controls-top">
         <div class="pagination-info">
@@ -239,20 +239,30 @@
 import { personService } from '../services/personService'
 import { backupService } from '../services/backupService'
 import ClientLoginModal from '../components/ClientLoginModal.vue'
+import { useLoading } from '../composables/useLoading'
 
 export default {
   name: 'ClientList',
   components: {
     ClientLoginModal
   },
+  setup() {
+    const { loading, error, execute } = useLoading()
+    const { loading: backupLoading, execute: executeBackup } = useLoading()
+    
+    return {
+      loading,
+      error,
+      execute,
+      backupLoading,
+      executeBackup
+    }
+  },
   data() {
     return {
       clients: [],
-      loading: false,
-      error: null,
       searchQuery: '',
       showBackupModal: false,
-      backupLoading: false,
       showLoginModal: false,
       selectedClient: null,
       currentPage: 0,
@@ -266,9 +276,7 @@ export default {
   },
   methods: {
     async loadClients() {
-      this.loading = true
-      this.error = null
-      try {
+      await this.execute(async () => {
         const search = this.searchQuery.trim() || null
         const response = await personService.getAll(this.currentPage, this.pageSize, search)
         
@@ -286,12 +294,11 @@ export default {
           this.clients = Array.isArray(response) ? response : []
           this.paginationData = null
         }
-      } catch (err) {
-        this.error = 'Erro ao carregar clientes: ' + (err.response?.data?.message || err.message)
+      }).catch(err => {
+        const errorMessage = 'Erro ao carregar clientes: ' + (err.response?.data?.message || err.message)
+        this.error.value = new Error(errorMessage)
         console.error(err)
-      } finally {
-        this.loading = false
-      }
+      })
     },
     onSearchChange() {
       // Debounce da busca
@@ -350,13 +357,12 @@ export default {
       this.showBackupModal = true
     },
     closeBackupModal() {
-      if (!this.backupLoading) {
+      if (!this.backupLoading.value) {
         this.showBackupModal = false
       }
     },
     async performBackup() {
-      this.backupLoading = true
-      try {
+      await this.executeBackup(async () => {
         const blob = await backupService.createBackup()
         
         // Criar link para download
@@ -372,12 +378,10 @@ export default {
         
         this.showBackupModal = false
         alert('Backup realizado com sucesso!')
-      } catch (err) {
+      }).catch(err => {
         alert('Erro ao realizar backup: ' + (err.response?.data?.message || err.message))
         console.error(err)
-      } finally {
-        this.backupLoading = false
-      }
+      })
     },
     openLoginModal(client) {
       this.selectedClient = client

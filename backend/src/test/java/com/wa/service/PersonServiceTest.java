@@ -2,6 +2,8 @@ package com.wa.service;
 
 import com.wa.dto.ClientCredentialsDTO;
 import com.wa.dto.PersonDTO;
+import com.wa.exception.PersonNotFoundException;
+import com.wa.exception.UsernameAlreadyExistsException;
 import com.wa.model.Person;
 import com.wa.model.User;
 import com.wa.repository.AddressRepository;
@@ -127,6 +129,54 @@ class PersonServiceTest {
         assertEquals(1, result.getContent().size());
         assertEquals("João Silva", result.getContent().get(0).getFullname());
         verify(personRepository, times(1)).findAllWithRelationsPaginated(search, pageable);
+    }
+
+    @Test
+    void testFindAllPaginated_DoesNotPerformForceLoads() {
+        // Arrange
+        // Criar Person com relacionamentos já inicializados (simulando JOIN FETCH)
+        Person personWithRelations = new Person();
+        personWithRelations.setId(1L);
+        personWithRelations.setFullname("João Silva");
+        personWithRelations.setEmail("joao@example.com");
+        personWithRelations.setCpf("12345678900");
+        
+        // Simular que relacionamentos já foram carregados via JOIN FETCH
+        // (não são proxies lazy)
+        com.wa.model.Address address = new com.wa.model.Address();
+        address.setId(1L);
+        address.setLogradouro("Rua Teste");
+        personWithRelations.setAddress(address);
+        
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("joao.silva");
+        personWithRelations.setUser(user);
+        
+        List<Person> persons = List.of(personWithRelations);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Person> page = new PageImpl<>(persons, pageable, 1);
+
+        when(personRepository.findAllWithRelationsPaginated(any(), any(Pageable.class)))
+                .thenReturn(page);
+
+        // Act
+        Page<PersonDTO> result = personService.findAllPaginated(null, pageable);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        
+        // Verificar que o método não faz force loads desnecessários
+        // O relacionamento já deve estar carregado pela query do repositório
+        PersonDTO dto = result.getContent().get(0);
+        assertNotNull(dto);
+        assertEquals("João Silva", dto.getFullname());
+        
+        // Verificar que o repositório foi chamado apenas uma vez
+        // (não há chamadas adicionais para carregar relacionamentos)
+        verify(personRepository, times(1)).findAllWithRelationsPaginated(any(), any(Pageable.class));
+        verify(personRepository, never()).findById(any());
     }
 
     @Test
@@ -271,7 +321,7 @@ class PersonServiceTest {
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(PersonNotFoundException.class, () -> {
             personService.generateUsernameSuggestion(999L);
         });
     }
@@ -364,10 +414,11 @@ class PersonServiceTest {
         when(userRepository.findByUsername("joao.silva")).thenReturn(Optional.of(existingUser));
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        UsernameAlreadyExistsException exception = assertThrows(UsernameAlreadyExistsException.class, () -> {
             personService.createOrUpdateCredentials(1L, credentials);
-        }, "Username já está em uso");
-
+        });
+        
+        assertTrue(exception.getMessage().contains("Username já está em uso"));
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -411,7 +462,7 @@ class PersonServiceTest {
         when(personRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(PersonNotFoundException.class, () -> {
             personService.createOrUpdateCredentials(999L, credentials);
         });
     }

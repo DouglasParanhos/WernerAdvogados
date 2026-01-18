@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @RestController
-@RequestMapping("/api/backup")
+@RequestMapping("/api/v1/backup")
 @RequiredArgsConstructor
 public class BackupController {
     

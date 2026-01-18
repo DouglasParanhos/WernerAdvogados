@@ -97,7 +97,7 @@
       </div>
       
       <div v-if="loading" class="loading">Carregando...</div>
-      <div v-if="error" class="error">{{ error }}</div>
+      <div v-if="error" class="error">{{ error?.message || error }}</div>
       
       <div v-if="!loading && !error" class="pagination-controls-top">
         <div class="pagination-info">
@@ -323,16 +323,24 @@
 <script>
 import { processService } from '../services/processService'
 import { personService } from '../services/personService'
+import { useLoading } from '../composables/useLoading'
 
 export default {
   name: 'ProcessList',
+  setup() {
+    const { loading, error, execute } = useLoading()
+    
+    return {
+      loading,
+      error,
+      execute
+    }
+  },
   data() {
     return {
       processes: [],
       clients: [],
       matriculations: [],
-      loading: false,
-      error: null,
       distinctStatuses: [],
       editingStatusId: null,
       editingStatus: '',
@@ -362,9 +370,7 @@ export default {
   },
   methods: {
     async loadData() {
-      this.loading = true
-      this.error = null
-      try {
+      await this.execute(async () => {
         // Carregar clientes e statuses (não paginados)
         const [clientsData, statusesData] = await Promise.all([
           personService.getAll(),
@@ -391,17 +397,14 @@ export default {
         
         // Carregar processos com paginação e filtros
         await this.loadProcesses()
-      } catch (err) {
-        this.error = 'Erro ao carregar processos: ' + (err.response?.data?.message || err.message)
+      }).catch(err => {
+        const errorMessage = 'Erro ao carregar processos: ' + (err.response?.data?.message || err.message)
+        this.error.value = new Error(errorMessage)
         console.error(err)
-      } finally {
-        this.loading = false
-      }
+      })
     },
     async loadProcesses() {
-      this.loading = true
-      this.error = null
-      try {
+      await this.execute(async () => {
         const filters = {
           numero: this.filters.numero.trim() || null,
           comarca: this.filters.comarca.trim() || null,
@@ -427,12 +430,11 @@ export default {
           this.processes = Array.isArray(response) ? response : []
           this.paginationData = null
         }
-      } catch (err) {
-        this.error = 'Erro ao carregar processos: ' + (err.response?.data?.message || err.message)
+      }).catch(err => {
+        const errorMessage = 'Erro ao carregar processos: ' + (err.response?.data?.message || err.message)
+        this.error.value = new Error(errorMessage)
         console.error(err)
-      } finally {
-        this.loading = false
-      }
+      })
     },
     onFilterChange() {
       // Debounce dos filtros

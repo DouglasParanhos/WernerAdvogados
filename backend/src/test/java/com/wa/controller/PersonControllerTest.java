@@ -81,7 +81,7 @@ class PersonControllerTest {
         when(personService.findAllPaginated(any(), any())).thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .param("page", "0")
                         .param("size", "10")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -109,7 +109,7 @@ class PersonControllerTest {
         when(personService.findAllPaginated(eq(search), any())).thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .param("page", "0")
                         .param("size", "10")
                         .param("search", search)
@@ -131,7 +131,7 @@ class PersonControllerTest {
         when(personService.findAllPaginated(any(), any())).thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .param("page", "0")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -149,7 +149,7 @@ class PersonControllerTest {
         when(personService.findAllPaginated(any(), any())).thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .param("size", "50")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -172,21 +172,21 @@ class PersonControllerTest {
         when(personService.findAllPaginated(null, PageRequest.of(0, 100))).thenReturn(page100);
 
         // Act & Assert - Size 10
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(10));
 
         // Act & Assert - Size 50
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .param("page", "0")
                         .param("size", "50"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size").value(50));
 
         // Act & Assert - Size 100
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .param("page", "0")
                         .param("size", "100"))
                 .andExpect(status().isOk())
@@ -200,7 +200,7 @@ class PersonControllerTest {
         when(personService.findAll()).thenReturn(persons);
 
         // Act & Assert
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -219,7 +219,7 @@ class PersonControllerTest {
         when(personService.findAllPaginated(any(), any())).thenReturn(page);
 
         // Act & Assert
-        mockMvc.perform(get("/api/persons")
+        mockMvc.perform(get("/api/v1/persons")
                         .param("page", "1")
                         .param("size", "2")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -237,7 +237,7 @@ class PersonControllerTest {
         when(personService.generateUsernameSuggestion(1L)).thenReturn("joao.silva");
 
         // Act & Assert
-        mockMvc.perform(get("/api/persons/1/username-suggestion")
+        mockMvc.perform(get("/api/v1/persons/1/username-suggestion")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("joao.silva"));
@@ -268,7 +268,7 @@ class PersonControllerTest {
         doNothing().when(personService).createOrUpdateCredentials(eq(1L), any());
 
         // Act & Assert
-        mockMvc.perform(post("/api/persons/1/credentials")
+        mockMvc.perform(post("/api/v1/persons/1/credentials")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());
@@ -299,7 +299,7 @@ class PersonControllerTest {
         doNothing().when(personService).createOrUpdateCredentials(eq(1L), any());
 
         // Act & Assert
-        mockMvc.perform(post("/api/persons/1/credentials")
+        mockMvc.perform(post("/api/v1/persons/1/credentials")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());
@@ -321,7 +321,7 @@ class PersonControllerTest {
         when(personService.findById(1L)).thenReturn(personWithUser);
 
         // Act & Assert
-        mockMvc.perform(get("/api/persons/1")
+        mockMvc.perform(get("/api/v1/persons/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
@@ -346,7 +346,7 @@ class PersonControllerTest {
         when(personService.findById(1L)).thenReturn(personWithoutUser);
 
         // Act & Assert
-        mockMvc.perform(get("/api/persons/1")
+        mockMvc.perform(get("/api/v1/persons/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
