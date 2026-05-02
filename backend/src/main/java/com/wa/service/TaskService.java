@@ -3,6 +3,7 @@ package com.wa.service;
 import com.wa.dto.TaskDTO;
 import com.wa.dto.TaskRequestDTO;
 import com.wa.model.Task;
+import com.wa.repository.ProcessRepository;
 import com.wa.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,9 @@ public class TaskService {
     
     @Autowired
     private TaskRepository taskRepository;
+
+    @Autowired
+    private ProcessRepository processRepository;
     
     public List<TaskDTO> getAll() {
         return taskRepository.findAllByOrderByStatusAscOrdemAsc()
@@ -38,6 +42,7 @@ public class TaskService {
         task.setTipoTarefa(request.getTipoTarefa());
         task.setStatus(request.getStatus() != null ? request.getStatus() : "PARA_INICIAR");
         task.setResponsavel(request.getResponsavel());
+        resolveProcessId(task, request.getProcessId());
         
         // Se não especificada, definir ordem como última da coluna
         if (request.getOrdem() == null) {
@@ -66,6 +71,7 @@ public class TaskService {
         if (request.getStatus() != null) task.setStatus(request.getStatus());
         if (request.getResponsavel() != null) task.setResponsavel(request.getResponsavel());
         if (request.getOrdem() != null) task.setOrdem(request.getOrdem());
+        resolveProcessId(task, request.getProcessId());
         
         Task saved = taskRepository.save(task);
         return convertToDTO(saved);
@@ -106,10 +112,24 @@ public class TaskService {
         dto.setTipoTarefa(task.getTipoTarefa());
         dto.setStatus(task.getStatus());
         dto.setResponsavel(task.getResponsavel());
+        dto.setProcessId(task.getProcessId());
+        if (task.getProcessId() != null) {
+            processRepository.findById(task.getProcessId())
+                    .ifPresent(p -> dto.setProcessNumero(p.getNumero()));
+        } else {
+            dto.setProcessNumero(null);
+        }
         dto.setOrdem(task.getOrdem());
         dto.setCreatedOn(task.getCreatedOn());
         dto.setModifiedOn(task.getModifiedOn());
         return dto;
+    }
+
+    private void resolveProcessId(Task task, Long processId) {
+        if (processId != null && !processRepository.existsById(processId)) {
+            throw new RuntimeException("Processo não encontrado");
+        }
+        task.setProcessId(processId);
     }
 }
 

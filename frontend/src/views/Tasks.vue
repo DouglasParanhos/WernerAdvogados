@@ -32,7 +32,7 @@
               <option value="ADMINISTRATIVO">Administrativo</option>
             </select>
           </div>
-          <button @click="showNewTaskModal = true" class="btn-icon-add" title="Nova Tarefa">
+          <button @click="openNewTaskModal" class="btn-icon-add" title="Nova Tarefa">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
               <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -76,7 +76,7 @@
           
           <div class="tasks-list" :class="{ 'collapsed': isColumnCollapsed(column.status) }">
             <div
-              v-for="task in getTasksByStatus(column.status)"
+              v-for="task in getVisibleTasksByStatus(column.status)"
               :key="task.id"
               class="task-card"
               :class="getTaskColorClass(task.tipoTarefa)"
@@ -85,19 +85,73 @@
               @click="openEditTaskModal(task)"
             >
               <div class="task-header">
-                <span class="task-type-badge" :style="{ backgroundColor: getTaskTypeColor(task.tipoTarefa) }">
-                  {{ getTaskTypeLabel(task.tipoTarefa) }}
-                </span>
+                <div class="task-header-left">
+                  <span class="task-type-badge" :style="{ backgroundColor: getTaskTypeColor(task.tipoTarefa) }">
+                    {{ getTaskTypeLabel(task.tipoTarefa) }}
+                  </span>
+                  <span
+                    class="task-type-badge"
+                    :style="{ backgroundColor: getResponsavelColor(task.responsavel) }"
+                  >{{ task.responsavel }}</span>
+                </div>
                 <button @click.stop="deleteTask(task.id)" class="task-delete-btn" title="Excluir tarefa">
                   ×
                 </button>
               </div>
               <h3 class="task-title">{{ task.titulo }}</h3>
+              <p v-if="task.processNumero" class="task-process-numero">{{ task.processNumero }}</p>
               <p v-if="task.descricao" class="task-description">{{ task.descricao }}</p>
-              <div class="task-footer">
-                <span class="task-responsavel">{{ task.responsavel }}</span>
-              </div>
             </div>
+          </div>
+
+          <div
+            v-show="!isColumnCollapsed(column.status)"
+            class="column-pagination"
+          >
+            <div class="filter-group column-page-size">
+              <label :for="'exibir-' + column.status">Exibir:</label>
+              <select
+                :id="'exibir-' + column.status"
+                v-model="columnDisplayLimit[column.status]"
+                class="filter-select column-page-select"
+                @change="onColumnPageSizeChange(column.status)"
+              >
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="all">Todas</option>
+              </select>
+            </div>
+            <div
+              v-if="getColumnTotalPages(column.status) > 1"
+              class="column-page-nav"
+            >
+              <button
+                type="button"
+                class="column-page-btn"
+                :disabled="isColumnPaginationFirst(column.status)"
+                @click="columnPagePrev(column.status)"
+              >
+                Anterior
+              </button>
+              <span class="column-page-indicator">
+                {{ getColumnPaginationLabel(column.status) }}
+              </span>
+              <button
+                type="button"
+                class="column-page-btn"
+                :disabled="isColumnPaginationLast(column.status)"
+                @click="columnPageNext(column.status)"
+              >
+                Seguinte
+              </button>
+            </div>
+            <p
+              v-if="getColumnPaginationHint(column.status)"
+              class="column-pagination-hint"
+            >
+              {{ getColumnPaginationHint(column.status) }}
+            </p>
           </div>
         </div>
       </div>
@@ -147,6 +201,58 @@
                 <option value="Thiago">Thiago</option>
               </select>
             </div>
+
+            <div class="form-group form-group-processo">
+              <label for="processo-autocomplete-input">Processo</label>
+              <div class="processo-row">
+                <div
+                  class="processo-autocomplete"
+                  @keydown.escape.stop="closeProcessoSuggestions"
+                >
+                  <input
+                    id="processo-autocomplete-input"
+                    v-model="processoInputDisplay"
+                    type="text"
+                    autocomplete="off"
+                    class="processo-autocomplete-input"
+                    :disabled="semProcessoRelacionado"
+                    placeholder="Digite para buscar pelo número..."
+                    @input="onProcessoInput"
+                    @focus="onProcessoFocus"
+                    @blur="onProcessoBlur"
+                  />
+                  <ul
+                    v-show="processoSuggestionsOpen && processoSuggestions.length && !semProcessoRelacionado"
+                    class="processo-suggestions"
+                    role="listbox"
+                  >
+                    <li
+                      v-for="p in processoSuggestions"
+                      :key="p.id"
+                      class="processo-suggestion-item"
+                      role="option"
+                      @mousedown.prevent="selectProcessoSuggestion(p)"
+                    >
+                      {{ p.numero }}
+                    </li>
+                  </ul>
+                  <p
+                    v-if="processoSuggestionsLoading && !semProcessoRelacionado"
+                    class="processo-suggestions-hint"
+                  >
+                    Buscando...
+                  </p>
+                </div>
+                <label class="checkbox-sem-processo">
+                  <input
+                    type="checkbox"
+                    v-model="semProcessoRelacionado"
+                    @change="onSemProcessoRelacionadoChange"
+                  />
+                  <span>Sem processo relacionado</span>
+                </label>
+              </div>
+            </div>
             
             <div class="modal-actions">
               <button type="button" @click="closeModal" class="btn btn-secondary">Cancelar</button>
@@ -161,6 +267,7 @@
 
 <script>
 import { taskService } from '../services/taskService'
+import { processService } from '../services/processService'
 
 export default {
   name: 'Tasks',
@@ -174,19 +281,38 @@ export default {
       draggedTask: null,
       filterResponsavel: '',
       filterTipoTarefa: '',
+      processoInputDisplay: '',
+      processoConfirmadoNumero: null,
+      processoSuggestions: [],
+      processoSuggestionsOpen: false,
+      processoSuggestionsLoading: false,
+      processoSearchDebounceId: null,
+      processoBlurTimeoutId: null,
+      semProcessoRelacionado: false,
       taskForm: {
         id: null,
         titulo: '',
         descricao: '',
         tipoTarefa: '',
         status: 'PARA_INICIAR',
-        responsavel: ''
+        responsavel: '',
+        processId: null
       },
       columns: [
         { status: 'PARA_INICIAR', title: 'Para Iniciar', color: '#e2e8f0' },
         { status: 'EM_ANDAMENTO', title: 'Em Andamento', color: '#dbeafe' },
         { status: 'COMPLETA', title: 'Completa', color: '#d1fae5' }
       ],
+      columnDisplayLimit: {
+        PARA_INICIAR: '10',
+        EM_ANDAMENTO: '10',
+        COMPLETA: '10'
+      },
+      columnPageIndex: {
+        PARA_INICIAR: 0,
+        EM_ANDAMENTO: 0,
+        COMPLETA: 0
+      },
       collapsedColumns: new Set(),
       isMobile: false
     }
@@ -204,6 +330,23 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.checkMobile)
+    if (this.processoSearchDebounceId) {
+      clearTimeout(this.processoSearchDebounceId)
+    }
+    if (this.processoBlurTimeoutId) {
+      clearTimeout(this.processoBlurTimeoutId)
+    }
+  },
+  watch: {
+    filterResponsavel() {
+      this.resetAllColumnPages()
+    },
+    filterTipoTarefa() {
+      this.resetAllColumnPages()
+    },
+    tasks() {
+      this.$nextTick(() => this.clampAllColumnPages())
+    }
   },
   methods: {
     async loadTasks() {
@@ -216,7 +359,75 @@ export default {
         console.error(err)
       } finally {
         this.loading = false
+        this.$nextTick(() => this.clampAllColumnPages())
       }
+    },
+    resetProcessoAutocomplete() {
+      this.processoInputDisplay = ''
+      this.processoConfirmadoNumero = null
+      this.processoSuggestions = []
+      this.processoSuggestionsOpen = false
+      this.processoSuggestionsLoading = false
+    },
+    onProcessoInput() {
+      if (this.semProcessoRelacionado) return
+      const t = this.processoInputDisplay.trim()
+      const c = (this.processoConfirmadoNumero || '').trim()
+      if (t !== c) {
+        this.taskForm.processId = null
+        this.processoConfirmadoNumero = null
+      }
+      if (this.processoSearchDebounceId) {
+        clearTimeout(this.processoSearchDebounceId)
+      }
+      this.processoSearchDebounceId = setTimeout(() => {
+        this.processoSearchDebounceId = null
+        this.fetchProcessoSuggestions()
+      }, 300)
+    },
+    onProcessoFocus() {
+      if (this.semProcessoRelacionado) return
+      this.processoSuggestionsOpen = true
+      if (this.processoInputDisplay.trim()) {
+        this.fetchProcessoSuggestions()
+      }
+    },
+    onProcessoBlur() {
+      if (this.processoBlurTimeoutId) {
+        clearTimeout(this.processoBlurTimeoutId)
+      }
+      this.processoBlurTimeoutId = setTimeout(() => {
+        this.processoSuggestionsOpen = false
+        this.processoBlurTimeoutId = null
+      }, 200)
+    },
+    closeProcessoSuggestions() {
+      this.processoSuggestionsOpen = false
+    },
+    async fetchProcessoSuggestions() {
+      if (this.semProcessoRelacionado) return
+      const q = this.processoInputDisplay.trim()
+      if (!q) {
+        this.processoSuggestions = []
+        return
+      }
+      this.processoSuggestionsLoading = true
+      try {
+        const response = await processService.getAll(null, 0, 20, { numero: q })
+        this.processoSuggestions = response.content ? response.content : []
+      } catch (err) {
+        console.error('Busca de processos:', err)
+        this.processoSuggestions = []
+      } finally {
+        this.processoSuggestionsLoading = false
+      }
+    },
+    selectProcessoSuggestion(p) {
+      this.taskForm.processId = p.id
+      this.processoConfirmadoNumero = p.numero
+      this.processoInputDisplay = p.numero
+      this.processoSuggestions = []
+      this.processoSuggestionsOpen = false
     },
     getTasksByStatus(status) {
       return this.tasks
@@ -227,6 +438,95 @@ export default {
           return matchesStatus && matchesResponsavel && matchesTipoTarefa
         })
         .sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+    },
+    getDisplayLimitForStatus(status) {
+      const raw = this.columnDisplayLimit[status]
+      if (raw === 'all' || raw == null || raw === '') return null
+      const n = parseInt(String(raw), 10)
+      return Number.isFinite(n) && n > 0 ? n : null
+    },
+    resetAllColumnPages() {
+      this.columnPageIndex = {
+        PARA_INICIAR: 0,
+        EM_ANDAMENTO: 0,
+        COMPLETA: 0
+      }
+    },
+    getClampedColumnPage(status) {
+      const full = this.getTasksByStatus(status)
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) return 0
+      const totalPages = Math.max(1, Math.ceil(full.length / limit))
+      let idx = this.columnPageIndex[status]
+      if (idx == null || idx < 0) idx = 0
+      return Math.min(idx, totalPages - 1)
+    },
+    clampColumnPage(status) {
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) {
+        this.columnPageIndex[status] = 0
+        return
+      }
+      this.columnPageIndex[status] = this.getClampedColumnPage(status)
+    },
+    clampAllColumnPages() {
+      this.columns.forEach(col => this.clampColumnPage(col.status))
+    },
+    getColumnTotalPages(status) {
+      const full = this.getTasksByStatus(status)
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) return 1
+      return Math.max(1, Math.ceil(full.length / limit))
+    },
+    isColumnPaginationFirst(status) {
+      return this.getClampedColumnPage(status) <= 0
+    },
+    isColumnPaginationLast(status) {
+      const last = this.getColumnTotalPages(status) - 1
+      return this.getClampedColumnPage(status) >= last
+    },
+    columnPagePrev(status) {
+      const clamped = this.getClampedColumnPage(status)
+      if (clamped > 0) this.columnPageIndex[status] = clamped - 1
+    },
+    columnPageNext(status) {
+      const clamped = this.getClampedColumnPage(status)
+      const last = this.getColumnTotalPages(status) - 1
+      if (clamped < last) this.columnPageIndex[status] = clamped + 1
+    },
+    getColumnPaginationLabel(status) {
+      const p = this.getClampedColumnPage(status) + 1
+      const total = this.getColumnTotalPages(status)
+      return `${p} / ${total}`
+    },
+    onColumnPageSizeChange(status) {
+      this.columnPageIndex[status] = 0
+    },
+    getVisibleTasksByStatus(status) {
+      const full = this.getTasksByStatus(status)
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) return full
+      const page = this.getClampedColumnPage(status)
+      const start = page * limit
+      return full.slice(start, start + limit)
+    },
+    getColumnPaginationHint(status) {
+      const full = this.getTasksByStatus(status)
+      const total = full.length
+      if (total === 0) return ''
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) {
+        return ''
+      }
+      const visible = this.getVisibleTasksByStatus(status).length
+      const page = this.getClampedColumnPage(status)
+      const start = page * limit + 1
+      const end = page * limit + visible
+      const totalPages = this.getColumnTotalPages(status)
+      if (totalPages <= 1) {
+        return ''
+      }
+      return `Mostrando ${start}–${end} de ${total}`
     },
     getTaskTypeColor(tipo) {
       const colors = {
@@ -251,6 +551,15 @@ export default {
     getTaskColorClass(tipo) {
       return `task-${tipo.toLowerCase()}`
     },
+    getResponsavelColor(nome) {
+      if (!nome) return '#6b7280'
+      const colors = {
+        Liz: '#db2777',
+        Angelo: '#a16207',
+        Thiago: '#0a0a0a'
+      }
+      return colors[nome] || '#6b7280'
+    },
     onDragStart(event, task) {
       this.draggedTask = task
       event.dataTransfer.effectAllowed = 'move'
@@ -271,7 +580,8 @@ export default {
         await taskService.update(this.draggedTask.id, {
           ...this.draggedTask,
           status: newStatus,
-          ordem: newOrder
+          ordem: newOrder,
+          processId: this.draggedTask.processId ?? null
         })
         
         await this.loadTasks()
@@ -281,6 +591,21 @@ export default {
         this.draggedTask = null
       }
     },
+    openNewTaskModal() {
+      this.showEditTaskModal = false
+      this.semProcessoRelacionado = false
+      this.resetProcessoAutocomplete()
+      this.taskForm = {
+        id: null,
+        titulo: '',
+        descricao: '',
+        tipoTarefa: '',
+        status: 'PARA_INICIAR',
+        responsavel: '',
+        processId: null
+      }
+      this.showNewTaskModal = true
+    },
     openEditTaskModal(task) {
       this.taskForm = {
         id: task.id,
@@ -288,33 +613,61 @@ export default {
         descricao: task.descricao || '',
         tipoTarefa: task.tipoTarefa,
         status: task.status,
-        responsavel: task.responsavel
+        responsavel: task.responsavel,
+        processId: task.processId ?? null
       }
+      this.semProcessoRelacionado = !task.processId
+      this.processoInputDisplay = task.processNumero || ''
+      this.processoConfirmadoNumero = task.processNumero || null
+      this.processoSuggestions = []
+      this.processoSuggestionsOpen = false
+      this.showNewTaskModal = false
       this.showEditTaskModal = true
+    },
+    onSemProcessoRelacionadoChange() {
+      if (this.semProcessoRelacionado) {
+        this.taskForm.processId = null
+        this.resetProcessoAutocomplete()
+      }
     },
     closeModal() {
       this.showNewTaskModal = false
       this.showEditTaskModal = false
+      this.semProcessoRelacionado = false
+      this.resetProcessoAutocomplete()
       this.taskForm = {
         id: null,
         titulo: '',
         descricao: '',
         tipoTarefa: '',
         status: 'PARA_INICIAR',
-        responsavel: ''
+        responsavel: '',
+        processId: null
       }
     },
     async saveTask() {
+      if (this.semProcessoRelacionado) {
+        this.taskForm.processId = null
+      } else if (!this.taskForm.processId) {
+        alert('Selecione um processo na lista de sugestões ou marque que não há processo relacionado.')
+        return
+      }
       try {
+        const payload = { ...this.taskForm }
         if (this.taskForm.id) {
-          await taskService.update(this.taskForm.id, this.taskForm)
+          await taskService.update(this.taskForm.id, payload)
         } else {
-          await taskService.create(this.taskForm)
+          await taskService.create(payload)
         }
         await this.loadTasks()
         this.closeModal()
       } catch (err) {
-        alert('Erro ao salvar tarefa: ' + (err.response?.data?.message || err.message))
+        let msg = err.response?.data?.message || err.message || ''
+        if (typeof msg === 'string' && /process_id|task\.process|column.*does not exist/i.test(msg)) {
+          msg +=
+            ' Verifique se a migração Flyway V4 (coluna task.process_id) foi aplicada na base de dados.'
+        }
+        alert('Erro ao salvar tarefa: ' + msg)
       }
     },
     async deleteTask(id) {
@@ -497,6 +850,80 @@ export default {
   overflow: hidden;
 }
 
+.column-pagination {
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.column-pagination .column-page-size {
+  margin: 0;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.column-pagination .column-page-size label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.column-page-select {
+  width: auto;
+  min-width: 5rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+}
+
+.column-page-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.column-page-btn {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #003d7a;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.column-page-btn:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.column-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.column-page-indicator {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #4a5568;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.column-pagination-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
 .task-card {
   background: white;
   border-radius: 6px;
@@ -534,7 +961,16 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.task-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .task-type-badge {
@@ -571,23 +1007,20 @@ export default {
   margin: 0 0 0.5rem 0;
 }
 
+.task-process-numero {
+  font-size: 0.8125rem;
+  color: #003d7a;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
 .task-description {
   font-size: 0.875rem;
   color: #6b7280;
   margin: 0 0 0.75rem 0;
   line-height: 1.4;
-}
-
-.task-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.task-responsavel {
-  font-size: 0.875rem;
-  color: #4a5568;
-  font-weight: 500;
 }
 
 .modal-overlay {
@@ -638,6 +1071,76 @@ export default {
   border-radius: 6px;
   font-size: 1rem;
   transition: border-color 0.2s;
+}
+
+.form-group-processo .processo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1rem;
+}
+
+.form-group-processo .processo-autocomplete {
+  flex: 1;
+  min-width: 12rem;
+  position: relative;
+}
+
+.form-group-processo .processo-autocomplete-input {
+  width: 100%;
+}
+
+.processo-suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  margin-top: 4px;
+}
+
+.processo-suggestion-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+}
+
+.processo-suggestion-item:hover {
+  background: #f1f5f9;
+}
+
+.processo-suggestions-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.checkbox-sem-processo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.checkbox-sem-processo input {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
 }
 
 .form-group input:focus,

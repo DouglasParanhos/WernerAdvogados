@@ -14,6 +14,7 @@ public class TaskRequestDTO {
     private String tipoTarefa;
     private String status;
     private String responsavel;
+    private Long processId;
     private Integer ordem;
 }
 

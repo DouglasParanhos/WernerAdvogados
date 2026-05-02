@@ -16,6 +16,8 @@ public class TaskDTO {
     private String tipoTarefa;
     private String status;
     private String responsavel;
+    private Long processId;
+    private String processNumero;
     private Integer ordem;
     private LocalDateTime createdOn;
     private LocalDateTime modifiedOn;

@@ -89,7 +89,6 @@
           <thead>
             <tr>
               <th>Nome</th>
-              <th>Email</th>
               <th>CPF</th>
               <th>Telefone</th>
               <th>Processos</th>
@@ -104,7 +103,6 @@
               class="table-row"
             >
               <td>{{ client.fullname }}</td>
-              <td>{{ client.email }}</td>
               <td>{{ client.cpf }}</td>
               <td>{{ client.telefone }}</td>
               <td>{{ getProcessCount(client) }}</td>
@@ -132,7 +130,7 @@
               </td>
             </tr>
             <tr v-if="clients.length === 0">
-              <td colspan="6" class="empty-state">
+              <td colspan="5" class="empty-state">
                 {{ searchQuery ? 'Nenhum cliente encontrado com esse nome' : 'Nenhum cliente encontrado' }}
               </td>
             </tr>

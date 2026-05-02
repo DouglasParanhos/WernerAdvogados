@@ -33,6 +33,9 @@ public class Task {
     @Column(name = "responsavel", nullable = false, length = 50)
     private String responsavel; // Liz, Angelo, Thiago
     
+    @Column(name = "process_id")
+    private Long processId;
+    
     @Column(name = "ordem")
     private Integer ordem;
     
