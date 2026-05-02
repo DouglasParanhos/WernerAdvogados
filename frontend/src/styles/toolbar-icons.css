@@ -1,0 +1,113 @@
+/* Toolbar icon buttons — aligned with ProcessDetails canonical style (48×48, 8px radius, white icons). */
+
+.toolbar-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: background-color 0.2s, opacity 0.2s;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.toolbar-btn svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toolbar-btn--refresh {
+  background: #17a2b8;
+}
+
+.toolbar-btn--refresh:hover:not(:disabled) {
+  background-color: #138496;
+}
+
+.toolbar-btn--refresh svg.spinning {
+  animation: toolbar-spin-refresh 0.9s linear infinite;
+}
+
+@keyframes toolbar-spin-refresh {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.toolbar-btn--edit {
+  background: #6c757d;
+}
+
+.toolbar-btn--edit:hover:not(:disabled) {
+  background-color: #545b62;
+}
+
+.toolbar-btn--add {
+  background: #007bff;
+}
+
+.toolbar-btn--add:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.toolbar-btn--document {
+  background: #003d7a;
+}
+
+.toolbar-btn--document:hover:not(:disabled) {
+  background-color: #002d5c;
+}
+
+.toolbar-btn--login {
+  background: #003d7a;
+}
+
+.toolbar-btn--login:hover:not(:disabled) {
+  background-color: #002d5c;
+}
+
+.toolbar-btn--danger {
+  background: #dc3545;
+}
+
+.toolbar-btn--danger:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+@media (max-width: 768px) {
+  .header-actions .toolbar-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .header-actions .toolbar-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-actions .toolbar-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-actions .toolbar-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
