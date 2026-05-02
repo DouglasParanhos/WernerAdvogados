@@ -16,13 +16,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.List;
@@ -80,22 +81,18 @@ public class DocumentController {
     public ResponseEntity<ByteArrayResource> generateDocument(
             @Valid @RequestBody DocumentGenerationRequestDTO request) {
         try {
-            // Gerar documento
-            byte[] documentBytes = wordDocumentService.generateDocument(
-                    request.getProcessId(), 
+            var generated = wordDocumentService.generateDocument(
+                    request.getProcessId(),
                     request.getTemplateName()
             );
-            
-            // Criar recurso para download
-            ByteArrayResource resource = new ByteArrayResource(documentBytes);
-            
-            // Nome do arquivo gerado
-            String fileName = request.getTemplateName().replace(".docx", "") + "_gerado.docx";
-            
+
+            ByteArrayResource resource = new ByteArrayResource(generated.content());
+            String fileName = generated.fileName();
+
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .contentLength(documentBytes.length)
+                    .contentLength(generated.content().length)
                     .body(resource);
                     
         } catch (RuntimeException e) {
@@ -155,29 +152,28 @@ public class DocumentController {
                             .orElseThrow(() -> new RuntimeException("Cliente não encontrado para este usuário"));
                     
                     if (!person.getId().equals(request.getPersonId())) {
-                        throw new AccessDeniedException("Clientes só podem gerar documentos para si mesmos");
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                "Clientes só podem gerar documentos para si mesmos");
                     }
                 }
             }
             
-            // Gerar documento
-            byte[] documentBytes = wordDocumentService.generateDocumentForClient(
-                    request.getPersonId(), 
+            var generated = wordDocumentService.generateDocumentForClient(
+                    request.getPersonId(),
                     request.getTemplateName()
             );
-            
-            // Criar recurso para download
-            ByteArrayResource resource = new ByteArrayResource(documentBytes);
-            
-            // Nome do arquivo gerado
-            String fileName = request.getTemplateName().replace(".docx", "") + "_gerado.docx";
-            
+
+            ByteArrayResource resource = new ByteArrayResource(generated.content());
+            String fileName = generated.fileName();
+
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .contentLength(documentBytes.length)
+                    .contentLength(generated.content().length)
                     .body(resource);
-                    
+
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (RuntimeException e) {
             log.error("Erro ao gerar documento do cliente: {}", e.getMessage(), e);
             return ResponseEntity.notFound().build();
