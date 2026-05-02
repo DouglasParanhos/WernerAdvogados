@@ -1,6 +1,7 @@
 package com.wa.controller;
 
 import com.wa.dto.ProcessDTO;
+import com.wa.dto.ProcessFilterOptionsDTO;
 import com.wa.service.ProcessService;
 import com.wa.util.JWTUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,7 +79,7 @@ class ProcessControllerTest {
         List<ProcessDTO> processes = List.of(processDTO1, processDTO2, processDTO3);
         Page<ProcessDTO> page = new PageImpl<>(processes, PageRequest.of(0, 10), 3);
 
-        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any()))
+        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
         // Act & Assert
@@ -95,7 +96,7 @@ class ProcessControllerTest {
                 .andExpect(jsonPath("$.number").value(0));
 
         verify(processService, times(1)).findAllPaginated(
-                null, null, null, null, null, false, PageRequest.of(0, 10));
+                null, null, null, null, null, null, false, PageRequest.of(0, 10));
     }
 
     @Test
@@ -105,7 +106,7 @@ class ProcessControllerTest {
         List<ProcessDTO> filteredProcesses = List.of(processDTO1);
         Page<ProcessDTO> page = new PageImpl<>(filteredProcesses, PageRequest.of(0, 10), 1);
 
-        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any()))
+        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
         // Act & Assert
@@ -119,7 +120,7 @@ class ProcessControllerTest {
                 .andExpect(jsonPath("$.content[0].numero").value("0012345-67.2023.8.19.0001"));
 
         verify(processService, times(1)).findAllPaginated(
-                numero, null, null, null, null, false, PageRequest.of(0, 10));
+                numero, null, null, null, null, null, false, PageRequest.of(0, 10));
     }
 
     @Test
@@ -129,7 +130,7 @@ class ProcessControllerTest {
         List<ProcessDTO> filteredProcesses = List.of(processDTO1, processDTO3);
         Page<ProcessDTO> page = new PageImpl<>(filteredProcesses, PageRequest.of(0, 10), 2);
 
-        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any()))
+        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
         // Act & Assert
@@ -142,7 +143,7 @@ class ProcessControllerTest {
                 .andExpect(jsonPath("$.content.length()").value(2));
 
         verify(processService, times(1)).findAllPaginated(
-                null, comarca, null, null, null, false, PageRequest.of(0, 10));
+                null, null, comarca, null, null, null, false, PageRequest.of(0, 10));
     }
 
     @Test
@@ -152,7 +153,7 @@ class ProcessControllerTest {
         List<ProcessDTO> filteredProcesses = List.of(processDTO1);
         Page<ProcessDTO> page = new PageImpl<>(filteredProcesses, PageRequest.of(0, 10), 1);
 
-        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any()))
+        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
         // Act & Assert
@@ -166,7 +167,7 @@ class ProcessControllerTest {
                 .andExpect(jsonPath("$.content[0].status").value("Em andamento"));
 
         verify(processService, times(1)).findAllPaginated(
-                null, null, null, null, status, false, PageRequest.of(0, 10));
+                null, null, null, null, null, status, false, PageRequest.of(0, 10));
     }
 
     @Test
@@ -175,7 +176,7 @@ class ProcessControllerTest {
         List<ProcessDTO> allProcesses = List.of(processDTO1, processDTO2, processDTO3);
         Page<ProcessDTO> page = new PageImpl<>(allProcesses, PageRequest.of(0, 10), 3);
 
-        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any()))
+        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
         // Act & Assert
@@ -188,7 +189,7 @@ class ProcessControllerTest {
                 .andExpect(jsonPath("$.content.length()").value(3));
 
         verify(processService, times(1)).findAllPaginated(
-                null, null, null, null, null, true, PageRequest.of(0, 10));
+                null, null, null, null, null, null, true, PageRequest.of(0, 10));
     }
 
     @Test
@@ -199,7 +200,7 @@ class ProcessControllerTest {
         List<ProcessDTO> filteredProcesses = List.of(processDTO1);
         Page<ProcessDTO> page = new PageImpl<>(filteredProcesses, PageRequest.of(0, 10), 1);
 
-        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any()))
+        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
         // Act & Assert
@@ -215,7 +216,7 @@ class ProcessControllerTest {
                 .andExpect(jsonPath("$.content[0].tipoProcesso").value("PISO"));
 
         verify(processService, times(1)).findAllPaginated(
-                null, comarca, null, tipoProcesso, null, false, PageRequest.of(0, 10));
+                null, null, comarca, null, tipoProcesso, null, false, PageRequest.of(0, 10));
     }
 
     @Test
@@ -226,11 +227,11 @@ class ProcessControllerTest {
         Page<ProcessDTO> page50 = new PageImpl<>(processes, PageRequest.of(0, 50), 3);
         Page<ProcessDTO> page100 = new PageImpl<>(processes, PageRequest.of(0, 100), 3);
 
-        when(processService.findAllPaginated(null, null, null, null, null, false, PageRequest.of(0, 10)))
+        when(processService.findAllPaginated(null, null, null, null, null, null, false, PageRequest.of(0, 10)))
                 .thenReturn(page10);
-        when(processService.findAllPaginated(null, null, null, null, null, false, PageRequest.of(0, 50)))
+        when(processService.findAllPaginated(null, null, null, null, null, null, false, PageRequest.of(0, 50)))
                 .thenReturn(page50);
-        when(processService.findAllPaginated(null, null, null, null, null, false, PageRequest.of(0, 100)))
+        when(processService.findAllPaginated(null, null, null, null, null, null, false, PageRequest.of(0, 100)))
                 .thenReturn(page100);
 
         // Act & Assert - Size 10
@@ -269,7 +270,7 @@ class ProcessControllerTest {
                 .andExpect(jsonPath("$.length()").value(3));
 
         verify(processService, times(1)).findAll();
-        verify(processService, never()).findAllPaginated(any(), any(), any(), any(), any(), any(), any());
+        verify(processService, never()).findAllPaginated(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -288,7 +289,45 @@ class ProcessControllerTest {
                 .andExpect(jsonPath("$.length()").value(2));
 
         verify(processService, times(1)).findByPersonId(personId);
-        verify(processService, never()).findAllPaginated(any(), any(), any(), any(), any(), any(), any());
+        verify(processService, never()).findAllPaginated(any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void testFindAll_WithNomeClienteFilter_ReturnsFilteredResults() throws Exception {
+        String nomeCliente = "João";
+        List<ProcessDTO> filteredProcesses = List.of(processDTO1);
+        Page<ProcessDTO> page = new PageImpl<>(filteredProcesses, PageRequest.of(0, 10), 1);
+
+        when(processService.findAllPaginated(any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/api/processes")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("nomeCliente", nomeCliente)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1));
+
+        verify(processService, times(1)).findAllPaginated(
+                null, nomeCliente, null, null, null, null, false, PageRequest.of(0, 10));
+    }
+
+    @Test
+    void testGetFilterOptions_ReturnsDistinctLists() throws Exception {
+        ProcessFilterOptionsDTO options = new ProcessFilterOptionsDTO(
+                List.of("Rio"),
+                List.of("1ª Vara"),
+                List.of("PISO"));
+        when(processService.getFilterOptions()).thenReturn(options);
+
+        mockMvc.perform(get("/api/processes/filters/options"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.comarcas[0]").value("Rio"))
+                .andExpect(jsonPath("$.varas[0]").value("1ª Vara"))
+                .andExpect(jsonPath("$.temas[0]").value("PISO"));
+
+        verify(processService, times(1)).getFilterOptions();
     }
 }
 

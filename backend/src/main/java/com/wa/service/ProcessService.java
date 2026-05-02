@@ -2,6 +2,7 @@ package com.wa.service;
 
 import com.wa.dto.MovimentDTO;
 import com.wa.dto.ProcessDTO;
+import com.wa.dto.ProcessFilterOptionsDTO;
 import com.wa.dto.ProcessRequestDTO;
 import com.wa.model.Matriculation;
 import com.wa.model.Moviment;
@@ -38,12 +39,19 @@ public class ProcessService {
                 .collect(Collectors.toList());
     }
     
+    public ProcessFilterOptionsDTO getFilterOptions() {
+        return new ProcessFilterOptionsDTO(
+                processRepository.findDistinctComarcas(),
+                processRepository.findDistinctVaras(),
+                processRepository.findDistinctTipoProcesso());
+    }
+
     @Transactional
-    public Page<ProcessDTO> findAllPaginated(String numero, String comarca, String vara, 
-                                             String tipoProcesso, String status, 
+    public Page<ProcessDTO> findAllPaginated(String numero, String nomeCliente, String comarca, String vara,
+                                             String tipoProcesso, String status,
                                              Boolean showArchived, Pageable pageable) {
         Page<Process> page = processRepository.findAllWithRelationsPaginated(
-                numero, comarca, vara, tipoProcesso, status, showArchived, pageable);
+                numero, nomeCliente, comarca, vara, tipoProcesso, status, showArchived, pageable);
         // Carregar relacionamentos explicitamente para evitar N+1
         page.getContent().forEach(process -> {
             if (process.getMatriculation() != null) {

@@ -42,21 +42,33 @@ public interface ProcessRepository extends JpaRepository<Process, Long> {
                      "LEFT JOIN m.person per " +
                      "WHERE (:numero IS NULL OR :numero = '' OR LOWER(p.numero) LIKE LOWER(CONCAT('%', :numero, '%'))) "
                      +
-                     "AND (:comarca IS NULL OR :comarca = '' OR LOWER(p.comarca) LIKE LOWER(CONCAT('%', :comarca, '%'))) "
+                     "AND (:nomeCliente IS NULL OR :nomeCliente = '' OR LOWER(per.fullname) LIKE LOWER(CONCAT('%', :nomeCliente, '%'))) "
                      +
-                     "AND (:vara IS NULL OR :vara = '' OR LOWER(p.vara) LIKE LOWER(CONCAT('%', :vara, '%'))) " +
-                     "AND (:tipoProcesso IS NULL OR :tipoProcesso = '' OR LOWER(p.tipoProcesso) LIKE LOWER(CONCAT('%', :tipoProcesso, '%'))) "
+                     "AND (:comarca IS NULL OR :comarca = '' OR p.comarca = :comarca) "
+                     +
+                     "AND (:vara IS NULL OR :vara = '' OR p.vara = :vara) " +
+                     "AND (:tipoProcesso IS NULL OR :tipoProcesso = '' OR p.tipoProcesso = :tipoProcesso) "
                      +
                      "AND (:status IS NULL OR :status = '' OR p.status = :status) " +
                      "AND (:showArchived = true OR p.status IS NULL OR LOWER(p.status) NOT LIKE '%arquivado%')")
        Page<Process> findAllWithRelationsPaginated(
                      @Param("numero") String numero,
+                     @Param("nomeCliente") String nomeCliente,
                      @Param("comarca") String comarca,
                      @Param("vara") String vara,
                      @Param("tipoProcesso") String tipoProcesso,
                      @Param("status") String status,
                      @Param("showArchived") Boolean showArchived,
                      Pageable pageable);
+
+       @Query("SELECT DISTINCT p.comarca FROM Process p WHERE p.comarca IS NOT NULL AND LENGTH(TRIM(p.comarca)) > 0 ORDER BY p.comarca ASC")
+       List<String> findDistinctComarcas();
+
+       @Query("SELECT DISTINCT p.vara FROM Process p WHERE p.vara IS NOT NULL AND LENGTH(TRIM(p.vara)) > 0 ORDER BY p.vara ASC")
+       List<String> findDistinctVaras();
+
+       @Query("SELECT DISTINCT p.tipoProcesso FROM Process p WHERE p.tipoProcesso IS NOT NULL AND LENGTH(TRIM(p.tipoProcesso)) > 0 ORDER BY p.tipoProcesso ASC")
+       List<String> findDistinctTipoProcesso();
 
        @Query("SELECT DISTINCT p FROM Process p " +
                      "LEFT JOIN FETCH p.matriculation m " +
