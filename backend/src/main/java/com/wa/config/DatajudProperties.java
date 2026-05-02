@@ -37,4 +37,10 @@ public class DatajudProperties {
      * Hard cap for {@link #maxHits} when read from config (avoids oversized requests).
      */
     private int maxHitsCeiling = 50;
+
+    /**
+     * Threads for batch movimentos ({@code consultarMovimentosDesde}): consulta NPUs em paralelo para reduzir tempo total.
+     * Valores altos podem aumentar risco de rate limit na API CNJ.
+     */
+    private int movimentosBatchParallelism = 4;
 }

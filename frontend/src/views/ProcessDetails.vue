@@ -12,6 +12,26 @@
           <button @click="goBack" class="btn btn-secondary">← Voltar</button>
         </div>
         <div class="header-actions">
+          <button
+            type="button"
+            @click="refreshDatajudMovimentos"
+            class="btn-icon-refresh"
+            title="Atualizar movimentos DataJud"
+            aria-label="Atualizar movimentos DataJud"
+            :disabled="loading || !process || !isTjrjNumero || refreshingDatajud"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              :class="{ spinning: refreshingDatajud }"
+            >
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 3v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M16 21h5v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
           <button @click="goToEdit" class="btn-icon-edit" title="Editar Processo">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -112,31 +132,14 @@
           </div>
           
           <!-- Lista de Movimentações -->
-          <div v-if="moviments && moviments.length > 0" class="moviments-list">
-            <div v-for="moviment in moviments" :key="moviment.id" class="moviment-card">
-              <div v-if="editingMovimentId !== moviment.id" class="moviment-display">
-                <div class="moviment-header">
-                  <div class="moviment-date">{{ formatDate(moviment.date) }}</div>
-                  <div class="moviment-actions">
-                    <button @click="startEditMoviment(moviment)" class="icon-btn edit-btn" title="Editar movimentação">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
-                    <button @click="deleteMoviment(moviment.id)" class="icon-btn delete-btn" title="Excluir movimentação">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div class="moviment-description">{{ moviment.descricao }}</div>
-              </div>
-              
-              <!-- Formulário de Edição -->
-              <div v-else class="moviment-edit-form">
+          <div v-if="movimentsForDisplay.length > 0" class="moviments-list">
+            <div
+              v-for="moviment in movimentsForDisplay"
+              :key="moviment.isPending ? moviment.tempId : moviment.id"
+              class="moviment-card"
+              :class="{ 'moviment-card--pending': moviment.isPending }"
+            >
+              <div v-if="!moviment.isPending && editingMovimentId === moviment.id" class="moviment-edit-form">
                 <div class="form-group">
                   <label>Data:</label>
                   <input type="datetime-local" v-model="editingMoviment.date" class="form-control" />
@@ -157,6 +160,63 @@
                   <button @click="cancelEditMoviment" class="btn btn-secondary">Cancelar</button>
                 </div>
               </div>
+
+              <div v-else-if="!moviment.isPending && editingMovimentId !== moviment.id" class="moviment-display">
+                <div class="moviment-header">
+                  <div class="moviment-date">{{ formatDate(moviment.date) }}</div>
+                  <div class="moviment-actions">
+                    <button @click="startEditMoviment(moviment)" class="icon-btn edit-btn" title="Editar movimentação">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button @click="deleteMoviment(moviment.id)" class="icon-btn delete-btn" title="Excluir movimentação">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="moviment-description">{{ moviment.descricao }}</div>
+              </div>
+
+              <div v-else-if="moviment.isPending" class="moviment-display">
+                <div class="moviment-header moviment-header--pending">
+                  <div class="moviment-date-block">
+                    <div class="moviment-date">{{ formatDatajudMovimentDate(moviment.date) }}</div>
+                    <span v-if="moviment.grauLabel" class="grau-pill">{{ formatGrauLabel(moviment.grauLabel) }}</span>
+                  </div>
+                  <div class="moviment-actions moviment-actions--pending">
+                    <span class="badge-datajud-new" title="Movimento retornado do DataJud, ainda não salvo">Novo (DataJud)</span>
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-sm"
+                      :disabled="savingPendingId === moviment.tempId"
+                      @click="savePendingMoviment(moviment.tempId)"
+                    >
+                      {{ savingPendingId === moviment.tempId ? 'Salvando…' : 'Salvar' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      :disabled="savingPendingId === moviment.tempId"
+                      @click="ignorePendingMoviment(moviment.tempId)"
+                    >
+                      Ignorar
+                    </button>
+                  </div>
+                </div>
+                <div class="moviment-description">{{ moviment.descricao }}</div>
+                <div v-if="moviment.isPending" class="pending-checkbox">
+                  <label class="checkbox-label">
+                    <input type="checkbox" v-model="moviment.pendingRef.visibleToClient" class="checkbox-input" />
+                    <span class="checkbox-custom"></span>
+                    <span class="checkbox-text">Visível para o cliente</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
           <div v-else class="no-moviments">
@@ -172,6 +232,24 @@
 import { processService } from '../services/processService'
 import { movimentService } from '../services/movimentService'
 import { matriculationService } from '../services/matriculationService'
+import { datajudService } from '../services/datajudService'
+
+function yyyyMmDdDaysAgo(days) {
+  const d = new Date()
+  d.setDate(d.getDate() - days)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function newPendingTempId() {
+  const c = globalThis.crypto
+  if (c && typeof c.randomUUID === 'function') {
+    return c.randomUUID()
+  }
+  return `p-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+}
 
 export default {
   name: 'ProcessDetails',
@@ -179,8 +257,11 @@ export default {
     return {
       process: null,
       moviments: [],
+      pendingDatajud: [],
       loading: false,
       error: null,
+      refreshingDatajud: false,
+      savingPendingId: null,
       showNewMovimentForm: false,
       editingMovimentId: null,
       editingMoviment: null,
@@ -191,6 +272,29 @@ export default {
         processId: null,
         visibleToClient: true
       }
+    }
+  },
+  computed: {
+    isTjrjNumero() {
+      const n = this.process?.numero
+      return typeof n === 'string' && n.toLowerCase().includes('.8.19.')
+    },
+    movimentsForDisplay() {
+      const dbRows = (this.moviments || []).map((m) => ({
+        ...m,
+        isPending: false,
+        sortKey: this.movementTimeMs(m.date) ?? 0
+      }))
+      const pendRows = (this.pendingDatajud || []).map((p) => ({
+        isPending: true,
+        pendingRef: p,
+        tempId: p.tempId,
+        date: p.dataRaw,
+        descricao: p.descricao,
+        grauLabel: p.grauLabel,
+        sortKey: this.movementTimeMs(p.dataRaw) ?? Number.NEGATIVE_INFINITY
+      }))
+      return [...dbRows, ...pendRows].sort((a, b) => b.sortKey - a.sortKey)
     }
   },
   async mounted() {
@@ -219,6 +323,143 @@ export default {
       } catch (err) {
         console.error('Erro ao carregar movimentações:', err)
       }
+    },
+    normalizeMovementDesc(s) {
+      if (s == null) return ''
+      return String(s).trim().replace(/\s+/g, ' ').toLowerCase()
+    },
+    /** Instante em ms para comparação DataJud vs movimento salvo (parse compatível com ISO e strings do TJRJ). */
+    movementTimeMs(value) {
+      if (value == null) return null
+      try {
+        const normalized = String(value).replace('Z', '+00:00')
+        const t = new Date(normalized).getTime()
+        return Number.isNaN(t) ? null : t
+      } catch {
+        return null
+      }
+    },
+    movementKey(dateValue, descricao) {
+      const ms = this.movementTimeMs(dateValue)
+      const timePart = ms != null ? String(ms) : `raw:${String(dateValue)}`
+      return `${timePart}::${this.normalizeMovementDesc(descricao)}`
+    },
+    formatDatajudMovimentDate(raw) {
+      if (!raw) return '—'
+      try {
+        const normalized = String(raw).replace('Z', '+00:00')
+        const dt = new Date(normalized)
+        if (Number.isNaN(dt.getTime())) return raw
+        return dt.toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      } catch {
+        return raw
+      }
+    },
+    formatGrauLabel(grau) {
+      if (grau == null || grau === '' || grau === 'desconhecido') return '(não informado)'
+      return grau
+    },
+    flattenDatajudRow(row) {
+      const graus = row.graus || []
+      const out = []
+      for (const g of graus) {
+        const grauLabel = this.formatGrauLabel(g.grau)
+        for (const mv of g.movimentos || []) {
+          out.push({
+            data: mv.data,
+            descricao: mv.descricao,
+            grauLabel
+          })
+        }
+      }
+      out.sort((a, b) => (this.movementTimeMs(b.data) ?? 0) - (this.movementTimeMs(a.data) ?? 0))
+      return out
+    },
+    async refreshDatajudMovimentos() {
+      if (!this.process?.id || !this.isTjrjNumero) {
+        return
+      }
+      this.refreshingDatajud = true
+      try {
+        const dataInicio = yyyyMmDdDaysAgo(365)
+        const row = await datajudService.consultarMovimentosProcesso(this.process.id, dataInicio)
+        if (row.status === 'erro') {
+          window.alert(
+            'Erro ao consultar DataJud: ' + (row.erro || 'falha desconhecida')
+          )
+          return
+        }
+        if (row.status === 'nao_encontrado') {
+          window.alert('Processo não encontrado no DataJud para o NPU informado.')
+          return
+        }
+        const flat = this.flattenDatajudRow(row)
+        const existingKeys = new Set(
+          (this.moviments || []).map((m) => this.movementKey(m.date, m.descricao))
+        )
+        for (const p of this.pendingDatajud) {
+          existingKeys.add(this.movementKey(p.dataRaw, p.descricao))
+        }
+        let added = 0
+        for (const item of flat) {
+          const key = this.movementKey(item.data, item.descricao)
+          if (!existingKeys.has(key)) {
+            existingKeys.add(key)
+            this.pendingDatajud.push({
+              tempId: newPendingTempId(),
+              dataRaw: item.data,
+              descricao: item.descricao,
+              grauLabel: item.grauLabel,
+              visibleToClient: true
+            })
+            added++
+          }
+        }
+        if (!added) {
+          window.alert(
+            'Nenhum movimento novo do DataJud no período (últimos 365 dias) que não estivesse já na lista.'
+          )
+        }
+      } catch (err) {
+        const msg = err.response?.data?.message || err.message || 'Falha na consulta DataJud.'
+        window.alert(msg)
+        console.error(err)
+      } finally {
+        this.refreshingDatajud = false
+      }
+    },
+    async savePendingMoviment(tempId) {
+      const pending = this.pendingDatajud.find((p) => p.tempId === tempId)
+      if (!pending) return
+      const ms = this.movementTimeMs(pending.dataRaw)
+      if (ms == null) {
+        window.alert('Data do movimento inválida; não é possível salvar.')
+        return
+      }
+      this.savingPendingId = tempId
+      try {
+        await movimentService.create({
+          processId: Number(this.$route.params.id),
+          descricao: pending.descricao,
+          date: new Date(ms).toISOString(),
+          visibleToClient: pending.visibleToClient !== false
+        })
+        this.pendingDatajud = this.pendingDatajud.filter((p) => p.tempId !== tempId)
+        await this.loadMoviments()
+      } catch (err) {
+        window.alert('Erro ao salvar movimentação: ' + (err.response?.data?.message || err.message))
+      } finally {
+        this.savingPendingId = null
+      }
+    },
+    ignorePendingMoviment(tempId) {
+      this.pendingDatajud = this.pendingDatajud.filter((p) => p.tempId !== tempId)
     },
     formatDate(date) {
       if (!date) return '-'
@@ -313,10 +554,10 @@ export default {
       
       this.saving = true
       try {
-        // Converter para formato ISO
         const dateISO = new Date(this.editingMoviment.date).toISOString()
-        await movimentService.update(this.editingMoviment.id, {
-          ...this.editingMoviment,
+        const { id, ...fields } = this.editingMoviment
+        await movimentService.update(id, {
+          ...fields,
           date: dateISO
         })
         await this.loadMoviments()
@@ -399,6 +640,48 @@ export default {
   display: flex;
   gap: 0.75rem;
   align-items: center;
+}
+
+.btn-icon-refresh {
+  background: #17a2b8;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all 0.2s;
+  width: 48px;
+  height: 48px;
+}
+
+.btn-icon-refresh:hover:not(:disabled) {
+  background-color: #138496;
+}
+
+.btn-icon-refresh:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-icon-refresh svg {
+  width: 24px;
+  height: 24px;
+}
+
+.btn-icon-refresh svg.spinning {
+  animation: spin-refresh 0.9s linear infinite;
+}
+
+@keyframes spin-refresh {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .btn-icon-edit,
@@ -640,6 +923,56 @@ export default {
   padding: 1rem;
 }
 
+.moviment-card--pending {
+  border-color: #17a2b8;
+  background: linear-gradient(135deg, #f0fbfc 0%, #f8f9fa 100%);
+  box-shadow: 0 0 0 1px rgba(23, 162, 184, 0.15);
+}
+
+.moviment-header--pending {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.moviment-date-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.grau-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0c5460;
+  background: #d1ecf1;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.badge-datajud-new {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #0c5460;
+  background: #bee5eb;
+  padding: 0.35rem 0.55rem;
+  border-radius: 4px;
+  margin-right: 0.25rem;
+}
+
+.moviment-actions--pending {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pending-checkbox {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #ced4da;
+}
+
 .moviment-display {
   display: flex;
   flex-direction: column;
@@ -775,6 +1108,11 @@ export default {
 
   .btn-icon-edit,
   .btn-icon-add {
+    width: 44px;
+    height: 44px;
+  }
+
+  .btn-icon-refresh {
     width: 44px;
     height: 44px;
   }
@@ -916,6 +1254,11 @@ export default {
 
   .btn-icon-edit,
   .btn-icon-add {
+    width: 40px;
+    height: 40px;
+  }
+
+  .btn-icon-refresh {
     width: 40px;
     height: 40px;
   }

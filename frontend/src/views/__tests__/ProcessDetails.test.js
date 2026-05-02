@@ -16,6 +16,7 @@ vi.mock('../../services/processService', () => ({
 vi.mock('../../services/movimentService', () => ({
   movimentService: {
     getAll: vi.fn(),
+    create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn()
   }
@@ -24,6 +25,12 @@ vi.mock('../../services/movimentService', () => ({
 vi.mock('../../services/matriculationService', () => ({
   matriculationService: {
     getById: vi.fn()
+  }
+}))
+
+vi.mock('../../services/datajudService', () => ({
+  datajudService: {
+    consultarMovimentosProcesso: vi.fn()
   }
 }))
 

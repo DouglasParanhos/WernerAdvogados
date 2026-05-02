@@ -4,7 +4,10 @@ import com.wa.client.DatajudClient;
 import com.wa.client.DatajudQueryBuilder;
 import com.wa.config.DatajudProperties;
 import com.wa.dto.DatajudMovimentoConsultaResponseDTO;
+import com.wa.dto.DatajudProcessoMovimentoDTO;
+import com.wa.model.Process;
 import com.wa.repository.ProcessRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,6 +49,7 @@ class DatajudMovimentoConsultaServiceTest {
         lenient().when(datajudProperties.getMaxHits()).thenReturn(10);
         lenient().when(datajudProperties.getMaxHitsCeiling()).thenReturn(50);
         lenient().when(datajudProperties.getMaxMovimentosPorGrau()).thenReturn(5);
+        lenient().when(datajudProperties.getMovimentosBatchParallelism()).thenReturn(4);
     }
 
     @Test
@@ -272,5 +277,59 @@ class DatajudMovimentoConsultaServiceTest {
 
         assertThat(dto.getTotalNaoEncontrados()).isEqualTo(1);
         assertThat(dto.getResultados()).isEmpty();
+    }
+
+    @Test
+    void consultarMovimentosProcesso_processoInexistente_lancaEntityNotFound() {
+        when(processRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.consultarMovimentosProcesso(999L, LocalDate.now().minusDays(1)))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessageContaining("Processo");
+    }
+
+    @Test
+    void consultarMovimentosProcesso_semSegmentoTjrj_lanca() {
+        Process p = new Process();
+        p.setId(1L);
+        p.setNumero("0000000-00.0000.0.00.0000");
+        when(processRepository.findById(1L)).thenReturn(Optional.of(p));
+
+        assertThatThrownBy(() -> service.consultarMovimentosProcesso(1L, LocalDate.now().minusDays(1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(".8.19.");
+    }
+
+    @Test
+    void consultarMovimentosProcesso_encontrado_preencheProcessoId() {
+        Process p = new Process();
+        p.setId(77L);
+        p.setNumero("0059197-75.2023.8.19.0000");
+        when(processRepository.findById(77L)).thenReturn(Optional.of(p));
+
+        LocalDate hoje = LocalDate.now();
+        Map<String, Object> source = new HashMap<>();
+        source.put("grau", "G1");
+        source.put(
+                "movimentos",
+                List.of(
+                        Map.of(
+                                "dataHora",
+                                hoje.minusDays(1).toString() + "T15:00:00Z",
+                                "nome",
+                                "recente",
+                                "codigo",
+                                "2")));
+
+        when(datajudClient.search(any())).thenReturn(
+                Map.of("hits", Map.of("hits", List.of(Map.of("_id", "a", "_source", source)))));
+
+        DatajudProcessoMovimentoDTO one = service.consultarMovimentosProcesso(77L, LocalDate.now().minusDays(7));
+
+        assertThat(one.getProcessoId()).isEqualTo(77L);
+        assertThat(one.getStatus()).isEqualTo("encontrado");
+        assertThat(one.getGraus()).hasSize(1);
+        assertThat(one.getGraus().get(0).getMovimentos()).hasSize(1);
+        assertThat(one.getGraus().get(0).getMovimentos().get(0).getDescricao()).isEqualTo("recente");
     }
 }

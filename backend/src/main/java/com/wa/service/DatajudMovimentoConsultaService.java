@@ -8,8 +8,10 @@ import com.wa.dto.DatajudGrauBlocoDTO;
 import com.wa.dto.DatajudMovimentoConsultaResponseDTO;
 import com.wa.dto.DatajudMovimentoItemDTO;
 import com.wa.dto.DatajudProcessoMovimentoDTO;
+import com.wa.model.Process;
 import com.wa.repository.ProcessRepository;
 import com.wa.util.NpuNormalizer;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -77,13 +84,44 @@ public class DatajudMovimentoConsultaService {
         }
         Set<String> unicos = idPorNpu.keySet();
 
+        Map<String, UmResult> umPorNumero = new ConcurrentHashMap<>();
+        int parallelism = Math.max(1, datajudProperties.getMovimentosBatchParallelism());
+        if (unicos.size() <= 1) {
+            for (String numero : unicos) {
+                umPorNumero.put(numero, consultarUm(numero, inicioInstant, fimInstant));
+            }
+        } else {
+            int poolSize = Math.min(parallelism, unicos.size());
+            ExecutorService pool = Executors.newFixedThreadPool(poolSize);
+            try {
+                List<CompletableFuture<Void>> futures = new ArrayList<>();
+                for (String numero : unicos) {
+                    futures.add(CompletableFuture.runAsync(
+                            () -> umPorNumero.put(numero, consultarUm(numero, inicioInstant, fimInstant)),
+                            pool));
+                }
+                CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+            } finally {
+                pool.shutdown();
+                try {
+                    if (!pool.awaitTermination(30, TimeUnit.MINUTES)) {
+                        pool.shutdownNow();
+                    }
+                } catch (InterruptedException e) {
+                    pool.shutdownNow();
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("Interrompido durante consulta DataJud em lote.", e);
+                }
+            }
+        }
+
         List<DatajudProcessoMovimentoDTO> resultados = new ArrayList<>();
         int encontrados = 0;
         int naoEncontrados = 0;
         int erros = 0;
 
         for (String numero : unicos) {
-            UmResult ur = consultarUm(numero, inicioInstant, fimInstant);
+            UmResult ur = umPorNumero.get(numero);
             DatajudProcessoMovimentoDTO linha = ur.dto();
             linha.setProcessoId(idPorNpu.get(numero));
             boolean exibirNaListagem =
@@ -115,6 +153,42 @@ public class DatajudMovimentoConsultaService {
                 .totalErros(erros)
                 .resultados(resultados)
                 .build();
+    }
+
+    /**
+     * Consulta movimentos DataJud para um único processo (NPU com segmento CNJ .8.19. — TJRJ).
+     */
+    public DatajudProcessoMovimentoDTO consultarMovimentosProcesso(Long processId, LocalDate dataInicio) {
+        if (datajudProperties.getKey() == null || datajudProperties.getKey().isBlank()) {
+            throw new IllegalStateException("DATAJUD_API_KEY não configurada no servidor.");
+        }
+
+        LocalDate hoje = LocalDate.now(ZONA_BR);
+        if (dataInicio.isAfter(hoje)) {
+            throw new IllegalArgumentException("A data inicial não pode ser posterior à data atual.");
+        }
+
+        Process process = processRepository
+                .findById(processId)
+                .orElseThrow(() -> new EntityNotFoundException("Processo não encontrado."));
+        String numeroBruto = process.getNumero();
+        if (numeroBruto == null || numeroBruto.isBlank()) {
+            throw new IllegalArgumentException("Processo sem número cadastrado.");
+        }
+        if (!numeroBruto.toLowerCase().contains(".8.19.")) {
+            throw new IllegalArgumentException(
+                    "Consulta DataJud TJRJ disponível apenas para processos com NPU do Rio de Janeiro (segmento .8.19.).");
+        }
+
+        String npu = NpuNormalizer.normalizeNpu(numeroBruto.trim());
+        ZonedDateTime inicioZdt = dataInicio.atStartOfDay(ZONA_BR);
+        Instant inicioInstant = inicioZdt.toInstant();
+        Instant fimInstant = ZonedDateTime.now(ZONA_BR).toInstant();
+
+        UmResult ur = consultarUm(npu, inicioInstant, fimInstant);
+        DatajudProcessoMovimentoDTO dto = ur.dto();
+        dto.setProcessoId(processId);
+        return dto;
     }
 
     private static boolean temMovimentosEmAlgumGrau(DatajudProcessoMovimentoDTO dto) {
