@@ -50,6 +50,8 @@ public class TaskController {
     public ResponseEntity<TaskDTO> update(@PathVariable Long id, @RequestBody TaskRequestDTO request) {
         try {
             return ResponseEntity.ok(taskService.update(id, request));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

@@ -23,6 +23,7 @@ public class ProcessDTO {
     private LocalDateTime distribuidoEm;
     private String tipoProcesso;
     private String status;
+    private String nomeCliente;
     private Long matriculationId;
     private MatriculationDTO matriculation;
     private List<MovimentDTO> moviments;

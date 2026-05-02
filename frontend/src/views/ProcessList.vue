@@ -12,9 +12,8 @@
           <h1>Processos</h1>
         </div>
         <div class="header-actions">
-          <button @click="goToNewProcess" class="btn btn-primary btn-new-process" title="Novo Processo">
-            <span class="btn-text">Novo Processo</span>
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <button type="button" @click="goToNewProcess" class="toolbar-btn toolbar-btn--add" title="Novo Processo" aria-label="Novo Processo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
@@ -36,36 +35,44 @@
           </div>
           
           <div class="filter-group">
-            <label>Comarca</label>
+            <label>Nome do Cliente</label>
             <input 
               type="text" 
-              v-model="filters.comarca" 
+              v-model="filters.nomeCliente" 
               @input="onFilterChange"
-              placeholder="Filtrar por comarca..."
+              placeholder="Buscar por nome do cliente..."
               class="filter-input"
             />
+          </div>
+          
+          <div class="filter-group">
+            <label>Comarca</label>
+            <select v-model="filters.comarca" @change="onFilterChange" class="filter-select">
+              <option value="">Todos</option>
+              <option v-for="c in distinctComarcas" :key="'comarca-' + c" :value="c">
+                {{ c }}
+              </option>
+            </select>
           </div>
           
           <div class="filter-group">
             <label>Vara</label>
-            <input 
-              type="text" 
-              v-model="filters.vara" 
-              @input="onFilterChange"
-              placeholder="Filtrar por vara..."
-              class="filter-input"
-            />
+            <select v-model="filters.vara" @change="onFilterChange" class="filter-select">
+              <option value="">Todos</option>
+              <option v-for="v in distinctVaras" :key="'vara-' + v" :value="v">
+                {{ v }}
+              </option>
+            </select>
           </div>
           
           <div class="filter-group">
             <label>Tema</label>
-            <input 
-              type="text" 
-              v-model="filters.tipoProcesso" 
-              @input="onFilterChange"
-              placeholder="Filtrar por tema..."
-              class="filter-input"
-            />
+            <select v-model="filters.tipoProcesso" @change="onFilterChange" class="filter-select">
+              <option value="">Todos</option>
+              <option v-for="t in distinctTemas" :key="'tema-' + t" :value="t">
+                {{ t }}
+              </option>
+            </select>
           </div>
           
           <div class="filter-group">
@@ -135,7 +142,21 @@
               @click="goToProcessDetails(process.id)"
               class="table-row"
             >
-              <td>{{ process.numero }}</td>
+              <td class="process-numero-cell">
+                <button
+                  type="button"
+                  @click.stop="openProcessInNewTab(process.id)"
+                  class="icon-btn open-tab-btn"
+                  title="Abrir processo em nova aba"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <span>{{ process.numero }}</span>
+              </td>
               <td>{{ getClientName(process) }}</td>
               <td>{{ process.comarca }}</td>
               <td>{{ process.vara }}</td>
@@ -206,7 +227,19 @@
             class="mobile-card"
             @click="goToProcessDetails(process.id)"
           >
-            <div class="card-header">
+            <div class="card-header process-list-card-header">
+              <button
+                type="button"
+                @click.stop="openProcessInNewTab(process.id)"
+                class="icon-btn open-tab-btn"
+                title="Abrir processo em nova aba"
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
               <h3 class="card-title">{{ process.numero }}</h3>
             </div>
             <div class="card-body">
@@ -333,6 +366,9 @@ export default {
       matriculations: [],
       loading: false,
       error: null,
+      distinctComarcas: [],
+      distinctVaras: [],
+      distinctTemas: [],
       distinctStatuses: [],
       editingStatusId: null,
       editingStatus: '',
@@ -341,6 +377,7 @@ export default {
       showArchived: false,
       filters: {
         numero: '',
+        nomeCliente: '',
         comarca: '',
         vara: '',
         tipoProcesso: '',
@@ -366,12 +403,16 @@ export default {
       this.error = null
       try {
         // Carregar clientes e statuses (não paginados)
-        const [clientsData, statusesData] = await Promise.all([
+        const [clientsData, statusesData, filterOptions] = await Promise.all([
           personService.getAll(),
-          processService.getDistinctStatuses()
+          processService.getDistinctStatuses(),
+          processService.getFilterOptions()
         ])
         
         this.clients = Array.isArray(clientsData) ? clientsData : (clientsData.content || [])
+        this.distinctComarcas = Array.isArray(filterOptions.comarcas) ? filterOptions.comarcas : []
+        this.distinctVaras = Array.isArray(filterOptions.varas) ? filterOptions.varas : []
+        this.distinctTemas = Array.isArray(filterOptions.temas) ? filterOptions.temas : []
         this.distinctStatuses = statusesData
         this.statusSuggestions = statusesData
         this.filteredStatusSuggestions = statusesData
@@ -404,6 +445,7 @@ export default {
       try {
         const filters = {
           numero: this.filters.numero.trim() || null,
+          nomeCliente: this.filters.nomeCliente.trim() || null,
           comarca: this.filters.comarca.trim() || null,
           vara: this.filters.vara.trim() || null,
           tipoProcesso: this.filters.tipoProcesso.trim() || null,
@@ -483,6 +525,13 @@ export default {
     goToProcessDetails(id) {
       this.$router.push(`/processes/${id}`)
     },
+    openProcessInNewTab(id) {
+      const { href } = this.$router.resolve({
+        name: 'ProcessDetails',
+        params: { id: String(id) }
+      })
+      window.open(href, '_blank', 'noopener,noreferrer')
+    },
     goToNewProcess() {
       this.$router.push('/processes/new')
     },
@@ -492,6 +541,7 @@ export default {
     clearFilters() {
       this.filters = {
         numero: '',
+        nomeCliente: '',
         comarca: '',
         vara: '',
         tipoProcesso: '',
@@ -566,6 +616,36 @@ export default {
 /* Estilos específicos do componente ProcessList */
 .process-list {
   padding: 2rem;
+}
+
+.process-numero-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.process-numero-cell .open-tab-btn {
+  flex-shrink: 0;
+}
+
+.process-list-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.process-list-card-header .card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.open-tab-btn {
+  color: #003d7a;
+}
+
+.open-tab-btn:hover {
+  background-color: #e6f2ff;
+  color: #002855;
 }
 
 .card-title {

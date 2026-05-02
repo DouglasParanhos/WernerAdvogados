@@ -12,7 +12,7 @@
           <button @click="goBack" class="btn btn-secondary">← Voltar</button>
         </div>
         <div class="header-actions">
-          <button @click="openClientDocumentModal" class="icon-btn document-btn" title="Gerar Documento do Cliente">
+          <button @click="openClientDocumentModal" class="toolbar-btn toolbar-btn--document" title="Gerar Documento do Cliente">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -20,26 +20,24 @@
               <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
-          <div class="action-buttons">
-            <button @click="openLoginModal" class="icon-btn login-btn" title="Configurar Login">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <button @click="goToEdit" class="icon-btn edit-btn" title="Editar cliente">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <button @click="deleteClient" class="icon-btn delete-btn" title="Excluir cliente">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
+          <button @click="openLoginModal" class="toolbar-btn toolbar-btn--login" title="Configurar Login">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button @click="goToEdit" class="toolbar-btn toolbar-btn--edit" title="Editar cliente">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button @click="deleteClient" class="toolbar-btn toolbar-btn--danger" title="Excluir cliente">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
       </div>
       
@@ -172,10 +170,24 @@
                 :class="{ 'archived-process': isArchived(process) }"
               >
                 <div class="process-header">
-                  <strong @click="goToProcessDetails(process.id)" class="process-link">{{ process.numero }}</strong>
+                  <div class="process-numero-row">
+                    <button
+                      type="button"
+                      @click.stop="openProcessInNewTab(process.id)"
+                      class="icon-btn open-tab-btn"
+                      title="Abrir processo em nova aba"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <strong @click="goToProcessDetails(process.id)" class="process-link">{{ process.numero }}</strong>
+                  </div>
                   <div class="process-actions">
                     <button @click.stop="openDocumentModal(process)" class="icon-btn document-btn" title="Gerar Documento">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">r
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -353,6 +365,14 @@ export default {
     },
     goToProcessDetails(id) {
       this.$router.push({ path: `/processes/${id}`, query: { from: 'client' } })
+    },
+    openProcessInNewTab(id) {
+      const { href } = this.$router.resolve({
+        name: 'ProcessDetails',
+        params: { id: String(id) },
+        query: { from: 'client' }
+      })
+      window.open(href, '_blank', 'noopener,noreferrer')
     },
     goToEditProcess(id) {
       this.$router.push(`/processes/${id}/edit`)
@@ -620,50 +640,6 @@ export default {
   align-items: center;
 }
 
-.icon-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0.375rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  border-radius: 4px;
-}
-
-.icon-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.login-btn {
-  color: #007bff;
-}
-
-.login-btn:hover {
-  background-color: #f0f8ff;
-  color: #0056b3;
-}
-
-.edit-btn {
-  color: #6c757d;
-}
-
-.edit-btn:hover {
-  background-color: #f8f9fa;
-  color: #495057;
-}
-
-.delete-btn {
-  color: #dc3545;
-}
-
-.delete-btn:hover {
-  background-color: #fff5f5;
-  color: #c82333;
-}
-
 .document-btn {
   color: #003d7a;
 }
@@ -686,6 +662,26 @@ export default {
 .btn-new-process-plus svg {
   width: 24px;
   height: 24px;
+}
+
+.process-numero-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.process-numero-row .open-tab-btn {
+  flex-shrink: 0;
+}
+
+.open-tab-btn {
+  color: #003d7a;
+}
+
+.open-tab-btn:hover {
+  background-color: #e6f2ff;
+  color: #002855;
 }
 
 .process-header {

@@ -32,7 +32,7 @@
               <option value="ADMINISTRATIVO">Administrativo</option>
             </select>
           </div>
-          <button @click="showNewTaskModal = true" class="btn-icon-add" title="Nova Tarefa">
+          <button type="button" @click="openNewTaskModal" class="toolbar-btn toolbar-btn--add" title="Nova Tarefa">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
               <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -76,7 +76,7 @@
           
           <div class="tasks-list" :class="{ 'collapsed': isColumnCollapsed(column.status) }">
             <div
-              v-for="task in getTasksByStatus(column.status)"
+              v-for="task in getVisibleTasksByStatus(column.status)"
               :key="task.id"
               class="task-card"
               :class="getTaskColorClass(task.tipoTarefa)"
@@ -85,108 +85,119 @@
               @click="openEditTaskModal(task)"
             >
               <div class="task-header">
-                <span class="task-type-badge" :style="{ backgroundColor: getTaskTypeColor(task.tipoTarefa) }">
-                  {{ getTaskTypeLabel(task.tipoTarefa) }}
-                </span>
+                <div class="task-header-left">
+                  <span class="task-type-badge" :style="{ backgroundColor: getTaskTypeColor(task.tipoTarefa) }">
+                    {{ getTaskTypeLabel(task.tipoTarefa) }}
+                  </span>
+                  <span
+                    class="task-type-badge"
+                    :style="{ backgroundColor: getResponsavelColor(task.responsavel) }"
+                  >{{ task.responsavel }}</span>
+                  <span v-if="formatPrazoParaCard(task.prazoFinal)" class="task-prazo-inline">{{ formatPrazoParaCard(task.prazoFinal) }}</span>
+                </div>
                 <button @click.stop="deleteTask(task.id)" class="task-delete-btn" title="Excluir tarefa">
                   ×
                 </button>
               </div>
               <h3 class="task-title">{{ task.titulo }}</h3>
+              <p v-if="task.processNumero" class="task-process-numero">{{ task.processNumero }}</p>
               <p v-if="task.descricao" class="task-description">{{ task.descricao }}</p>
-              <div class="task-footer">
-                <span class="task-responsavel">{{ task.responsavel }}</span>
-              </div>
             </div>
+          </div>
+
+          <div
+            v-show="!isColumnCollapsed(column.status)"
+            class="column-pagination"
+          >
+            <div class="filter-group column-page-size">
+              <label :for="'exibir-' + column.status">Exibir:</label>
+              <select
+                :id="'exibir-' + column.status"
+                v-model="columnDisplayLimit[column.status]"
+                class="filter-select column-page-select"
+                @change="onColumnPageSizeChange(column.status)"
+              >
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="all">Todas</option>
+              </select>
+            </div>
+            <div
+              v-if="getColumnTotalPages(column.status) > 1"
+              class="column-page-nav"
+            >
+              <button
+                type="button"
+                class="column-page-btn"
+                :disabled="isColumnPaginationFirst(column.status)"
+                @click="columnPagePrev(column.status)"
+              >
+                Anterior
+              </button>
+              <span class="column-page-indicator">
+                {{ getColumnPaginationLabel(column.status) }}
+              </span>
+              <button
+                type="button"
+                class="column-page-btn"
+                :disabled="isColumnPaginationLast(column.status)"
+                @click="columnPageNext(column.status)"
+              >
+                Seguinte
+              </button>
+            </div>
+            <p
+              v-if="getColumnPaginationHint(column.status)"
+              class="column-pagination-hint"
+            >
+              {{ getColumnPaginationHint(column.status) }}
+            </p>
           </div>
         </div>
       </div>
-      
-      <!-- Modal Nova/Editar Tarefa -->
-      <div v-if="showNewTaskModal || showEditTaskModal" class="modal-overlay" @click="closeModal">
-        <div class="modal-content" @click.stop>
-          <h2>{{ showEditTaskModal ? 'Editar Tarefa' : 'Nova Tarefa' }}</h2>
-          <form @submit.prevent="saveTask">
-            <div class="form-group">
-              <label>Título *</label>
-              <input v-model="taskForm.titulo" type="text" required />
-            </div>
-            
-            <div class="form-group">
-              <label>Descrição</label>
-              <textarea v-model="taskForm.descricao" rows="3"></textarea>
-            </div>
-            
-            <div class="form-group">
-              <label>Tipo de Tarefa *</label>
-              <select v-model="taskForm.tipoTarefa" required>
-                <option value="">Selecione...</option>
-                <option value="PRESENCIAL">Presencial / Diligência</option>
-                <option value="COMUNICAR_CLIENTE">Comunicar com Cliente</option>
-                <option value="ESCRITA_PECA">Escrita de Peça</option>
-                <option value="PRAZO">Prazo</option>
-                <option value="ADMINISTRATIVO">Administrativo</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label>Status *</label>
-              <select v-model="taskForm.status" required>
-                <option value="PARA_INICIAR">Para Iniciar</option>
-                <option value="EM_ANDAMENTO">Em Andamento</option>
-                <option value="COMPLETA">Completa</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label>Responsável *</label>
-              <select v-model="taskForm.responsavel" required>
-                <option value="">Selecione...</option>
-                <option value="Liz">Liz</option>
-                <option value="Angelo">Angelo</option>
-                <option value="Thiago">Thiago</option>
-              </select>
-            </div>
-            
-            <div class="modal-actions">
-              <button type="button" @click="closeModal" class="btn btn-secondary">Cancelar</button>
-              <button type="submit" class="btn btn-primary">Salvar</button>
-            </div>
-          </form>
-        </div>
-      </div>
+
+      <TaskFormModal
+        v-model="taskModalOpen"
+        :task-for-edit="modalEditingTask"
+        @saved="loadTasks"
+      />
     </div>
   </div>
 </template>
 
 <script>
 import { taskService } from '../services/taskService'
+import TaskFormModal from '../components/TaskFormModal.vue'
 
 export default {
   name: 'Tasks',
+  components: { TaskFormModal },
   data() {
     return {
       tasks: [],
       loading: false,
       error: null,
-      showNewTaskModal: false,
-      showEditTaskModal: false,
+      taskModalOpen: false,
+      modalEditingTask: null,
       draggedTask: null,
       filterResponsavel: '',
       filterTipoTarefa: '',
-      taskForm: {
-        id: null,
-        titulo: '',
-        descricao: '',
-        tipoTarefa: '',
-        status: 'PARA_INICIAR',
-        responsavel: ''
-      },
       columns: [
         { status: 'PARA_INICIAR', title: 'Para Iniciar', color: '#e2e8f0' },
         { status: 'EM_ANDAMENTO', title: 'Em Andamento', color: '#dbeafe' },
         { status: 'COMPLETA', title: 'Completa', color: '#d1fae5' }
       ],
+      columnDisplayLimit: {
+        PARA_INICIAR: '10',
+        EM_ANDAMENTO: '10',
+        COMPLETA: '10'
+      },
+      columnPageIndex: {
+        PARA_INICIAR: 0,
+        EM_ANDAMENTO: 0,
+        COMPLETA: 0
+      },
       collapsedColumns: new Set(),
       isMobile: false
     }
@@ -205,6 +216,20 @@ export default {
   beforeUnmount() {
     window.removeEventListener('resize', this.checkMobile)
   },
+  watch: {
+    taskModalOpen(val) {
+      if (!val) this.modalEditingTask = null
+    },
+    filterResponsavel() {
+      this.resetAllColumnPages()
+    },
+    filterTipoTarefa() {
+      this.resetAllColumnPages()
+    },
+    tasks() {
+      this.$nextTick(() => this.clampAllColumnPages())
+    }
+  },
   methods: {
     async loadTasks() {
       this.loading = true
@@ -216,6 +241,7 @@ export default {
         console.error(err)
       } finally {
         this.loading = false
+        this.$nextTick(() => this.clampAllColumnPages())
       }
     },
     getTasksByStatus(status) {
@@ -227,6 +253,105 @@ export default {
           return matchesStatus && matchesResponsavel && matchesTipoTarefa
         })
         .sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+    },
+    getDisplayLimitForStatus(status) {
+      const raw = this.columnDisplayLimit[status]
+      if (raw === 'all' || raw == null || raw === '') return null
+      const n = parseInt(String(raw), 10)
+      return Number.isFinite(n) && n > 0 ? n : null
+    },
+    resetAllColumnPages() {
+      this.columnPageIndex = {
+        PARA_INICIAR: 0,
+        EM_ANDAMENTO: 0,
+        COMPLETA: 0
+      }
+    },
+    getClampedColumnPage(status) {
+      const full = this.getTasksByStatus(status)
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) return 0
+      const totalPages = Math.max(1, Math.ceil(full.length / limit))
+      let idx = this.columnPageIndex[status]
+      if (idx == null || idx < 0) idx = 0
+      return Math.min(idx, totalPages - 1)
+    },
+    clampColumnPage(status) {
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) {
+        this.columnPageIndex[status] = 0
+        return
+      }
+      this.columnPageIndex[status] = this.getClampedColumnPage(status)
+    },
+    clampAllColumnPages() {
+      this.columns.forEach(col => this.clampColumnPage(col.status))
+    },
+    getColumnTotalPages(status) {
+      const full = this.getTasksByStatus(status)
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) return 1
+      return Math.max(1, Math.ceil(full.length / limit))
+    },
+    isColumnPaginationFirst(status) {
+      return this.getClampedColumnPage(status) <= 0
+    },
+    isColumnPaginationLast(status) {
+      const last = this.getColumnTotalPages(status) - 1
+      return this.getClampedColumnPage(status) >= last
+    },
+    columnPagePrev(status) {
+      const clamped = this.getClampedColumnPage(status)
+      if (clamped > 0) this.columnPageIndex[status] = clamped - 1
+    },
+    columnPageNext(status) {
+      const clamped = this.getClampedColumnPage(status)
+      const last = this.getColumnTotalPages(status) - 1
+      if (clamped < last) this.columnPageIndex[status] = clamped + 1
+    },
+    getColumnPaginationLabel(status) {
+      const p = this.getClampedColumnPage(status) + 1
+      const total = this.getColumnTotalPages(status)
+      return `${p} / ${total}`
+    },
+    onColumnPageSizeChange(status) {
+      this.columnPageIndex[status] = 0
+    },
+    getVisibleTasksByStatus(status) {
+      const full = this.getTasksByStatus(status)
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) return full
+      const page = this.getClampedColumnPage(status)
+      const start = page * limit
+      return full.slice(start, start + limit)
+    },
+    getColumnPaginationHint(status) {
+      const full = this.getTasksByStatus(status)
+      const total = full.length
+      if (total === 0) return ''
+      const limit = this.getDisplayLimitForStatus(status)
+      if (limit == null) {
+        return ''
+      }
+      const visible = this.getVisibleTasksByStatus(status).length
+      const page = this.getClampedColumnPage(status)
+      const start = page * limit + 1
+      const end = page * limit + visible
+      const totalPages = this.getColumnTotalPages(status)
+      if (totalPages <= 1) {
+        return ''
+      }
+      return `Mostrando ${start}–${end} de ${total}`
+    },
+    formatPrazoParaCard(isoDate) {
+      if (isoDate == null || isoDate === '') return ''
+      const s = String(isoDate).trim()
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s)
+      if (m) {
+        const [, y, mo, d] = m
+        return `${d}/${mo}/${y}`
+      }
+      return s
     },
     getTaskTypeColor(tipo) {
       const colors = {
@@ -251,6 +376,15 @@ export default {
     getTaskColorClass(tipo) {
       return `task-${tipo.toLowerCase()}`
     },
+    getResponsavelColor(nome) {
+      if (!nome) return '#6b7280'
+      const colors = {
+        Liz: '#db2777',
+        Angelo: '#a16207',
+        Thiago: '#0a0a0a'
+      }
+      return colors[nome] || '#6b7280'
+    },
     onDragStart(event, task) {
       this.draggedTask = task
       event.dataTransfer.effectAllowed = 'move'
@@ -271,7 +405,8 @@ export default {
         await taskService.update(this.draggedTask.id, {
           ...this.draggedTask,
           status: newStatus,
-          ordem: newOrder
+          ordem: newOrder,
+          processId: this.draggedTask.processId ?? null
         })
         
         await this.loadTasks()
@@ -281,41 +416,13 @@ export default {
         this.draggedTask = null
       }
     },
+    openNewTaskModal() {
+      this.modalEditingTask = null
+      this.taskModalOpen = true
+    },
     openEditTaskModal(task) {
-      this.taskForm = {
-        id: task.id,
-        titulo: task.titulo,
-        descricao: task.descricao || '',
-        tipoTarefa: task.tipoTarefa,
-        status: task.status,
-        responsavel: task.responsavel
-      }
-      this.showEditTaskModal = true
-    },
-    closeModal() {
-      this.showNewTaskModal = false
-      this.showEditTaskModal = false
-      this.taskForm = {
-        id: null,
-        titulo: '',
-        descricao: '',
-        tipoTarefa: '',
-        status: 'PARA_INICIAR',
-        responsavel: ''
-      }
-    },
-    async saveTask() {
-      try {
-        if (this.taskForm.id) {
-          await taskService.update(this.taskForm.id, this.taskForm)
-        } else {
-          await taskService.create(this.taskForm)
-        }
-        await this.loadTasks()
-        this.closeModal()
-      } catch (err) {
-        alert('Erro ao salvar tarefa: ' + (err.response?.data?.message || err.message))
-      }
+      this.modalEditingTask = task
+      this.taskModalOpen = true
     },
     async deleteTask(id) {
       if (!confirm('Tem certeza que deseja excluir esta tarefa?')) {
@@ -373,36 +480,6 @@ export default {
 }
 
 .btn-home svg {
-  width: 24px;
-  height: 24px;
-}
-
-.btn-icon-add {
-  background: #003d7a;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 61, 122, 0.2);
-}
-
-.btn-icon-add:hover {
-  background: #002d5a;
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 61, 122, 0.3);
-}
-
-.btn-icon-add:active {
-  transform: scale(0.95);
-}
-
-.btn-icon-add svg {
   width: 24px;
   height: 24px;
 }
@@ -497,6 +574,80 @@ export default {
   overflow: hidden;
 }
 
+.column-pagination {
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.column-pagination .column-page-size {
+  margin: 0;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.column-pagination .column-page-size label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.column-page-select {
+  width: auto;
+  min-width: 5rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.875rem;
+}
+
+.column-page-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.column-page-btn {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #003d7a;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.column-page-btn:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.column-page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.column-page-indicator {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #4a5568;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.column-pagination-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
 .task-card {
   background: white;
   border-radius: 6px;
@@ -534,7 +685,16 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.task-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .task-type-badge {
@@ -543,6 +703,13 @@ export default {
   font-size: 0.75rem;
   font-weight: 600;
   color: white;
+}
+
+.task-prazo-inline {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  white-space: nowrap;
 }
 
 .task-delete-btn {
@@ -571,87 +738,20 @@ export default {
   margin: 0 0 0.5rem 0;
 }
 
+.task-process-numero {
+  font-size: 0.8125rem;
+  color: #003d7a;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
 .task-description {
   font-size: 0.875rem;
   color: #6b7280;
   margin: 0 0 0.75rem 0;
   line-height: 1.4;
-}
-
-.task-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.task-responsavel {
-  font-size: 0.875rem;
-  color: #4a5568;
-  font-weight: 500;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 8px;
-  padding: 2rem;
-  max-width: 500px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-content h2 {
-  margin: 0 0 1.5rem 0;
-  color: #1a1a1a;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #4a5568;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #003d7a;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 2rem;
 }
 
 @media (max-width: 1024px) {

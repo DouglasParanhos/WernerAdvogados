@@ -7,6 +7,7 @@ export const processService = {
     if (page !== null) params.page = page
     if (size !== null) params.size = size
     if (filters.numero) params.numero = filters.numero
+    if (filters.nomeCliente) params.nomeCliente = filters.nomeCliente
     if (filters.comarca) params.comarca = filters.comarca
     if (filters.vara) params.vara = filters.vara
     if (filters.tipoProcesso) params.tipoProcesso = filters.tipoProcesso
@@ -42,6 +43,11 @@ export const processService = {
   
   async getDistinctStatuses() {
     const response = await api.get('/processes/status/distinct')
+    return response.data
+  },
+
+  async getFilterOptions() {
+    const response = await api.get('/processes/filters/options')
     return response.data
   }
 }

@@ -12,11 +12,18 @@
           <button @click="goBack" class="btn btn-secondary">← Voltar</button>
         </div>
         <h1>Estatísticas</h1>
-        <div @click="!loading && !isProcessing && updateAllData()" class="refresh-icon" :class="{ 'disabled': loading || isProcessing }" title="Atualizar dados">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :class="{ 'rotating': loading || isProcessing }">
+        <button
+          type="button"
+          class="toolbar-btn toolbar-btn--refresh"
+          title="Atualizar dados"
+          aria-label="Atualizar dados"
+          :disabled="loading || isProcessing"
+          @click="updateAllData()"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :class="{ spinning: loading || isProcessing }">
             <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
           </svg>
-        </div>
+        </button>
       </div>
       
       <div v-if="loading" class="loading">Carregando estatísticas...</div>
@@ -730,47 +737,8 @@ export default {
   height: 20px;
 }
 
-.refresh-icon {
+.header .toolbar-btn--refresh {
   margin-left: auto;
-  cursor: pointer;
-  color: #5a7ba8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem;
-  border-radius: 4px;
-  transition: color 0.2s, transform 0.2s;
-}
-
-.refresh-icon:hover:not(.disabled) {
-  color: #4a6b98;
-  transform: scale(1.1);
-}
-
-.refresh-icon.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.refresh-icon svg {
-  transition: transform 0.3s ease;
-}
-
-.refresh-icon:hover:not(.disabled) svg:not(.rotating) {
-  transform: rotate(90deg);
-}
-
-.refresh-icon svg.rotating {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .header h1 {

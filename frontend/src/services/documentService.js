@@ -1,5 +1,18 @@
 import api from './api'
 
+/**
+ * Extrai o nome do ficheiro do header Content-Disposition sem capturar a aspa final
+ * (evita `*.docx"` no Windows, que sanitiza para `*.docx_`).
+ */
+function filenameFromContentDisposition(contentDisposition) {
+  if (!contentDisposition) return null
+  const fileNameMatch = contentDisposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i)
+  if (fileNameMatch && fileNameMatch[1]) {
+    return fileNameMatch[1].replace(/^"+|"+$/g, '').trim()
+  }
+  return null
+}
+
 export const documentService = {
   /**
    * Busca templates disponíveis para um processo
@@ -37,9 +50,9 @@ export const documentService = {
       let fileName = templateName.replace('.docx', '') + '_gerado.docx'
       
       if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/i)
-        if (fileNameMatch && fileNameMatch[1]) {
-          fileName = fileNameMatch[1]
+        const extracted = filenameFromContentDisposition(contentDisposition)
+        if (extracted) {
+          fileName = extracted
         }
       }
       
@@ -94,9 +107,9 @@ export const documentService = {
       let fileName = templateName.replace('.docx', '') + '_gerado.docx'
       
       if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/i)
-        if (fileNameMatch && fileNameMatch[1]) {
-          fileName = fileNameMatch[1]
+        const extracted = filenameFromContentDisposition(contentDisposition)
+        if (extracted) {
+          fileName = extracted
         }
       }
       

@@ -1,11 +1,13 @@
 package com.wa.service;
 
+import com.wa.dto.GeneratedDocument;
 import com.wa.model.Address;
 import com.wa.model.Matriculation;
 import com.wa.model.Person;
 import com.wa.model.Process;
 import com.wa.repository.PersonRepository;
 import com.wa.repository.ProcessRepository;
+import com.wa.util.GeneratedDocumentFileNameBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -38,7 +40,7 @@ public class WordDocumentService {
     /**
      * Gera um documento Word preenchendo o template com dados do processo
      */
-    public byte[] generateDocument(Long processId, String templateName) throws IOException {
+    public GeneratedDocument generateDocument(Long processId, String templateName) throws IOException {
         // Buscar processo com todos os relacionamentos necessários
         Process process = processRepository.findByIdWithRelations(processId)
                 .orElseThrow(() -> new RuntimeException("Processo não encontrado com ID: " + processId));
@@ -77,7 +79,9 @@ public class WordDocumentService {
             
             // Salvar documento em byte array
             document.write(outputStream);
-            return outputStream.toByteArray();
+            byte[] bytes = outputStream.toByteArray();
+            String fileName = GeneratedDocumentFileNameBuilder.buildForProcess(templateName, process) + ".docx";
+            return new GeneratedDocument(bytes, fileName);
         }
     }
     
@@ -246,7 +250,7 @@ public class WordDocumentService {
     /**
      * Gera um documento Word preenchendo o template com dados do cliente (pessoa)
      */
-    public byte[] generateDocumentForClient(Long personId, String templateName) throws IOException {
+    public GeneratedDocument generateDocumentForClient(Long personId, String templateName) throws IOException {
         // Buscar pessoa com todos os relacionamentos necessários
         Person person = personRepository.findByIdWithRelations(personId)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + personId));
@@ -285,7 +289,9 @@ public class WordDocumentService {
             
             // Salvar documento em byte array
             document.write(outputStream);
-            return outputStream.toByteArray();
+            byte[] bytes = outputStream.toByteArray();
+            String fileName = GeneratedDocumentFileNameBuilder.buildForClient(templateName, person) + ".docx";
+            return new GeneratedDocument(bytes, fileName);
         }
     }
     

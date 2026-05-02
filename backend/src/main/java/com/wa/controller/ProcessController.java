@@ -2,6 +2,7 @@ package com.wa.controller;
 
 import com.wa.annotation.RequiresNonClient;
 import com.wa.dto.ProcessDTO;
+import com.wa.dto.ProcessFilterOptionsDTO;
 import com.wa.dto.ProcessRequestDTO;
 import com.wa.service.ProcessService;
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ public class ProcessController {
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String numero,
+            @RequestParam(required = false) String nomeCliente,
             @RequestParam(required = false) String comarca,
             @RequestParam(required = false) String vara,
             @RequestParam(required = false) String tipoProcesso,
@@ -45,13 +47,19 @@ public class ProcessController {
             Pageable pageable = PageRequest.of(pageNumber, pageSize);
             Boolean showArchivedValue = showArchived != null ? showArchived : false;
             Page<ProcessDTO> result = processService.findAllPaginated(
-                    numero, comarca, vara, tipoProcesso, status, showArchivedValue, pageable);
+                    numero, nomeCliente, comarca, vara, tipoProcesso, status, showArchivedValue, pageable);
             return ResponseEntity.ok(result);
         }
         // Caso contrário, retornar lista completa (compatibilidade)
         return ResponseEntity.ok(processService.findAll());
     }
     
+    @GetMapping("/filters/options")
+    @RequiresNonClient
+    public ResponseEntity<ProcessFilterOptionsDTO> getFilterOptions() {
+        return ResponseEntity.ok(processService.getFilterOptions());
+    }
+
     @GetMapping("/{id}")
     @RequiresNonClient
     public ResponseEntity<ProcessDTO> findById(@PathVariable Long id) {

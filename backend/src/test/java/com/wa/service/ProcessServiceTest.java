@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -87,19 +88,19 @@ class ProcessServiceTest {
         Page<Process> page = new PageImpl<>(processes, pageable, 3);
 
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(page);
 
         // Act
         Page<ProcessDTO> result = processService.findAllPaginated(
-                null, null, null, null, null, false, pageable);
+                null, null, null, null, null, null, false, pageable);
 
         // Assert
         assertNotNull(result);
         assertEquals(3, result.getTotalElements());
         assertEquals(3, result.getContent().size());
         verify(processRepository, times(1)).findAllWithRelationsPaginated(
-                null, null, null, null, null, false, pageable);
+                null, null, null, null, null, null, false, pageable);
     }
 
     @Test
@@ -111,12 +112,12 @@ class ProcessServiceTest {
         Page<Process> page = new PageImpl<>(filteredProcesses, pageable, 1);
 
         when(processRepository.findAllWithRelationsPaginated(
-                eq(numero), isNull(), isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
+                eq(numero), isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(page);
 
         // Act
         Page<ProcessDTO> result = processService.findAllPaginated(
-                numero, null, null, null, null, false, pageable);
+                numero, null, null, null, null, null, false, pageable);
 
         // Assert
         assertNotNull(result);
@@ -134,12 +135,12 @@ class ProcessServiceTest {
         Page<Process> page = new PageImpl<>(filteredProcesses, pageable, 2);
 
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), eq(comarca), isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
+                isNull(), isNull(), eq(comarca), isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(page);
 
         // Act
         Page<ProcessDTO> result = processService.findAllPaginated(
-                null, comarca, null, null, null, false, pageable);
+                null, null, comarca, null, null, null, false, pageable);
 
         // Assert
         assertNotNull(result);
@@ -156,12 +157,12 @@ class ProcessServiceTest {
         Page<Process> page = new PageImpl<>(filteredProcesses, pageable, 1);
 
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), isNull(), isNull(), isNull(), eq(status), eq(false), any(Pageable.class)))
+                isNull(), isNull(), isNull(), isNull(), isNull(), eq(status), eq(false), any(Pageable.class)))
                 .thenReturn(page);
 
         // Act
         Page<ProcessDTO> result = processService.findAllPaginated(
-                null, null, null, null, status, false, pageable);
+                null, null, null, null, null, status, false, pageable);
 
         // Assert
         assertNotNull(result);
@@ -177,18 +178,18 @@ class ProcessServiceTest {
         Page<Process> page = new PageImpl<>(allProcesses, pageable, 3);
 
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), isNull(), isNull(), isNull(), isNull(), eq(true), any(Pageable.class)))
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(true), any(Pageable.class)))
                 .thenReturn(page);
 
         // Act
         Page<ProcessDTO> result = processService.findAllPaginated(
-                null, null, null, null, null, true, pageable);
+                null, null, null, null, null, null, true, pageable);
 
         // Assert
         assertNotNull(result);
         assertEquals(3, result.getTotalElements());
         verify(processRepository, times(1)).findAllWithRelationsPaginated(
-                null, null, null, null, null, true, pageable);
+                null, null, null, null, null, null, true, pageable);
     }
 
     @Test
@@ -201,12 +202,12 @@ class ProcessServiceTest {
         Page<Process> page = new PageImpl<>(filteredProcesses, pageable, 1);
 
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), eq(comarca), isNull(), eq(tipoProcesso), isNull(), eq(false), any(Pageable.class)))
+                isNull(), isNull(), eq(comarca), isNull(), eq(tipoProcesso), isNull(), eq(false), any(Pageable.class)))
                 .thenReturn(page);
 
         // Act
         Page<ProcessDTO> result = processService.findAllPaginated(
-                null, comarca, null, tipoProcesso, null, false, pageable);
+                null, null, comarca, null, tipoProcesso, null, false, pageable);
 
         // Assert
         assertNotNull(result);
@@ -226,17 +227,17 @@ class ProcessServiceTest {
         Page<Process> page2 = new PageImpl<>(page2Processes, pageable2, 3);
 
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable1)))
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable1)))
                 .thenReturn(page1);
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable2)))
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable2)))
                 .thenReturn(page2);
 
         // Act
         Page<ProcessDTO> result1 = processService.findAllPaginated(
-                null, null, null, null, null, false, pageable1);
+                null, null, null, null, null, null, false, pageable1);
         Page<ProcessDTO> result2 = processService.findAllPaginated(
-                null, null, null, null, null, false, pageable2);
+                null, null, null, null, null, null, false, pageable2);
 
         // Assert
         assertEquals(2, result1.getContent().size());
@@ -257,22 +258,22 @@ class ProcessServiceTest {
         Page<Process> page100 = new PageImpl<>(processes, pageable100, 3);
 
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable10)))
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable10)))
                 .thenReturn(page10);
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable50)))
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable50)))
                 .thenReturn(page50);
         when(processRepository.findAllWithRelationsPaginated(
-                isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable100)))
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(false), eq(pageable100)))
                 .thenReturn(page100);
 
         // Act
         Page<ProcessDTO> result10 = processService.findAllPaginated(
-                null, null, null, null, null, false, pageable10);
+                null, null, null, null, null, null, false, pageable10);
         Page<ProcessDTO> result50 = processService.findAllPaginated(
-                null, null, null, null, null, false, pageable50);
+                null, null, null, null, null, null, false, pageable50);
         Page<ProcessDTO> result100 = processService.findAllPaginated(
-                null, null, null, null, null, false, pageable100);
+                null, null, null, null, null, null, false, pageable100);
 
         // Assert
         assertEquals(10, result10.getSize());
@@ -281,6 +282,39 @@ class ProcessServiceTest {
         assertEquals(3, result10.getTotalElements());
         assertEquals(3, result50.getTotalElements());
         assertEquals(3, result100.getTotalElements());
+    }
+
+    @Test
+    void testFindAllPaginated_WithNomeClienteFilter_ReturnsFilteredResults() {
+        String nomeCliente = "João";
+        List<Process> filteredProcesses = List.of(process1);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Process> page = new PageImpl<>(filteredProcesses, pageable, 1);
+
+        when(processRepository.findAllWithRelationsPaginated(
+                isNull(), eq(nomeCliente), isNull(), isNull(), isNull(), isNull(), eq(false), any(Pageable.class)))
+                .thenReturn(page);
+
+        Page<ProcessDTO> result = processService.findAllPaginated(
+                null, nomeCliente, null, null, null, null, false, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("João Silva", result.getContent().get(0).getNomeCliente());
+        verify(processRepository, times(1)).findAllWithRelationsPaginated(
+                null, nomeCliente, null, null, null, null, false, pageable);
+    }
+
+    @Test
+    void testFindById_ReturnsNomeClienteFromPerson() {
+        when(processRepository.findByIdWithMoviments(1L)).thenReturn(Optional.of(process1));
+
+        ProcessDTO dto = processService.findById(1L);
+
+        assertNotNull(dto);
+        assertEquals("João Silva", dto.getNomeCliente());
+        assertEquals(1L, dto.getMatriculationId());
+        verify(processRepository, times(1)).findByIdWithMoviments(1L);
     }
 }
 

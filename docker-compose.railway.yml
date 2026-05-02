@@ -35,6 +35,8 @@ services:
       - "8081"
 
   frontend:
+    # Nginx proxy para /api: PROXY_API_TIMEOUT default 600s (frontend/docker-entrypoint.sh).
+    # Limite na borda Railway para HTTP longo ~15 min: https://docs.railway.com/reference/public-networking
     build:
       context: ./frontend
       dockerfile: Dockerfile
