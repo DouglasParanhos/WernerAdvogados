@@ -149,6 +149,26 @@
           <h2>Cálculos</h2>
           <p>Gerar cálculos judiciais e planilhas</p>
         </button>
+
+        <button type="button" @click="goToDatajudMovimentos" class="menu-card movimentos-datajud-card">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23 4v6h-6" stroke="url(#iconGradientMov)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20.49 9a9 9 0 0 0-14.23-4.36L1 10" stroke="url(#iconGradientMov)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M1 20v-6h6" stroke="url(#iconGradientMov)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.51 15a9 9 0 0 0 14.23 4.36L23 14" stroke="url(#iconGradientMov)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="iconGradientMov" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#003d7a;stop-opacity:1" />
+                  <stop offset="50%" style="stop-color:#5a7ba8;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#9db4d4;stop-opacity:1" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h2>Movimentos</h2>
+          <p>Atualizações no DataJud (processos TJRJ)</p>
+        </button>
       </div>
     </div>
   </div>
@@ -180,6 +200,9 @@ export default {
     },
     goToCalculations() {
       this.$router.push('/calculations')
+    },
+    goToDatajudMovimentos() {
+      this.$router.push('/movimentos-datajud')
     }
   }
 }

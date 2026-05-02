@@ -19,6 +19,7 @@ import Statistics from '../views/Statistics.vue'
 import Calculations from '../views/Calculations.vue'
 import NovaEscolaCalculation from '../views/NovaEscolaCalculation.vue'
 import ClientMoviments from '../views/ClientMoviments.vue'
+import DatajudMovimentos from '../views/DatajudMovimentos.vue'
 
 const routes = [
   // Public routes with PublicLayout
@@ -142,6 +143,12 @@ const routes = [
     path: '/calculations/novaescola',
     name: 'NovaEscolaCalculation',
     component: NovaEscolaCalculation,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/movimentos-datajud',
+    name: 'DatajudMovimentos',
+    component: DatajudMovimentos,
     meta: { requiresAuth: true }
   },
   {
