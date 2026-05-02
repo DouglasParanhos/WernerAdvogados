@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -190,6 +191,8 @@ public class DocumentTemplateService {
                              template.getFileName(), template.getType(), normalizedType, matches);
                     return matches;
                 })
+                .sorted(Comparator.comparing(DocumentTemplateDTO::getName,
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
                 .toList();
         
         log.debug("Encontrados {} templates para o tipo '{}' (de {} templates totais)", 
@@ -484,6 +487,8 @@ public class DocumentTemplateService {
                              template.getFileName(), template.getCategory(), normalizedCategory, matches);
                     return matches;
                 })
+                .sorted(Comparator.comparing(DocumentTemplateDTO::getName,
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
                 .toList();
         
         log.debug("Encontrados {} templates para a categoria '{}' (de {} templates totais)", 
