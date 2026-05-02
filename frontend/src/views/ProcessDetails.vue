@@ -15,7 +15,7 @@
           <button
             type="button"
             @click="refreshDatajudMovimentos"
-            class="btn-icon-refresh"
+            class="toolbar-btn toolbar-btn--refresh"
             title="Atualizar movimentos DataJud"
             aria-label="Atualizar movimentos DataJud"
             :disabled="loading || !process || !isTjrjNumero || refreshingDatajud"
@@ -35,7 +35,7 @@
           <button
             type="button"
             @click="showTaskModal = true"
-            class="btn-icon-add"
+            class="toolbar-btn toolbar-btn--add"
             title="Adicionar tarefa"
             aria-label="Adicionar tarefa"
             :disabled="loading || !process"
@@ -48,7 +48,7 @@
           <button
             type="button"
             @click="openDocumentModal"
-            class="btn-icon-document"
+            class="toolbar-btn toolbar-btn--document"
             title="Gerar Documento"
             aria-label="Gerar Documento"
             :disabled="loading || !process"
@@ -60,7 +60,7 @@
               <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
-          <button @click="goToEdit" class="btn-icon-edit" title="Editar Processo">
+          <button @click="goToEdit" class="toolbar-btn toolbar-btn--edit" title="Editar Processo">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -149,7 +149,7 @@
         <div class="section">
           <div class="section-header">
             <h2>Movimentações</h2>
-            <button type="button" @click="openNewMovimentForm" class="btn-icon-add" title="Nova Movimentação">
+            <button type="button" @click="openNewMovimentForm" class="toolbar-btn toolbar-btn--add" title="Nova Movimentação">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -822,132 +822,6 @@ export default {
   align-items: center;
 }
 
-.btn-icon-refresh {
-  background: #17a2b8;
-  border: none;
-  border-radius: 8px;
-  padding: 0.75rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  transition: all 0.2s;
-  width: 48px;
-  height: 48px;
-}
-
-.btn-icon-refresh:hover:not(:disabled) {
-  background-color: #138496;
-}
-
-.btn-icon-refresh:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-icon-refresh svg {
-  width: 24px;
-  height: 24px;
-}
-
-.btn-icon-refresh svg.spinning {
-  animation: spin-refresh 0.9s linear infinite;
-}
-
-@keyframes spin-refresh {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.btn-icon-edit,
-.btn-icon-add,
-.btn-icon-document {
-  background: #6c757d;
-  border: none;
-  border-radius: 8px;
-  padding: 0.75rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  transition: all 0.2s;
-  width: 48px;
-  height: 48px;
-}
-
-.btn-icon-edit:hover {
-  background-color: #545b62;
-}
-
-.btn-icon-add {
-  background: #007bff;
-}
-
-.btn-icon-add:hover {
-  background-color: #0056b3;
-}
-
-.btn-icon-document {
-  background: #003d7a;
-}
-
-.btn-icon-document:hover:not(:disabled) {
-  background-color: #002d5c;
-}
-
-.btn-icon-document:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-icon-edit svg,
-.btn-icon-add svg,
-.btn-icon-document svg {
-  width: 24px;
-  height: 24px;
-}
-
-.icon-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0.375rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  border-radius: 4px;
-}
-
-.icon-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.edit-btn {
-  color: #6c757d;
-}
-
-.edit-btn:hover {
-  background-color: #f8f9fa;
-  color: #495057;
-}
-
-.delete-btn {
-  color: #dc3545;
-}
-
-.delete-btn:hover {
-  background-color: #fff5f5;
-  color: #c82333;
-}
-
 .section {
   background: white;
   border-radius: 8px;
@@ -1380,21 +1254,7 @@ export default {
     height: 18px;
   }
 
-  .btn-icon-edit,
-  .btn-icon-add,
-  .btn-icon-document {
-    width: 44px;
-    height: 44px;
-  }
-
-  .btn-icon-refresh {
-    width: 44px;
-    height: 44px;
-  }
-
-  .btn-icon-edit svg,
-  .btn-icon-add svg,
-  .btn-icon-document svg {
+  .section-header .toolbar-btn svg {
     width: 20px;
     height: 20px;
   }
@@ -1416,11 +1276,6 @@ export default {
 
   .section-header button {
     width: 100%;
-  }
-
-  .section-header .btn-icon-add {
-    width: 100%;
-    justify-content: center;
   }
 
   .info-grid {
@@ -1528,21 +1383,7 @@ export default {
     height: 16px;
   }
 
-  .btn-icon-edit,
-  .btn-icon-add,
-  .btn-icon-document {
-    width: 40px;
-    height: 40px;
-  }
-
-  .btn-icon-refresh {
-    width: 40px;
-    height: 40px;
-  }
-
-  .btn-icon-edit svg,
-  .btn-icon-add svg,
-  .btn-icon-document svg {
+  .section-header .toolbar-btn svg {
     width: 18px;
     height: 18px;
   }

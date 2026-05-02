@@ -32,7 +32,7 @@
               <option value="ADMINISTRATIVO">Administrativo</option>
             </select>
           </div>
-          <button @click="openNewTaskModal" class="btn-icon-add" title="Nova Tarefa">
+          <button type="button" @click="openNewTaskModal" class="toolbar-btn toolbar-btn--add" title="Nova Tarefa">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
               <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -480,36 +480,6 @@ export default {
 }
 
 .btn-home svg {
-  width: 24px;
-  height: 24px;
-}
-
-.btn-icon-add {
-  background: #003d7a;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 61, 122, 0.2);
-}
-
-.btn-icon-add:hover {
-  background: #002d5a;
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 61, 122, 0.3);
-}
-
-.btn-icon-add:active {
-  transform: scale(0.95);
-}
-
-.btn-icon-add svg {
   width: 24px;
   height: 24px;
 }
