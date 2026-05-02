@@ -48,7 +48,7 @@
           <button
             type="button"
             @click="openDocumentModal"
-            class="toolbar-btn toolbar-btn--document"
+            class="btn-icon-document"
             title="Gerar Documento"
             aria-label="Gerar Documento"
             :disabled="loading || !process"
@@ -60,7 +60,7 @@
               <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
-          <button @click="goToEdit" class="toolbar-btn toolbar-btn--edit" title="Editar Processo">
+          <button @click="goToEdit" class="btn-icon-edit" title="Editar Processo">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -145,236 +145,6 @@
           </div>
         </div>
         
-        <!-- Recursos de Segunda Instância -->
-        <div class="section">
-          <div
-            class="section-header section-header--collapsible"
-            :class="{ 'section-header--collapsed': !recursosSectionExpanded }"
-            @click="toggleRecursosSection"
-          >
-            <div class="section-header-left">
-              <button
-                type="button"
-                class="section-toggle-btn"
-                :title="recursosSectionExpanded ? 'Recolher seção' : 'Expandir seção'"
-                @click.stop="toggleRecursosSection"
-              >
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" :class="{ 'rotated': recursosSectionExpanded }">
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-              <h2>Recursos de 2ª Instância</h2>
-              <span v-if="!recursosSectionExpanded && recursosSummary" class="section-summary">{{ recursosSummary }}</span>
-            </div>
-            <button type="button" @click.stop="addRecurso" class="btn-icon-add" title="Adicionar Recurso">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-
-          <div v-show="recursosSectionExpanded" class="section-body">
-            <div v-if="recursosAtivos.length > 0 || recursosBaixados.length > 0">
-              <!-- Recursos ativos -->
-              <RecursoCard
-                v-for="r in recursosAtivos"
-                :key="r.id"
-                :recurso="r"
-                :process-id="process.id"
-                @updated="onRecursoUpdated"
-                @deleted="onRecursoDeleted"
-              />
-              <!-- Recursos baixados (colapsados) -->
-              <RecursoCard
-                v-for="r in recursosBaixados"
-                :key="r.id"
-                :recurso="r"
-                :process-id="process.id"
-                @updated="onRecursoUpdated"
-                @deleted="onRecursoDeleted"
-              />
-            </div>
-            <div v-else class="no-moviments">Nenhum recurso cadastrado</div>
-
-            <!-- Novo recurso (sem ID ainda) renderizado via card -->
-            <RecursoCard
-              v-if="addingRecurso"
-              :recurso="newRecursoPlaceholder"
-              :is-new="true"
-              :process-id="process.id"
-              @updated="onNewRecursoSaved"
-              @deleted="cancelAddRecurso"
-            />
-          </div>
-        </div>
-
-        <!-- Tarefas do Processo -->
-        <div class="section">
-          <div
-            class="section-header section-header--collapsible"
-            :class="{ 'section-header--collapsed': !tasksSectionExpanded }"
-            @click="toggleTasksSection"
-          >
-            <div class="section-header-left">
-              <button
-                type="button"
-                class="section-toggle-btn"
-                :title="tasksSectionExpanded ? 'Recolher seção' : 'Expandir seção'"
-                @click.stop="toggleTasksSection"
-              >
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" :class="{ 'rotated': tasksSectionExpanded }">
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-              <h2>Tarefas</h2>
-              <span v-if="!tasksSectionExpanded && tasksSummary" class="section-summary">{{ tasksSummary }}</span>
-            </div>
-            <button type="button" @click.stop="showTaskModal = true" class="btn-icon-add" title="Nova Tarefa">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-
-          <div v-show="tasksSectionExpanded" class="section-body">
-
-          <div v-if="processTasksError" class="no-moviments task-load-error">
-            Erro ao carregar tarefas. Tente recarregar a página.
-          </div>
-          <div v-else-if="processTasks.length === 0" class="no-moviments">
-            Nenhuma tarefa vinculada a este processo
-          </div>
-
-          <div v-else class="process-tasks-groups">
-            <!-- Para Iniciar -->
-            <div class="task-group">
-              <button type="button" class="task-group-header" @click="toggleTaskGroup('PARA_INICIAR')">
-                <span class="task-group-label">
-                  Para Iniciar
-                  <span class="task-group-count">{{ tasksByStatus.PARA_INICIAR.length }}</span>
-                </span>
-                <span class="task-group-chevron" :class="{ rotated: !taskGroupExpanded.PARA_INICIAR }">▾</span>
-              </button>
-              <div v-if="taskGroupExpanded.PARA_INICIAR" class="task-group-body">
-                <div v-if="tasksByStatus.PARA_INICIAR.length === 0" class="task-empty">Nenhuma tarefa</div>
-                <template v-else>
-                  <div class="task-row" v-for="task in paginatedTasks.PARA_INICIAR" :key="task.id">
-                    <div class="task-row-main">
-                      <span class="task-tipo-badge" :class="taskTipoClass(task.tipoTarefa)">{{ taskTipoLabel(task.tipoTarefa) }}</span>
-                      <span class="task-resp-badge" :class="taskResponsavelClass(task.responsavel)">{{ task.responsavel }}</span>
-                      <span class="task-titulo">{{ task.titulo }}</span>
-                      <span v-if="task.prazoFinal" class="task-prazo" :class="{ 'task-prazo--overdue': isTaskOverdue(task) }">{{ formatTaskPrazo(task.prazoFinal) }}</span>
-                      <div class="task-row-actions">
-                        <button type="button" class="task-btn-advance" title="Avançar para Em Andamento" @click="advanceTaskStatus(task)">→</button>
-                        <button type="button" class="task-btn-delete" title="Excluir tarefa" @click="deleteProcessTask(task.id)">×</button>
-                      </div>
-                    </div>
-                    <div v-if="task.descricao" class="task-descricao">{{ task.descricao }}</div>
-                  </div>
-                  <div v-if="taskTotalPages.PARA_INICIAR > 1" class="task-pagination">
-                    <button class="pagination-btn" :disabled="taskPage.PARA_INICIAR === 0" @click="taskGoToPage('PARA_INICIAR', 0)">«</button>
-                    <button class="pagination-btn" :disabled="taskPage.PARA_INICIAR === 0" @click="taskGoToPage('PARA_INICIAR', taskPage.PARA_INICIAR - 1)">‹</button>
-                    <span class="pagination-page-info">{{ taskPage.PARA_INICIAR + 1 }} / {{ taskTotalPages.PARA_INICIAR }}</span>
-                    <button class="pagination-btn" :disabled="taskPage.PARA_INICIAR >= taskTotalPages.PARA_INICIAR - 1" @click="taskGoToPage('PARA_INICIAR', taskPage.PARA_INICIAR + 1)">›</button>
-                    <button class="pagination-btn" :disabled="taskPage.PARA_INICIAR >= taskTotalPages.PARA_INICIAR - 1" @click="taskGoToPage('PARA_INICIAR', taskTotalPages.PARA_INICIAR - 1)">»</button>
-                    <select v-model.number="taskPageSize.PARA_INICIAR" class="page-size-select task-page-size" @change="onTaskPageSizeChange('PARA_INICIAR')">
-                      <option :value="5">5</option>
-                      <option :value="10">10</option>
-                      <option :value="20">20</option>
-                      <option :value="0">Todas</option>
-                    </select>
-                  </div>
-                </template>
-              </div>
-            </div>
-
-            <!-- Em Andamento -->
-            <div class="task-group task-group--andamento">
-              <button type="button" class="task-group-header" @click="toggleTaskGroup('EM_ANDAMENTO')">
-                <span class="task-group-label">
-                  Em Andamento
-                  <span class="task-group-count">{{ tasksByStatus.EM_ANDAMENTO.length }}</span>
-                </span>
-                <span class="task-group-chevron" :class="{ rotated: !taskGroupExpanded.EM_ANDAMENTO }">▾</span>
-              </button>
-              <div v-if="taskGroupExpanded.EM_ANDAMENTO" class="task-group-body">
-                <div v-if="tasksByStatus.EM_ANDAMENTO.length === 0" class="task-empty">Nenhuma tarefa</div>
-                <template v-else>
-                  <div class="task-row" v-for="task in paginatedTasks.EM_ANDAMENTO" :key="task.id">
-                    <div class="task-row-main">
-                      <span class="task-tipo-badge" :class="taskTipoClass(task.tipoTarefa)">{{ taskTipoLabel(task.tipoTarefa) }}</span>
-                      <span class="task-resp-badge" :class="taskResponsavelClass(task.responsavel)">{{ task.responsavel }}</span>
-                      <span class="task-titulo">{{ task.titulo }}</span>
-                      <span v-if="task.prazoFinal" class="task-prazo" :class="{ 'task-prazo--overdue': isTaskOverdue(task) }">{{ formatTaskPrazo(task.prazoFinal) }}</span>
-                      <div class="task-row-actions">
-                        <button type="button" class="task-btn-advance" title="Avançar para Concluída" @click="advanceTaskStatus(task)">✓</button>
-                        <button type="button" class="task-btn-delete" title="Excluir tarefa" @click="deleteProcessTask(task.id)">×</button>
-                      </div>
-                    </div>
-                    <div v-if="task.descricao" class="task-descricao">{{ task.descricao }}</div>
-                  </div>
-                  <div v-if="taskTotalPages.EM_ANDAMENTO > 1" class="task-pagination">
-                    <button class="pagination-btn" :disabled="taskPage.EM_ANDAMENTO === 0" @click="taskGoToPage('EM_ANDAMENTO', 0)">«</button>
-                    <button class="pagination-btn" :disabled="taskPage.EM_ANDAMENTO === 0" @click="taskGoToPage('EM_ANDAMENTO', taskPage.EM_ANDAMENTO - 1)">‹</button>
-                    <span class="pagination-page-info">{{ taskPage.EM_ANDAMENTO + 1 }} / {{ taskTotalPages.EM_ANDAMENTO }}</span>
-                    <button class="pagination-btn" :disabled="taskPage.EM_ANDAMENTO >= taskTotalPages.EM_ANDAMENTO - 1" @click="taskGoToPage('EM_ANDAMENTO', taskPage.EM_ANDAMENTO + 1)">›</button>
-                    <button class="pagination-btn" :disabled="taskPage.EM_ANDAMENTO >= taskTotalPages.EM_ANDAMENTO - 1" @click="taskGoToPage('EM_ANDAMENTO', taskTotalPages.EM_ANDAMENTO - 1)">»</button>
-                    <select v-model.number="taskPageSize.EM_ANDAMENTO" class="page-size-select task-page-size" @change="onTaskPageSizeChange('EM_ANDAMENTO')">
-                      <option :value="5">5</option>
-                      <option :value="10">10</option>
-                      <option :value="20">20</option>
-                      <option :value="0">Todas</option>
-                    </select>
-                  </div>
-                </template>
-              </div>
-            </div>
-
-            <!-- Concluídas -->
-            <div class="task-group task-group--completa">
-              <button type="button" class="task-group-header" @click="toggleTaskGroup('COMPLETA')">
-                <span class="task-group-label">
-                  Concluídas
-                  <span class="task-group-count">{{ tasksByStatus.COMPLETA.length }}</span>
-                </span>
-                <span class="task-group-chevron" :class="{ rotated: !taskGroupExpanded.COMPLETA }">▾</span>
-              </button>
-              <div v-if="taskGroupExpanded.COMPLETA" class="task-group-body">
-                <div v-if="tasksByStatus.COMPLETA.length === 0" class="task-empty">Nenhuma tarefa</div>
-                <template v-else>
-                  <div class="task-row task-row--completa" v-for="task in paginatedTasks.COMPLETA" :key="task.id">
-                    <div class="task-row-main">
-                      <span class="task-tipo-badge" :class="taskTipoClass(task.tipoTarefa)">{{ taskTipoLabel(task.tipoTarefa) }}</span>
-                      <span class="task-resp-badge" :class="taskResponsavelClass(task.responsavel)">{{ task.responsavel }}</span>
-                      <span class="task-titulo task-titulo--completa">{{ task.titulo }}</span>
-                      <span v-if="task.prazoFinal" class="task-prazo">{{ formatTaskPrazo(task.prazoFinal) }}</span>
-                      <div class="task-row-actions">
-                        <button type="button" class="task-btn-delete" title="Excluir tarefa" @click="deleteProcessTask(task.id)">×</button>
-                      </div>
-                    </div>
-                    <div v-if="task.descricao" class="task-descricao task-descricao--completa">{{ task.descricao }}</div>
-                  </div>
-                  <div v-if="taskTotalPages.COMPLETA > 1" class="task-pagination">
-                    <button class="pagination-btn" :disabled="taskPage.COMPLETA === 0" @click="taskGoToPage('COMPLETA', 0)">«</button>
-                    <button class="pagination-btn" :disabled="taskPage.COMPLETA === 0" @click="taskGoToPage('COMPLETA', taskPage.COMPLETA - 1)">‹</button>
-                    <span class="pagination-page-info">{{ taskPage.COMPLETA + 1 }} / {{ taskTotalPages.COMPLETA }}</span>
-                    <button class="pagination-btn" :disabled="taskPage.COMPLETA >= taskTotalPages.COMPLETA - 1" @click="taskGoToPage('COMPLETA', taskPage.COMPLETA + 1)">›</button>
-                    <button class="pagination-btn" :disabled="taskPage.COMPLETA >= taskTotalPages.COMPLETA - 1" @click="taskGoToPage('COMPLETA', taskTotalPages.COMPLETA - 1)">»</button>
-                    <select v-model.number="taskPageSize.COMPLETA" class="page-size-select task-page-size" @change="onTaskPageSizeChange('COMPLETA')">
-                      <option :value="5">5</option>
-                      <option :value="10">10</option>
-                      <option :value="20">20</option>
-                      <option :value="0">Todas</option>
-                    </select>
-                  </div>
-                </template>
-              </div>
-            </div>
-          </div>
-
-          </div><!-- /section-body -->
-        </div>
-
         <!-- Movimentações -->
         <div class="section">
           <div class="section-header">
@@ -591,7 +361,6 @@
     <TaskFormModal
       v-model="showTaskModal"
       :preset-process="process ? { id: process.id, numero: process.numero } : null"
-      @saved="loadProcessTasks"
     />
 
     <DocumentGeneratorModal
@@ -611,7 +380,7 @@ import { datajudService } from '../services/datajudService'
 import { recursoService } from '../services/recursoService'
 import { taskService } from '../services/taskService'
 import TaskFormModal from '../components/TaskFormModal.vue'
-import RecursoCard from '../components/RecursoCard.vue'
+import DocumentGeneratorModal from '../components/DocumentGeneratorModal.vue'
 
 function yyyyMmDdDaysAgo(days) {
   const d = new Date()
@@ -666,7 +435,7 @@ function resolveSistemaPortalLink(sistema) {
 
 export default {
   name: 'ProcessDetails',
-  components: { TaskFormModal, RecursoCard },
+  components: { TaskFormModal, DocumentGeneratorModal },
   data() {
     return {
       process: null,
@@ -678,6 +447,7 @@ export default {
       refreshingDatajud: false,
       savingPendingId: null,
       showTaskModal: false,
+      showDocumentModal: false,
       showDocumentModal: false,
       showNewMovimentForm: false,
       editingMovimentId: null,
@@ -1146,6 +916,12 @@ export default {
     closeDocumentModal() {
       this.showDocumentModal = false
     },
+    openDocumentModal() {
+      this.showDocumentModal = true
+    },
+    closeDocumentModal() {
+      this.showDocumentModal = false
+    },
     openNewMovimentForm() {
       const pid = this.process?.id ?? this.$route.params.id
       this.newMoviment = {
@@ -1367,7 +1143,8 @@ export default {
 }
 
 .btn-icon-edit,
-.btn-icon-add {
+.btn-icon-add,
+.btn-icon-document {
   background: #6c757d;
   border: none;
   border-radius: 8px;
@@ -1394,8 +1171,22 @@ export default {
   background-color: #0056b3;
 }
 
+.btn-icon-document {
+  background: #003d7a;
+}
+
+.btn-icon-document:hover:not(:disabled) {
+  background-color: #002d5c;
+}
+
+.btn-icon-document:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .btn-icon-edit svg,
-.btn-icon-add svg {
+.btn-icon-add svg,
+.btn-icon-document svg {
   width: 24px;
   height: 24px;
 }
@@ -2198,7 +1989,21 @@ export default {
     height: 18px;
   }
 
-  .section-header .toolbar-btn svg {
+  .btn-icon-edit,
+  .btn-icon-add,
+  .btn-icon-document {
+    width: 44px;
+    height: 44px;
+  }
+
+  .btn-icon-refresh {
+    width: 44px;
+    height: 44px;
+  }
+
+  .btn-icon-edit svg,
+  .btn-icon-add svg,
+  .btn-icon-document svg {
     width: 20px;
     height: 20px;
   }
@@ -2327,7 +2132,21 @@ export default {
     height: 16px;
   }
 
-  .section-header .toolbar-btn svg {
+  .btn-icon-edit,
+  .btn-icon-add,
+  .btn-icon-document {
+    width: 40px;
+    height: 40px;
+  }
+
+  .btn-icon-refresh {
+    width: 40px;
+    height: 40px;
+  }
+
+  .btn-icon-edit svg,
+  .btn-icon-add svg,
+  .btn-icon-document svg {
     width: 18px;
     height: 18px;
   }
