@@ -52,6 +52,8 @@ docker-compose.dev.yml
 # Scripts shell que podem confundir o Railpack
 *.sh
 !**/node_modules/**/*.sh
+# O Dockerfile do frontend copia este arquivo para a imagem nginx
+!frontend/docker-entrypoint.sh
 
 # Arquivos SQL locais (se houver versão diferente)
 # werneradv20250511.sql
