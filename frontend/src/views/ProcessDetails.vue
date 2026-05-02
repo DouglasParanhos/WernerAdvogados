@@ -45,6 +45,21 @@
               <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
+          <button
+            type="button"
+            @click="openDocumentModal"
+            class="btn-icon-document"
+            title="Gerar Documento"
+            aria-label="Gerar Documento"
+            :disabled="loading || !process"
+          >
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
           <button @click="goToEdit" class="btn-icon-edit" title="Editar Processo">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -304,6 +319,13 @@
       v-model="showTaskModal"
       :preset-process="process ? { id: process.id, numero: process.numero } : null"
     />
+
+    <DocumentGeneratorModal
+      v-if="process"
+      :show="showDocumentModal"
+      :process="process"
+      @close="closeDocumentModal"
+    />
   </div>
 </template>
 
@@ -313,6 +335,7 @@ import { movimentService } from '../services/movimentService'
 import { matriculationService } from '../services/matriculationService'
 import { datajudService } from '../services/datajudService'
 import TaskFormModal from '../components/TaskFormModal.vue'
+import DocumentGeneratorModal from '../components/DocumentGeneratorModal.vue'
 
 function yyyyMmDdDaysAgo(days) {
   const d = new Date()
@@ -367,7 +390,7 @@ function resolveSistemaPortalLink(sistema) {
 
 export default {
   name: 'ProcessDetails',
-  components: { TaskFormModal },
+  components: { TaskFormModal, DocumentGeneratorModal },
   data() {
     return {
       process: null,
@@ -378,6 +401,7 @@ export default {
       refreshingDatajud: false,
       savingPendingId: null,
       showTaskModal: false,
+      showDocumentModal: false,
       showNewMovimentForm: false,
       editingMovimentId: null,
       editingMoviment: null,
@@ -617,6 +641,12 @@ export default {
     goToEdit() {
       this.$router.push(`/processes/${this.process.id}/edit`)
     },
+    openDocumentModal() {
+      this.showDocumentModal = true
+    },
+    closeDocumentModal() {
+      this.showDocumentModal = false
+    },
     openNewMovimentForm() {
       const pid = this.process?.id ?? this.$route.params.id
       this.newMoviment = {
@@ -835,7 +865,8 @@ export default {
 }
 
 .btn-icon-edit,
-.btn-icon-add {
+.btn-icon-add,
+.btn-icon-document {
   background: #6c757d;
   border: none;
   border-radius: 8px;
@@ -862,8 +893,22 @@ export default {
   background-color: #0056b3;
 }
 
+.btn-icon-document {
+  background: #003d7a;
+}
+
+.btn-icon-document:hover:not(:disabled) {
+  background-color: #002d5c;
+}
+
+.btn-icon-document:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .btn-icon-edit svg,
-.btn-icon-add svg {
+.btn-icon-add svg,
+.btn-icon-document svg {
   width: 24px;
   height: 24px;
 }
@@ -1336,7 +1381,8 @@ export default {
   }
 
   .btn-icon-edit,
-  .btn-icon-add {
+  .btn-icon-add,
+  .btn-icon-document {
     width: 44px;
     height: 44px;
   }
@@ -1347,7 +1393,8 @@ export default {
   }
 
   .btn-icon-edit svg,
-  .btn-icon-add svg {
+  .btn-icon-add svg,
+  .btn-icon-document svg {
     width: 20px;
     height: 20px;
   }
@@ -1482,7 +1529,8 @@ export default {
   }
 
   .btn-icon-edit,
-  .btn-icon-add {
+  .btn-icon-add,
+  .btn-icon-document {
     width: 40px;
     height: 40px;
   }
@@ -1493,7 +1541,8 @@ export default {
   }
 
   .btn-icon-edit svg,
-  .btn-icon-add svg {
+  .btn-icon-add svg,
+  .btn-icon-document svg {
     width: 18px;
     height: 18px;
   }
