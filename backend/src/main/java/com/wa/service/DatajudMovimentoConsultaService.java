@@ -53,15 +53,21 @@ public class DatajudMovimentoConsultaService {
     ) {
     }
 
-    public DatajudMovimentoConsultaResponseDTO consultarMovimentosDesde(LocalDate dataInicio) {
+    /**
+     * Valida os mesmos pré-requisitos de {@link #consultarMovimentosDesde(LocalDate)} antes de enfileirar um job assíncrono.
+     */
+    public void validarConsultaMovimentosDesde(LocalDate dataInicio) {
         if (datajudProperties.getKey() == null || datajudProperties.getKey().isBlank()) {
             throw new IllegalStateException("DATAJUD_API_KEY não configurada no servidor.");
         }
-
         LocalDate hoje = LocalDate.now(ZONA_BR);
         if (dataInicio.isAfter(hoje)) {
             throw new IllegalArgumentException("A data inicial não pode ser posterior à data atual.");
         }
+    }
+
+    public DatajudMovimentoConsultaResponseDTO consultarMovimentosDesde(LocalDate dataInicio) {
+        validarConsultaMovimentosDesde(dataInicio);
 
         ZonedDateTime inicioZdt = dataInicio.atStartOfDay(ZONA_BR);
         Instant inicioInstant = inicioZdt.toInstant();

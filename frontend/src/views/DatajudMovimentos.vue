@@ -47,6 +47,14 @@
           </button>
         </div>
         <p v-if="errorMsg" class="error-msg" role="alert">{{ errorMsg }}</p>
+        <div v-if="loading" class="search-banner" role="status" aria-live="polite">
+          <span class="search-banner-spinner" aria-hidden="true"></span>
+          <span>
+            <strong>Consulta em execução no servidor.</strong>
+            Se há muitos processos cadastrados, a pesquisa no DataJud pode levar vários minutos.
+            Os resultados aparecerão nesta página ao terminar e você será avisado.
+          </span>
+        </div>
       </div>
 
       <div v-if="resultado && !loading" class="summary">
@@ -125,6 +133,11 @@
         </section>
       </div>
     </div>
+    <transition name="toast-fade">
+      <div v-if="toastVisible" class="app-toast" role="status">
+        {{ toastMessage }}
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -140,6 +153,8 @@ function yyyyMmDdDaysAgo(days) {
   return `${y}-${m}-${day}`
 }
 
+const WA_DATAJUD_MOVIMENTOS_ASYNC_JOB = 'wa.datajudMovimentosAsyncJob'
+
 export default {
   name: 'DatajudMovimentos',
   data() {
@@ -149,12 +164,31 @@ export default {
       errorMsg: '',
       resultado: null,
       copiedKey: '',
-      copiedTimer: null
+      copiedTimer: null,
+      pollTimer: null,
+      toastVisible: false,
+      toastMessage: '',
+      toastTimer: null
     }
+  },
+  mounted() {
+    const p = this.readPersistedJob()
+    if (!p || !p.jobId) return
+    if (p.dataInicio) {
+      this.dataInicio = p.dataInicio
+    }
+    this.resultado = null
+    this.errorMsg = ''
+    this.loading = true
+    void this.startPollingForJob(p.jobId)
   },
   beforeUnmount() {
     if (this.copiedTimer) {
       clearTimeout(this.copiedTimer)
+    }
+    this.clearPollTimer()
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer)
     }
   },
   computed: {
@@ -264,19 +298,6 @@ export default {
       out.sort((a, b) => this.mvSortKey(b.data) - this.mvSortKey(a.data))
       return out
     },
-    async pesquisar() {
-      this.errorMsg = ''
-      this.resultado = null
-      this.loading = true
-      try {
-        this.resultado = await datajudService.consultarMovimentos(this.dataInicio)
-      } catch (e) {
-        const msg = e.response?.data?.message || e.message || 'Falha na consulta.'
-        this.errorMsg = msg
-      } finally {
-        this.loading = false
-      }
-    },
     setUltimos7Dias() {
       this.dataInicio = yyyyMmDdDaysAgo(7)
     },
@@ -288,6 +309,149 @@ export default {
     formatGrauLabel(grau) {
       if (grau == null || grau === '' || grau === 'desconhecido') return '(não informado)'
       return grau
+    },
+    readPersistedJob() {
+      if (typeof sessionStorage === 'undefined') return null
+      try {
+        const raw = sessionStorage.getItem(WA_DATAJUD_MOVIMENTOS_ASYNC_JOB)
+        if (!raw) return null
+        const o = JSON.parse(raw)
+        if (!o || typeof o.jobId !== 'string' || !o.jobId) return null
+        return {
+          jobId: o.jobId,
+          dataInicio: typeof o.dataInicio === 'string' ? o.dataInicio : null
+        }
+      } catch {
+        return null
+      }
+    },
+    persistJob(jobId, dataInicio) {
+      if (typeof sessionStorage === 'undefined') return
+      sessionStorage.setItem(
+        WA_DATAJUD_MOVIMENTOS_ASYNC_JOB,
+        JSON.stringify({ jobId, dataInicio })
+      )
+    },
+    clearPersistedJob() {
+      if (typeof sessionStorage === 'undefined') return
+      sessionStorage.removeItem(WA_DATAJUD_MOVIMENTOS_ASYNC_JOB)
+    },
+    clearPollTimer() {
+      if (this.pollTimer) {
+        clearInterval(this.pollTimer)
+        this.pollTimer = null
+      }
+    },
+    clearToastTimer() {
+      if (this.toastTimer) {
+        clearTimeout(this.toastTimer)
+        this.toastTimer = null
+      }
+    },
+    showToast(msg) {
+      this.toastMessage = msg
+      this.toastVisible = true
+      this.clearToastTimer()
+      this.toastTimer = setTimeout(() => {
+        this.toastVisible = false
+        this.toastTimer = null
+      }, 5500)
+    },
+    requestNotifyPermissionIfPossible() {
+      if (typeof Notification === 'undefined' || Notification.permission !== 'default') return
+      Notification.requestPermission().catch(() => {})
+    },
+    maybeSystemNotify(body) {
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
+      if (!document.hidden) return
+      try {
+        void new Notification('Movimentos DataJud', { body })
+      } catch {
+        // ambientes restritos
+      }
+    },
+    /** @returns {Promise<boolean>} true se o job terminou (sucesso ou falha) */
+    async pollOnce(jobId) {
+      let st
+      try {
+        st = await datajudService.obterConsultaMovimentosJob(jobId)
+      } catch (e) {
+        if (e.response?.status === 404) {
+          this.clearPollTimer()
+          this.loading = false
+          this.clearPersistedJob()
+          this.errorMsg =
+            'Consulta anterior não encontrada ou expirou. Inicie uma nova pesquisa.'
+          return true
+        }
+        throw e
+      }
+      if (st.status === 'PENDING') {
+        return false
+      }
+      this.clearPollTimer()
+      this.loading = false
+      this.clearPersistedJob()
+      if (st.status === 'FAILED') {
+        this.errorMsg = st.errorMessage || 'Falha na consulta DataJud.'
+        return true
+      }
+      if (st.status === 'COMPLETED') {
+        this.resultado = st.result
+        await this.$nextTick()
+        const n = this.resultadosVisiveis.length
+        const msg = `Pesquisa concluída — ${n} processo(s) com movimentos no período.`
+        this.showToast(msg)
+        this.maybeSystemNotify(msg)
+        return true
+      }
+      return false
+    },
+    async startPollingForJob(jobId) {
+      try {
+        const done = await this.pollOnce(jobId)
+        if (done) return
+      } catch (e) {
+        this.clearPollTimer()
+        this.loading = false
+        this.clearPersistedJob()
+        const msg =
+          e.response?.data?.message || e.message || 'Falha ao acompanhar a consulta.'
+        this.errorMsg = msg
+        return
+      }
+      this.pollTimer = setInterval(async () => {
+        try {
+          await this.pollOnce(jobId)
+        } catch (err) {
+          this.clearPollTimer()
+          this.loading = false
+          this.clearPersistedJob()
+          const msg =
+            err.response?.data?.message || err.message || 'Falha ao acompanhar a consulta.'
+          this.errorMsg = msg
+        }
+      }, 2000)
+    },
+    async pesquisar() {
+      this.clearPersistedJob()
+      this.errorMsg = ''
+      this.resultado = null
+      this.clearPollTimer()
+      this.requestNotifyPermissionIfPossible()
+      this.loading = true
+      let jobId
+      try {
+        const body = await datajudService.iniciarConsultaMovimentosAsync(this.dataInicio)
+        jobId = body.jobId
+      } catch (e) {
+        this.loading = false
+        const msg = e.response?.data?.message || e.message || 'Falha na consulta.'
+        this.errorMsg = msg
+        return
+      }
+      this.persistJob(jobId, this.dataInicio)
+      await this.startPollingForJob(jobId)
     }
   }
 }
@@ -296,6 +460,7 @@ export default {
 <style scoped>
 .page {
   min-height: 100vh;
+  position: relative;
   background: linear-gradient(135deg, #d0d8e0 0%, #e8eef5 50%, #c0c8d0 100%);
   background-attachment: fixed;
   padding: 2rem;
@@ -495,6 +660,59 @@ export default {
   margin-top: 1rem;
   color: #b83232;
   font-size: 0.95rem;
+}
+
+.search-banner {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: rgba(0, 61, 122, 0.08);
+  border: 1px solid rgba(0, 61, 122, 0.2);
+  color: #2d3748;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.search-banner-spinner {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.12rem;
+  border: 2px solid rgba(0, 61, 122, 0.25);
+  border-top-color: #003d7a;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+.summary {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(32rem, calc(100vw - 2rem));
+  padding: 0.85rem 1.25rem;
+  background: #1a202c;
+  color: #f7fafc;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  font-size: 0.95rem;
+  font-weight: 500;
+  z-index: 1000;
+  text-align: center;
+}
+
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(0.75rem);
 }
 
 .summary {

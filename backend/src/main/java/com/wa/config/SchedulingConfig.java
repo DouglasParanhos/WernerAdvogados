@@ -23,5 +23,17 @@ public class SchedulingConfig {
         executor.initialize();
         return executor;
     }
+
+    /** Consultas DataJud em lote podem levar vários minutos; pool dedicado não compete com {@link #taskExecutor}. */
+    @Bean(name = "datajudConsultaExecutor")
+    public Executor datajudConsultaExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(4);
+        executor.setQueueCapacity(25);
+        executor.setThreadNamePrefix("datajud-job-");
+        executor.initialize();
+        return executor;
+    }
 }
 
