@@ -199,6 +199,9 @@ public class ProcessService {
         
         if (process.getMatriculation() != null) {
             dto.setMatriculationId(process.getMatriculation().getId());
+            if (process.getMatriculation().getPerson() != null) {
+                dto.setNomeCliente(process.getMatriculation().getPerson().getFullname());
+            }
         }
         
         if (process.getMoviments() != null) {

@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -281,6 +282,18 @@ class ProcessServiceTest {
         assertEquals(3, result10.getTotalElements());
         assertEquals(3, result50.getTotalElements());
         assertEquals(3, result100.getTotalElements());
+    }
+
+    @Test
+    void testFindById_ReturnsNomeClienteFromPerson() {
+        when(processRepository.findByIdWithMoviments(1L)).thenReturn(Optional.of(process1));
+
+        ProcessDTO dto = processService.findById(1L);
+
+        assertNotNull(dto);
+        assertEquals("João Silva", dto.getNomeCliente());
+        assertEquals(1L, dto.getMatriculationId());
+        verify(processRepository, times(1)).findByIdWithMoviments(1L);
     }
 }
 

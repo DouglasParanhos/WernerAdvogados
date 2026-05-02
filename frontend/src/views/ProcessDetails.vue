@@ -50,6 +50,10 @@
           <h2>Dados do Processo</h2>
           <div class="info-grid">
             <div class="info-item">
+              <label>Cliente:</label>
+              <span>{{ process.nomeCliente || '—' }}</span>
+            </div>
+            <div class="info-item">
               <label>Número:</label>
               <span>{{ process.numero }}</span>
             </div>
