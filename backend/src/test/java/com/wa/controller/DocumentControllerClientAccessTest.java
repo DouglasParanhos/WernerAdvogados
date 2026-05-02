@@ -1,8 +1,11 @@
 package com.wa.controller;
 
+import com.wa.config.MethodSecurityForWebMvcTests;
+import com.wa.dto.GeneratedDocument;
 import com.wa.model.Person;
 import com.wa.model.User;
 import com.wa.repository.PersonRepository;
+import com.wa.repository.ProcessRepository;
 import com.wa.repository.UserRepository;
 import com.wa.service.DocumentTemplateService;
 import com.wa.service.WordDocumentService;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = DocumentController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import({MethodSecurityForWebMvcTests.class, GlobalExceptionHandler.class})
 @TestPropertySource(properties = {
         "jwt.secret=test-secret-key-for-testing-purposes-only-min-32-chars",
         "jwt.expiration=86400000",
@@ -51,6 +56,9 @@ class DocumentControllerClientAccessTest {
 
     @MockBean
     private WordDocumentService wordDocumentService;
+
+    @MockBean
+    private ProcessRepository processRepository;
 
     @MockBean
     private PersonRepository personRepository;
@@ -118,7 +126,8 @@ class DocumentControllerClientAccessTest {
         when(securityContext.getAuthentication()).thenReturn(clientAuthentication);
         when(userRepository.findByUsername("client.user")).thenReturn(Optional.of(clientUser));
         when(personRepository.findByUserId(1L)).thenReturn(Optional.of(clientPerson));
-        when(wordDocumentService.generateDocumentForClient(eq(1L), any())).thenReturn(new byte[0]);
+        when(wordDocumentService.generateDocumentForClient(eq(1L), any()))
+                .thenReturn(new GeneratedDocument(new byte[0], "Template_Cliente.docx"));
 
         String requestBody = """
                 {
@@ -159,7 +168,8 @@ class DocumentControllerClientAccessTest {
     @Test
     void testGenerateClientDocument_WithAdminRole_AnyPersonId_ReturnsOk() throws Exception {
         when(securityContext.getAuthentication()).thenReturn(adminAuthentication);
-        when(wordDocumentService.generateDocumentForClient(eq(2L), any())).thenReturn(new byte[0]);
+        when(wordDocumentService.generateDocumentForClient(eq(2L), any()))
+                .thenReturn(new GeneratedDocument(new byte[0], "Template_Cliente.docx"));
 
         String requestBody = """
                 {

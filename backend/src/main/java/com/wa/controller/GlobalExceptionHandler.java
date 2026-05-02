@@ -7,6 +7,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
@@ -84,6 +85,19 @@ public class GlobalExceptionHandler {
         Map<String, String> error = new HashMap<>();
         error.put("message", e.getReason() != null ? e.getReason() : e.getStatusCode().toString());
         return ResponseEntity.status(e.getStatusCode()).body(error);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDeniedException(
+            AccessDeniedException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getMessage() != null ? e.getMessage() : "Access denied");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler(RuntimeException.class)
