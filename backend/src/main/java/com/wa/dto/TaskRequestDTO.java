@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,5 +18,6 @@ public class TaskRequestDTO {
     private String responsavel;
     private Long processId;
     private Integer ordem;
+    private LocalDate prazoFinal;
 }
 

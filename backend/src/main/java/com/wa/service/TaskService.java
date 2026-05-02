@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,6 +57,9 @@ public class TaskService {
             task.setOrdem(request.getOrdem());
         }
         
+        task.setPrazoFinal(request.getPrazoFinal());
+        validatePrazoFinalForTipo(task.getTipoTarefa(), task.getPrazoFinal());
+        
         Task saved = taskRepository.save(task);
         return convertToDTO(saved);
     }
@@ -72,6 +76,9 @@ public class TaskService {
         if (request.getResponsavel() != null) task.setResponsavel(request.getResponsavel());
         if (request.getOrdem() != null) task.setOrdem(request.getOrdem());
         resolveProcessId(task, request.getProcessId());
+        task.setPrazoFinal(request.getPrazoFinal());
+        
+        validatePrazoFinalForTipo(task.getTipoTarefa(), task.getPrazoFinal());
         
         Task saved = taskRepository.save(task);
         return convertToDTO(saved);
@@ -119,6 +126,7 @@ public class TaskService {
         } else {
             dto.setProcessNumero(null);
         }
+        dto.setPrazoFinal(task.getPrazoFinal());
         dto.setOrdem(task.getOrdem());
         dto.setCreatedOn(task.getCreatedOn());
         dto.setModifiedOn(task.getModifiedOn());
@@ -130,6 +138,12 @@ public class TaskService {
             throw new RuntimeException("Processo não encontrado");
         }
         task.setProcessId(processId);
+    }
+
+    private void validatePrazoFinalForTipo(String tipoTarefa, LocalDate prazoFinal) {
+        if ("PRAZO".equals(tipoTarefa) && prazoFinal == null) {
+            throw new IllegalArgumentException("Prazo final é obrigatório para tarefas do tipo Prazo.");
+        }
     }
 }
 

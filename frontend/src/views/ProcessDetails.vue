@@ -32,6 +32,19 @@
               <path d="M16 21h5v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
+          <button
+            type="button"
+            @click="showTaskModal = true"
+            class="btn-icon-add"
+            title="Adicionar tarefa"
+            aria-label="Adicionar tarefa"
+            :disabled="loading || !process"
+          >
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
           <button @click="goToEdit" class="btn-icon-edit" title="Editar Processo">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -67,7 +80,24 @@
             </div>
             <div class="info-item">
               <label>Sistema:</label>
-              <span>{{ process.sistema }}</span>
+              <span class="info-item-sistema-row">
+                <span class="info-item-sistema-text">{{ process.sistema }}</span>
+                <a
+                  v-if="sistemaPortalLink"
+                  :href="sistemaPortalLink.url"
+                  class="sistema-portal-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  :title="sistemaPortalLink.title"
+                  :aria-label="sistemaPortalLink.ariaLabel"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              </span>
             </div>
             <div class="info-item" v-if="process.tipoProcesso">
               <label>Tipo:</label>
@@ -104,7 +134,7 @@
         <div class="section">
           <div class="section-header">
             <h2>Movimentações</h2>
-            <button @click="showNewMovimentForm = true" class="btn-icon-add" title="Nova Movimentação">
+            <button type="button" @click="openNewMovimentForm" class="btn-icon-add" title="Nova Movimentação">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -115,8 +145,28 @@
           <div v-if="showNewMovimentForm" class="moviment-form">
             <h3>Nova Movimentação</h3>
             <div class="form-group">
-              <label>Data:</label>
-              <input type="datetime-local" v-model="newMoviment.date" class="form-control" />
+              <label for="new-moviment-datetime">Data:</label>
+              <div class="datetime-local-row">
+                <input
+                  id="new-moviment-datetime"
+                  ref="newMovimentDateInput"
+                  type="datetime-local"
+                  v-model="newMoviment.date"
+                  class="form-control datetime-local-input"
+                />
+                <button
+                  type="button"
+                  class="btn-datetime-picker"
+                  title="Abrir calendário"
+                  aria-label="Abrir calendário para selecionar data e hora"
+                  @click="openDatetimeLocalPicker('newMovimentDateInput')"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M3 10h18M8 2v4M16 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             <div class="form-group">
               <label>Descrição:</label>
@@ -145,8 +195,28 @@
             >
               <div v-if="!moviment.isPending && editingMovimentId === moviment.id" class="moviment-edit-form">
                 <div class="form-group">
-                  <label>Data:</label>
-                  <input type="datetime-local" v-model="editingMoviment.date" class="form-control" />
+                  <label for="edit-moviment-datetime">Data:</label>
+                  <div class="datetime-local-row">
+                    <input
+                      id="edit-moviment-datetime"
+                      ref="editMovimentDateInput"
+                      type="datetime-local"
+                      v-model="editingMoviment.date"
+                      class="form-control datetime-local-input"
+                    />
+                    <button
+                      type="button"
+                      class="btn-datetime-picker"
+                      title="Abrir calendário"
+                      aria-label="Abrir calendário para selecionar data e hora"
+                      @click="openDatetimeLocalPicker('editMovimentDateInput')"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M3 10h18M8 2v4M16 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label>Descrição:</label>
@@ -229,6 +299,11 @@
         </div>
       </div>
     </div>
+
+    <TaskFormModal
+      v-model="showTaskModal"
+      :preset-process="process ? { id: process.id, numero: process.numero } : null"
+    />
   </div>
 </template>
 
@@ -237,6 +312,7 @@ import { processService } from '../services/processService'
 import { movimentService } from '../services/movimentService'
 import { matriculationService } from '../services/matriculationService'
 import { datajudService } from '../services/datajudService'
+import TaskFormModal from '../components/TaskFormModal.vue'
 
 function yyyyMmDdDaysAgo(days) {
   const d = new Date()
@@ -247,6 +323,15 @@ function yyyyMmDdDaysAgo(days) {
   return `${y}-${m}-${day}`
 }
 
+/** Valor inicial para `datetime-local`: hoje às 00:01 no fuso local. */
+function todayAt0001Local() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}T00:01`
+}
+
 function newPendingTempId() {
   const c = globalThis.crypto
   if (c && typeof c.randomUUID === 'function') {
@@ -255,8 +340,34 @@ function newPendingTempId() {
   return `p-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
 }
 
+const SISTEMA_PORTAL_URL = {
+  PJE: 'https://tjrj.pje.jus.br/1g/login.seam',
+  TJRJ: 'https://www3.tjrj.jus.br/consultaprocessual/#/consultapublica#porNumero',
+  EPROC: 'https://eproc1g.tjrj.jus.br/eproc/'
+}
+
+/** @returns {{ url: string, title: string, ariaLabel: string } | null} */
+function resolveSistemaPortalLink(sistema) {
+  if (sistema == null || sistema === '') return null
+  const key = String(sistema).trim().toUpperCase()
+  const url = SISTEMA_PORTAL_URL[key]
+  if (!url) return null
+  const titleByKey = {
+    PJE: 'Abrir portal PJE TJRJ',
+    TJRJ: 'Abrir consulta processual TJRJ',
+    EPROC: 'Abrir portal eproc TJRJ'
+  }
+  const title = titleByKey[key] || `Abrir portal ${key}`
+  return {
+    url,
+    title,
+    ariaLabel: `${title} (nova aba)`
+  }
+}
+
 export default {
   name: 'ProcessDetails',
+  components: { TaskFormModal },
   data() {
     return {
       process: null,
@@ -266,6 +377,7 @@ export default {
       error: null,
       refreshingDatajud: false,
       savingPendingId: null,
+      showTaskModal: false,
       showNewMovimentForm: false,
       editingMovimentId: null,
       editingMoviment: null,
@@ -274,7 +386,7 @@ export default {
         descricao: '',
         date: '',
         processId: null,
-        visibleToClient: true
+        visibleToClient: false
       }
     }
   },
@@ -299,6 +411,9 @@ export default {
         sortKey: this.movementTimeMs(p.dataRaw) ?? Number.NEGATIVE_INFINITY
       }))
       return [...dbRows, ...pendRows].sort((a, b) => b.sortKey - a.sortKey)
+    },
+    sistemaPortalLink() {
+      return resolveSistemaPortalLink(this.process?.sistema)
     }
   },
   async mounted() {
@@ -502,6 +617,37 @@ export default {
     goToEdit() {
       this.$router.push(`/processes/${this.process.id}/edit`)
     },
+    openNewMovimentForm() {
+      const pid = this.process?.id ?? this.$route.params.id
+      this.newMoviment = {
+        descricao: '',
+        date: todayAt0001Local(),
+        processId: pid,
+        visibleToClient: false
+      }
+      this.showNewMovimentForm = true
+    },
+    openDatetimeLocalPicker(refKey) {
+      this.$nextTick(() => {
+        const raw = this.$refs[refKey]
+        const input = raw && (Array.isArray(raw) ? raw[0] : raw)
+        if (!input || input.tagName !== 'INPUT') return
+        if (typeof input.showPicker === 'function') {
+          try {
+            input.showPicker()
+            return
+          } catch {
+            /* Alguns browsers só permitem showPicker em gesto do usuário ou falham silenciosamente */
+          }
+        }
+        input.focus()
+        try {
+          input.click()
+        } catch {
+          /* noop */
+        }
+      })
+    },
     async saveNewMoviment() {
       if (!this.newMoviment.descricao || !this.newMoviment.date) {
         alert('Por favor, preencha todos os campos')
@@ -530,7 +676,7 @@ export default {
         descricao: '',
         date: '',
         processId: this.process.id,
-        visibleToClient: true
+        visibleToClient: false
       }
     },
     startEditMoviment(moviment) {
@@ -801,6 +947,42 @@ export default {
   font-size: 1rem;
 }
 
+.info-item-sistema-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.info-item-sistema-text {
+  min-width: 0;
+}
+
+.sistema-portal-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #003d7a;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.sistema-portal-link:hover {
+  color: #002d5a;
+}
+
+.sistema-portal-link:focus {
+  outline: 2px solid #003d7a;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sistema-portal-link svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
 .moviment-form {
   background: #f8f9fa;
   border-radius: 6px;
@@ -823,6 +1005,49 @@ export default {
   margin-bottom: 0.5rem;
   font-weight: 600;
   color: #495057;
+}
+
+.datetime-local-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.datetime-local-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-datetime-picker {
+  flex-shrink: 0;
+  width: 42px;
+  min-height: 42px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  color: #495057;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.btn-datetime-picker:hover {
+  border-color: #007bff;
+  background: #f0f7ff;
+  color: #007bff;
+}
+
+.btn-datetime-picker:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.btn-datetime-picker svg {
+  width: 22px;
+  height: 22px;
 }
 
 /* Checkbox customizado */

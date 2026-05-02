@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -35,6 +36,9 @@ public class Task {
     
     @Column(name = "process_id")
     private Long processId;
+
+    @Column(name = "prazo_final")
+    private LocalDate prazoFinal;
     
     @Column(name = "ordem")
     private Integer ordem;
