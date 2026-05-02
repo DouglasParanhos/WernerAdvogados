@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -71,7 +72,20 @@ public class GlobalExceptionHandler {
         }
         log.debug("Timeout em requisição assíncrona: {}", e.getMessage());
     }
-    
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatusException(
+            ResponseStatusException e,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        if (isSseRequest(request) || isResponseCommitted(response)) {
+            return null;
+        }
+        Map<String, String> error = new HashMap<>();
+        error.put("message", e.getReason() != null ? e.getReason() : e.getStatusCode().toString());
+        return ResponseEntity.status(e.getStatusCode()).body(error);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(
             RuntimeException e, 

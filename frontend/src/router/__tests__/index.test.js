@@ -76,6 +76,12 @@ describe('Router - Client Access Restrictions', () => {
         meta: { requiresAuth: true }
       },
       {
+        path: '/movimentos-datajud',
+        name: 'DatajudMovimentos',
+        component: {},
+        meta: { requiresAuth: true }
+      },
+      {
         path: '/my-moviments',
         name: 'ClientMoviments',
         component: {},
@@ -190,6 +196,16 @@ describe('Router - Client Access Restrictions', () => {
       expect(router.currentRoute.value.path).toBe('/my-moviments')
     })
 
+    it('deve redirecionar CLIENT de /movimentos-datajud para /my-moviments', async () => {
+      authService.isAuthenticated.mockReturnValue(true)
+      authService.getUser.mockReturnValue({ username: 'client', role: 'CLIENT' })
+
+      await router.push('/movimentos-datajud')
+      await router.isReady()
+
+      expect(router.currentRoute.value.path).toBe('/my-moviments')
+    })
+
     it('deve permitir CLIENT acessar /my-moviments', async () => {
       authService.isAuthenticated.mockReturnValue(true)
       authService.getUser.mockReturnValue({ username: 'client', role: 'CLIENT' })
@@ -221,6 +237,16 @@ describe('Router - Client Access Restrictions', () => {
       await router.isReady()
 
       expect(router.currentRoute.value.path).toBe('/dashboard')
+    })
+
+    it('deve permitir ADMIN acessar /movimentos-datajud', async () => {
+      authService.isAuthenticated.mockReturnValue(true)
+      authService.getUser.mockReturnValue({ username: 'admin', role: 'ADMIN' })
+
+      await router.push('/movimentos-datajud')
+      await router.isReady()
+
+      expect(router.currentRoute.value.path).toBe('/movimentos-datajud')
     })
 
     it('deve permitir USER acessar /clients', async () => {

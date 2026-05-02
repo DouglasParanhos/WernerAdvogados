@@ -1,0 +1,291 @@
+{
+  "instrucoes": [
+    "Cada processo precisa existir no sistema com o campo numero igual ao numero_cnj (ou ao que vocês usam).",
+    "Substitua processId por cada ID interno (process_id) obtido no cadastro ou via SELECT na tabela process.",
+    "Campo date no POST /api/moviments: ISO-8601 LocalDateTime (ex.: 2026-03-18T12:00:00). Horário 12:00 foi usado quando só havia data.",
+    "visibleToClient: true salvo indicação em contrário (movimentos administrativos podem ser false se desejarem)."
+  ],
+  "processos": [
+    {
+      "indice": 1,
+      "numero_cnj": "0059197-75.2023.8.19.0000",
+      "autuado_em": "26/07/2023",
+      "exequente": "Dirce Midori Matsumoto",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Levantamento de Valor",
+      "localizacao": "SGJUD - OE - Execuções Individuais das Ações Coletivas Originárias",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "26/07/2023", "date_iso": "2023-07-26T12:00:00", "descricao": "Autuação do processo" },
+        { "data": "14/05/2024", "date_iso": "2024-05-14T12:00:00", "descricao": "Publicação de Decisão (DECI/2024.000115)" },
+        { "data": "08/05/2024", "date_iso": "2024-05-08T12:00:00", "descricao": "Decisão (Des. Caetano Ernesto da Fonseca Costa) + Conclusão ao 1º Vice-Presidente" },
+        { "data": "27/08/2024", "date_iso": "2024-08-27T12:00:00", "descricao": "Intimações eletrônicas aos Interessados (2x)" },
+        { "data": "26/08/2024", "date_iso": "2024-08-26T12:00:00", "descricao": "Publicação do Ato Ordinatório RPV (AORD/2024.000280)" },
+        { "data": "23/08/2024", "date_iso": "2024-08-23T12:00:00", "descricao": "RPV expedida: determinado pagamento à exequente Dirce Midori Matsumoto no valor bruto de R$ 41.578,70 via RPV, prazo de 2 meses" },
+        { "data": "21/05/2025", "date_iso": "2025-05-21T12:00:00", "descricao": "Publicação de Ato Ordinatório (AORD/2025.000180): exequente intimada a comprovar posição na lista do processo originário (acórdão fls. 5875/5907)" },
+        { "data": "11/03/2026", "date_iso": "2026-03-11T12:00:00", "descricao": "Conclusão ao 1º Vice-Presidente (Gab. Dr. Alberto Salomão Junior)" },
+        { "data": "13/03/2026", "date_iso": "2026-03-13T12:00:00", "descricao": "Decisão proferida pela Des. Suely Lopes Magalhães" },
+        { "data": "18/03/2026", "date_iso": "2026-03-18T12:00:00", "descricao": "Publicação de Decisão (ID DJEN: 560524466 — DECI/2026.000144)" },
+        { "data": "18/03/2026", "date_iso": "2026-03-18T12:00:01", "descricao": "Fase atual — Intimação/Citação Eletrônica aos Interessados" }
+      ]
+    },
+    {
+      "indice": 2,
+      "numero_cnj": "0013631-06.2023.8.19.0000",
+      "autuado_em": "03/03/2023",
+      "exequente": "Maria Ligia de Bragança Soares",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Pagamento de Quantia Certa pela Fazenda Pública",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "03/03/2023", "date_iso": "2023-03-03T12:00:00", "descricao": "Remessa e autuação" },
+        { "data": "17/05/2023", "date_iso": "2023-05-17T12:00:00", "descricao": "Decisão (Des. Ricardo Rodrigues Cardozo)" },
+        { "data": "15/12/2023", "date_iso": "2023-12-15T12:00:00", "descricao": "Despacho de mero expediente (Des. Felipe Pinelli) — encaminhado ao Órgão Julgador" },
+        { "data": "12/04/2024", "date_iso": "2024-04-12T12:00:00", "descricao": "RPV expedida: Des. Caetano Ernesto da Fonseca Costa determina intimação do Estado para pagamento via RPV — valor e dados bancários a serem apresentados pelo patrono" },
+        { "data": "26/08/2024", "date_iso": "2024-08-26T12:00:00", "descricao": "Decisão (Des. Caetano) e publicação no DJE" },
+        { "data": "16/06/2025", "date_iso": "2025-06-16T12:00:00", "descricao": "Publicação de Decisão (DECI/2025 — Des. Suely Lopes Magalhães)" },
+        { "data": "18/06/2025", "date_iso": "2025-06-18T12:00:00", "descricao": "Intimação eletrônica aos Interessados" },
+        { "data": "01/07/2025", "date_iso": "2025-07-01T12:00:00", "descricao": "Intimação eletrônica à Procuradoria Geral do Estado — RPV" },
+        { "data": "15/09/2025", "date_iso": "2025-09-15T12:00:00", "descricao": "Juntada de Petição Comum" },
+        { "data": "23/09/2025", "date_iso": "2025-09-23T12:00:00", "descricao": "Juntada do Mandado de Pagamento (doc. 2025.00526.027.4414)" },
+        { "data": "29/09/2025", "date_iso": "2025-09-29T12:00:00", "descricao": "Fase atual — Expedição de Mandado de Pagamento" }
+      ]
+    },
+    {
+      "indice": 3,
+      "numero_cnj": "0004861-24.2023.8.19.0000",
+      "autuado_em": "31/01/2023",
+      "exequente": "Solange da Silva Chaves de Moura",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Pagamento de Quantia Certa pela Fazenda Pública",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "31/01/2023", "date_iso": "2023-01-31T12:00:00", "descricao": "Autuação do processo" },
+        { "data": "18/05/2023", "date_iso": "2023-05-18T12:00:00", "descricao": "Decisão (Des. Ricardo Rodrigues Cardozo)" },
+        { "data": "21/09/2023", "date_iso": "2023-09-21T12:00:00", "descricao": "Decisão (Des. Ricardo Rodrigues Cardozo)" },
+        { "data": "25/09/2023", "date_iso": "2023-09-25T12:00:00", "descricao": "Publicação da decisão (DECI/2023.000661)" },
+        { "data": "12/12/2023", "date_iso": "2023-12-12T12:00:00", "descricao": "RPV nº 5854/2023 expedida: determinado pagamento à exequente Solange e ao advogado Liz Werner Formaggini no valor de R$ 3.927,26 a título de honorários sucumbenciais, via RPV" },
+        { "data": "14/06/2024", "date_iso": "2024-06-14T12:00:00", "descricao": "Juntada de dois Mandados de Pagamento (2024.00526.027.1970 e 1971)" },
+        { "data": "08/10/2024", "date_iso": "2024-10-08T12:00:00", "descricao": "Decisão (Des. Caetano Ernesto da Fonseca Costa) — publicada em 10/10/2024 (DECI/2024.000511)" },
+        { "data": "10/10/2024", "date_iso": "2024-10-10T12:00:00", "descricao": "Fase atual — Intimação/Citação Eletrônica aos Interessados" }
+      ]
+    },
+    {
+      "indice": 4,
+      "numero_cnj": "0061175-87.2023.8.19.0000",
+      "autuado_em": "02/08/2023",
+      "exequente": "Daise Cristina Ribeiro de Carvalho",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Levantamento de Valor",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "02/08/2023", "date_iso": "2023-08-02T12:00:00", "descricao": "Autuação do processo" },
+        { "data": "30/10/2023", "date_iso": "2023-10-30T12:00:00", "descricao": "Intimação eletrônica aos Interessados" },
+        { "data": "10/04/2024", "date_iso": "2024-04-10T12:00:00", "descricao": "Juntada de petições (2x)" },
+        { "data": "03/07/2024", "date_iso": "2024-07-03T12:00:00", "descricao": "RPV expedida: determinado pagamento à exequente Daise Cristina Ribeiro de Carvalho via RPV; patrono intimado a apresentar dados bancários (AVISO TJ 44-2020)" },
+        { "data": "05/07/2024", "date_iso": "2024-07-05T12:00:00", "descricao": "Publicação do Ato Ordinatório RPV (AORD/2024.000203)" },
+        { "data": "22/09/2024", "date_iso": "2024-09-22T12:00:00", "descricao": "Observação: processo na fila de digitação — ordem cronológica de expedição" },
+        { "data": "21/03/2025", "date_iso": "2025-03-21T12:00:00", "descricao": "Conclusão ao 1º Vice-Presidente (Gab. Dr. Alberto Salomão Junior)" },
+        { "data": "26/03/2025", "date_iso": "2025-03-26T12:00:00", "descricao": "Publicação de Decisão (DECI/2025.000071)" },
+        { "data": "13/03/2026", "date_iso": "2026-03-13T12:00:00", "descricao": "Juntada de Extrato de GRERJ" },
+        { "data": "16/03/2026", "date_iso": "2026-03-16T12:00:00", "descricao": "Conclusão ao 1º Vice-Presidente (Gab. Dr. Alberto Salomão Junior)" },
+        { "data": "18/03/2026", "date_iso": "2026-03-18T12:00:00", "descricao": "Fase atual — Decisão (Des. Suely Lopes Magalhães — DECI/2026.000180)" }
+      ]
+    },
+    {
+      "indice": 5,
+      "numero_cnj": "0092545-21.2022.8.19.0000",
+      "autuado_em": "01/12/2022",
+      "exequente": "Ana Maria Caffaro Machado",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Pagamento de Quantia Certa pela Fazenda Pública",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "01/12/2022", "date_iso": "2022-12-01T12:00:00", "descricao": "Autuação do processo" },
+        { "data": "18/05/2023", "date_iso": "2023-05-18T12:00:00", "descricao": "Decisão (Des. Ricardo Rodrigues Cardozo)" },
+        { "data": "28/09/2023", "date_iso": "2023-09-28T12:00:00", "descricao": "Decisão — publicada em 28/09/2023 (DECI/2023)" },
+        { "data": "13/11/2023", "date_iso": "2023-11-13T12:00:00", "descricao": "RPV expedida (Ato Ordinatório): patrono intimado para apresentar dados bancários e esclarecer nome do patrono para RPV de honorários sucumbenciais" },
+        { "data": "01/08/2024", "date_iso": "2024-08-01T12:00:00", "descricao": "Decisão (Des. Caetano Ernesto da Fonseca Costa) — publicada em 05/08/2024 (DECI/2024.000266)" },
+        { "data": "05/08/2024", "date_iso": "2024-08-05T12:00:00", "descricao": "Intimação aos Interessados" },
+        { "data": "27/02/2026", "date_iso": "2026-02-27T12:00:00", "descricao": "Juntada de guia e petição comum" },
+        { "data": "11/03/2026", "date_iso": "2026-03-11T12:00:00", "descricao": "Documento liberado para assinaturas" },
+        { "data": "12/03/2026", "date_iso": "2026-03-12T12:00:00", "descricao": "Juntada do Mandado de Pagamento (2026.00526.027.1126)" },
+        { "data": "16/03/2026", "date_iso": "2026-03-16T12:00:00", "descricao": "Fase atual — Expedição de Mandado de Pagamento" }
+      ]
+    },
+    {
+      "indice": 6,
+      "numero_cnj": "0018916-77.2023.8.19.0000",
+      "autuado_em": "22/03/2023",
+      "exequente": "Jorge Solano de Andrade",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Pagamento de Quantia Certa pela Fazenda Pública",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "22/03/2023", "date_iso": "2023-03-22T12:00:00", "descricao": "Autuação do processo" },
+        { "data": "19/01/2024", "date_iso": "2024-01-19T12:00:00", "descricao": "Juntada de petições" },
+        { "data": "04/03/2024", "date_iso": "2024-03-04T12:00:00", "descricao": "Decisão — encaminhado ao SGJUD-OE" },
+        { "data": "08/03/2024", "date_iso": "2024-03-08T12:00:00", "descricao": "Publicação de Decisão (DECI/2024.000049 — Des. Marcello Alvarenga Leite)" },
+        { "data": "24/10/2024", "date_iso": "2024-10-24T12:00:00", "descricao": "Decisão (Des. Caetano Ernesto da Fonseca Costa)" },
+        { "data": "29/10/2024", "date_iso": "2024-10-29T12:00:00", "descricao": "Publicação de Decisão (DECI/2024.000567)" },
+        { "data": "13/11/2024", "date_iso": "2024-11-13T12:00:00", "descricao": "Intimação eletrônica aos Interessados" },
+        { "data": "11/04/2025", "date_iso": "2025-04-11T12:00:00", "descricao": "Intimação à PGE - RPV; Juntada de lista de beneficiários" },
+        { "data": "01/10/2025", "date_iso": "2025-10-01T12:00:00", "descricao": "Juntada de Petição Comum" },
+        { "data": "13/10/2025", "date_iso": "2025-10-13T12:00:00", "descricao": "Juntada de dois Mandados de Pagamento (2025.00526.027.4994 e .4995)" },
+        { "data": "17/10/2025", "date_iso": "2025-10-17T12:00:00", "descricao": "Fase atual — Expedição de Mandado de Pagamento" }
+      ]
+    },
+    {
+      "indice": 7,
+      "numero_cnj": "0069264-65.2024.8.19.0000",
+      "autuado_em": "29/08/2024",
+      "exequente": "Maria de Lourdes Freitas Barreira",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Levantamento de Valor",
+      "processId": null,
+      "observacoes": "Petição pendente de juntada (06/11/2025 — Prot. 2025.01039703). Processo recente (2024), em fase inicial.",
+      "movimentos_cronologicos": [
+        { "data": "29/08/2024", "date_iso": "2024-08-29T12:00:00", "descricao": "Remessa para SGJUD-OE e Autuação" },
+        { "data": "24/04/2025", "date_iso": "2025-04-24T12:00:00", "descricao": "Certidão" },
+        { "data": "24/04/2025", "date_iso": "2025-04-24T12:00:01", "descricao": "Ato ordinatório: exequente intimada sobre certidão (Portaria 1ª VP nº 02/2025)" },
+        { "data": "29/04/2025", "date_iso": "2025-04-29T12:00:00", "descricao": "Fase atual — Publicação de Ato Ordinatório (AORD/2025.000097): exequente intimada a se manifestar sobre certidão" }
+      ]
+    },
+    {
+      "indice": 8,
+      "numero_cnj": "0019319-46.2023.8.19.0000",
+      "autuado_em": "23/03/2023",
+      "exequente": "Jorge Solano de Andrade",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Pagamento de Quantia Certa pela Fazenda Pública",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "23/03/2023", "date_iso": "2023-03-23T12:00:00", "descricao": "Autuação do processo" },
+        { "data": "04/03/2024", "date_iso": "2024-03-04T12:00:00", "descricao": "Decisão" },
+        { "data": "08/03/2024", "date_iso": "2024-03-08T12:00:00", "descricao": "Publicação de Decisão (DECI/2024.000049 — Des. Marcello Alvarenga Leite)" },
+        { "data": "22/05/2024", "date_iso": "2024-05-22T12:00:00", "descricao": "Juntada de Embargos de Declaração" },
+        { "data": "24/05/2025", "date_iso": "2025-05-24T12:00:00", "descricao": "Juntada de petições" },
+        { "data": "28/05/2025", "date_iso": "2025-05-28T12:00:00", "descricao": "Decisão (Des. Suely Lopes Magalhães) + Conclusão ao 1º VP" },
+        { "data": "30/11/2025", "date_iso": "2025-11-30T12:00:00", "descricao": "Documento liberado para assinaturas e juntada de Extrato de GRERJ (honorários sucumbenciais)" },
+        { "data": "01/12/2025", "date_iso": "2025-12-01T12:00:00", "descricao": "Juntada de dois Mandados de Pagamento (2025.00526.027.5695 e .5697)" },
+        { "data": "09/12/2025", "date_iso": "2025-12-09T12:00:00", "descricao": "Fase atual — Expedição de Mandado de Pagamento" }
+      ]
+    },
+    {
+      "indice": 9,
+      "numero_cnj": "0006609-91.2023.8.19.0000",
+      "autuado_em": "09/02/2023",
+      "exequente": "Rosa Eli Machado de Santana",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Pagamento de Quantia Certa pela Fazenda Pública",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "09/02/2023", "date_iso": "2023-02-09T12:00:00", "descricao": "Remessa e Autuação" },
+        { "data": "17/05/2023", "date_iso": "2023-05-17T12:00:00", "descricao": "Decisão (Des. Ricardo Rodrigues Cardozo)" },
+        { "data": "27/08/2023", "date_iso": "2023-08-27T12:00:00", "descricao": "Conclusão ao Presidente do Órgão Julgador (Gab. Dr. Daniel Vianna Vargas); juntada de petição" },
+        { "data": "11/12/2023", "date_iso": "2023-12-11T12:00:00", "descricao": "Conclusão para Des. Patricia Rodriguez Whately" },
+        { "data": "15/05/2024", "date_iso": "2024-05-15T12:00:00", "descricao": "Publicação de Decisão (DECI/2024.000120 — Des. Patricia Rodriguez Whately)" },
+        { "data": "01/10/2024", "date_iso": "2024-10-01T12:00:00", "descricao": "Decisão (Des. Caetano Ernesto da Fonseca Costa)" },
+        { "data": "04/10/2024", "date_iso": "2024-10-04T12:00:00", "descricao": "Publicação de Decisão (DECI/2024.000481)" },
+        { "data": "23/10/2024", "date_iso": "2024-10-23T12:00:00", "descricao": "Fase atual — Intimação/Citação Eletrônica aos Interessados" }
+      ]
+    },
+    {
+      "indice": 10,
+      "numero_cnj": "0008198-21.2023.8.19.0000",
+      "autuado_em": "14/02/2023",
+      "exequente": "Martha Lopes Cardoso",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Pagamento de Quantia Certa pela Fazenda Pública",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "14/02/2023", "date_iso": "2023-02-14T12:00:00", "descricao": "Autuação do processo" },
+        { "data": "24/05/2023", "date_iso": "2023-05-24T12:00:00", "descricao": "Decisão (Des. Ricardo Rodrigues Cardozo)" },
+        { "data": "21/06/2023", "date_iso": "2023-06-21T12:00:00", "descricao": "Publicação de Decisão (DECI/2023.000289)" },
+        { "data": "12/03/2024", "date_iso": "2024-03-12T12:00:00", "descricao": "Decisão" },
+        { "data": "14/03/2024", "date_iso": "2024-03-14T12:00:00", "descricao": "Publicação de Decisão (DECI/2024.000055 — Des. Ricardo Rodrigues Cardozo)" },
+        { "data": "06/06/2024", "date_iso": "2024-06-06T12:00:00", "descricao": "Juntada de petição" },
+        { "data": "05/11/2025", "date_iso": "2025-11-05T12:00:00", "descricao": "Conclusão ao 1º VP (Gab. Dr. Alberto Salomão Junior)" },
+        { "data": "06/11/2025", "date_iso": "2025-11-06T12:00:00", "descricao": "Decisão (Des. Suely Lopes Magalhães)" },
+        { "data": "11/11/2025", "date_iso": "2025-11-11T12:00:00", "descricao": "Publicação de Decisão (DECI/2025.000750)" },
+        { "data": "26/11/2025", "date_iso": "2025-11-26T12:00:00", "descricao": "Fase atual — Intimação à Procuradoria Geral do Estado do RJ" }
+      ]
+    },
+    {
+      "indice": 11,
+      "numero_cnj": "0004939-18.2023.8.19.0000",
+      "autuado_em": "31/01/2023",
+      "exequente": "Neuman Mencari Leal de Souza",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Pagamento de Quantia Certa pela Fazenda Pública",
+      "processId": null,
+      "observacoes": "No extrato original aparecia '05/2023' sem dia para a RPV; foi adotado 25/05/2023 como data de referência (após a decisão de 18/05/2023) — ajuste se tiver a data exata no DJe.",
+      "movimentos_cronologicos": [
+        { "data": "31/01/2023", "date_iso": "2023-01-31T12:00:00", "descricao": "Autuação do processo" },
+        { "data": "18/05/2023", "date_iso": "2023-05-18T12:00:00", "descricao": "Decisão (Des. Ricardo Rodrigues Cardozo)" },
+        { "data": "25/05/2023", "date_iso": "2023-05-25T12:00:00", "descricao": "RPV expedida: determinado pagamento ao exequente Neuman Mencari Leal de Souza no valor bruto de R$ 21.526,75 via RPV; patrono intimado a apresentar dados bancários (data referência: maio/2023 — ver observações)" },
+        { "data": "24/04/2024", "date_iso": "2024-04-24T12:00:00", "descricao": "Intimação à PGE - Vista" },
+        { "data": "07/05/2024", "date_iso": "2024-05-07T12:00:00", "descricao": "Juntada de petição" },
+        { "data": "10/05/2024", "date_iso": "2024-05-10T12:00:00", "descricao": "Decisão (Des. Caetano Ernesto) — DECI/2024.000122" },
+        { "data": "31/10/2024", "date_iso": "2024-10-31T12:00:00", "descricao": "Decisão (Des. Caetano Ernesto da Fonseca Costa) — DECI/2024.000594" },
+        { "data": "04/11/2024", "date_iso": "2024-11-04T12:00:00", "descricao": "Fase atual — Intimação/Citação Eletrônica aos Interessados" }
+      ]
+    },
+    {
+      "indice": 12,
+      "numero_cnj": "0081825-58.2023.8.19.0000",
+      "autuado_em": "06/10/2023",
+      "exequente": "Jucelma Hermsdorff Vellozo Gaichi",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Levantamento de Valor",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "06/10/2023", "date_iso": "2023-10-06T12:00:00", "descricao": "Remessa e Autuação" },
+        { "data": "23/11/2023", "date_iso": "2023-11-23T12:00:00", "descricao": "Conclusão ao Magistrado para Despacho/Decisão" },
+        { "data": "28/12/2023", "date_iso": "2023-12-28T12:00:00", "descricao": "Decisão (Des. Marcello Alvarenga Leite)" },
+        { "data": "10/01/2024", "date_iso": "2024-01-10T12:00:00", "descricao": "Publicação de Decisão (DECI/2024.000002 — Des. Marcello Alvarenga Leite)" },
+        { "data": "16/07/2024", "date_iso": "2024-07-16T12:00:00", "descricao": "Decisão (Des. Caetano Ernesto da Fonseca Costa)" },
+        { "data": "23/07/2024", "date_iso": "2024-07-23T12:00:00", "descricao": "Publicação de Decisão (DECI/2024.000230)" },
+        { "data": "23/07/2024", "date_iso": "2024-07-23T12:00:01", "descricao": "Fase atual — Intimação/Citação Eletrônica aos Interessados" }
+      ]
+    },
+    {
+      "indice": 13,
+      "numero_cnj": "0015316-48.2023.8.19.0000",
+      "autuado_em": "10/03/2023",
+      "exequente": "Maria de Fatima Teles Stancato",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Pagamento de Quantia Certa pela Fazenda Pública",
+      "processId": null,
+      "movimentos_cronologicos": [
+        { "data": "10/03/2023", "date_iso": "2023-03-10T12:00:00", "descricao": "Autuação do processo" },
+        { "data": "17/05/2023", "date_iso": "2023-05-17T12:00:00", "descricao": "Decisão (Des. Ricardo Rodrigues Cardozo) — DECI/2023.000260" },
+        { "data": "17/08/2023", "date_iso": "2023-08-17T12:00:00", "descricao": "Juntada de petições e encaminhamento à Central de Cálculos" },
+        { "data": "18/08/2023", "date_iso": "2023-08-18T12:00:00", "descricao": "Publicação de Ato Ordinatório (AORD/2023.000572)" },
+        { "data": "03/10/2024", "date_iso": "2024-10-03T12:00:00", "descricao": "Ato ordinatório: partes intimadas sobre manifestação do Contador Judicial (Portaria 1ª VP nº 02/2024)" },
+        { "data": "07/10/2024", "date_iso": "2024-10-07T12:00:00", "descricao": "Publicação de Ato Ordinatório (AORD/2024.000354)" },
+        { "data": "07/10/2024", "date_iso": "2024-10-07T12:00:01", "descricao": "Fase atual — Intimação/Citação Eletrônica aos Interessados" }
+      ]
+    },
+    {
+      "indice": 14,
+      "numero_cnj": "0050852-86.2024.8.19.0000",
+      "autuado_em": "01/07/2024",
+      "exequente": "Marli Meireles Soares",
+      "executado": "Estado do Rio de Janeiro",
+      "classe": "Cumprimento de Sentença — Levantamento de Valor",
+      "processId": null,
+      "observacoes": "Petições mencionadas como pendentes de juntada em 21/10/2024 e 06/11/2025.",
+      "movimentos_cronologicos": [
+        { "data": "01/07/2024", "date_iso": "2024-07-01T12:00:00", "descricao": "Remessa e Autuação" },
+        { "data": "04/10/2024", "date_iso": "2024-10-04T12:00:00", "descricao": "Ato ordinatório: intimado o executado na forma do art. 535 do CPC (Portaria 1ª VP nº 02/2024)" },
+        { "data": "07/10/2024", "date_iso": "2024-10-07T12:00:00", "descricao": "Publicação de Ato Ordinatório (AORD/2024.000355)" },
+        { "data": "07/10/2024", "date_iso": "2024-10-07T12:00:01", "descricao": "Fase atual — Intimação/Citação Eletrônica aos Interessados" }
+      ]
+    }
+  ],
+  "totais": {
+    "processos": 14,
+    "movimentos": 100
+  }
+}

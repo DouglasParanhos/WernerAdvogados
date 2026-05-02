@@ -120,4 +120,16 @@ public interface ProcessRepository extends JpaRepository<Process, Long> {
                      "p.previsaoHonorariosContratuais, p.previsaoHonorariosSucumbenciais " +
                      "FROM Process p WHERE p.tipoProcesso IS NOT NULL")
        List<Object[]> findProcessesForHonorarios();
+
+       /**
+        * Pares (id, numero) distintos do TJRJ (segmento CNJ .8.19.), excluindo arquivados.
+        * Usa MIN(p.id) para garantir um id estável quando há mais de um processo com o mesmo número.
+        * {@code %arquivad%} cobre "arquivado" e "arquivada"; status só "ARQ" também é excluído.
+        */
+       @Query("SELECT MIN(p.id), p.numero FROM Process p " +
+                     "WHERE LOWER(p.numero) LIKE '%.8.19.%' " +
+                     "AND (p.status IS NULL OR (LOWER(p.status) NOT LIKE '%arquivad%' "
+                     + "AND UPPER(TRIM(p.status)) <> 'ARQ')) " +
+                     "GROUP BY p.numero")
+       List<Object[]> findIdAndNumeroTjrjAtivos();
 }
