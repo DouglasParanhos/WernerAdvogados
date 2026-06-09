@@ -5,7 +5,30 @@
       <form @submit.prevent="saveTask">
         <div class="form-group">
           <label>Título *</label>
-          <input v-model="taskForm.titulo" type="text" required />
+          <div class="titulo-autocomplete" @keydown.escape.stop="tituloSuggestionsOpen = false">
+            <input
+              v-model="taskForm.titulo"
+              type="text"
+              required
+              autocomplete="off"
+              @input="onTituloInput"
+              @focus="onTituloFocus"
+              @blur="onTituloBlur"
+            />
+            <ul
+              v-show="tituloSuggestionsOpen && tituloFilteredSuggestions.length"
+              class="titulo-suggestions"
+              role="listbox"
+            >
+              <li
+                v-for="s in tituloFilteredSuggestions"
+                :key="s"
+                class="titulo-suggestion-item"
+                role="option"
+                @mousedown.prevent="selectTituloSuggestion(s)"
+              >{{ s }}</li>
+            </ul>
+          </div>
         </div>
 
         <div class="form-group">
@@ -122,6 +145,36 @@
 import { taskService } from '../services/taskService'
 import { processService } from '../services/processService'
 
+const TITULO_SUGGESTIONS = [
+  'Apresentar contrarrazões ao RESP e REXT',
+  'Apresentar contrarrazões à apelação',
+  'Opor embargos de declaração (ED)',
+  'Responder ao agravo interno',
+  'Apresentar apelação',
+  'Apresentar agravo',
+  'Apresentar petição de provas',
+  'Apresentar réplica',
+  'Apresentar quesitos',
+  'Requerer levantamento de valores',
+  'Peticionar pedido de homologação + RPV',
+  'Peticionar pedido de envio de RPV',
+  'Peticionar sobre correção monetária',
+  'Peticionar com cálculos',
+  'Peticionar concordando com cálculos e pedindo homologação',
+  'Reembolso de custas',
+  'Responder impugnação (ERJ)',
+  'Reiterar pedido de reembolso de custas',
+  'Verificar comprovante de pagamento',
+  'Pedir conclusão ao juiz',
+  'Pedir conclusão para homologação',
+  'Pedir envio dos autos para o TJRJ',
+  'Pedir envio da conclusão para sentença',
+  'Pedir julgamento dos EDs',
+  'Pedir citação',
+  'Pedir para Expedir mandado de pagamento',
+  'Despachar',
+]
+
 const emptyTaskForm = () => ({
   id: null,
   titulo: '',
@@ -152,6 +205,8 @@ export default {
   emits: ['update:modelValue', 'saved'],
   data() {
     return {
+      tituloSuggestionsOpen: false,
+      tituloBlurTimeoutId: null,
       processoInputDisplay: '',
       processoConfirmadoNumero: null,
       processoSuggestions: [],
@@ -166,6 +221,11 @@ export default {
   computed: {
     isEditMode() {
       return !!(this.taskForEdit && this.taskForEdit.id)
+    },
+    tituloFilteredSuggestions() {
+      const q = (this.taskForm.titulo || '').trim().toLowerCase()
+      if (!q) return TITULO_SUGGESTIONS
+      return TITULO_SUGGESTIONS.filter(s => s.toLowerCase().includes(q))
     }
   },
   watch: {
@@ -176,6 +236,9 @@ export default {
     }
   },
   beforeUnmount() {
+    if (this.tituloBlurTimeoutId) {
+      clearTimeout(this.tituloBlurTimeoutId)
+    }
     if (this.processoSearchDebounceId) {
       clearTimeout(this.processoSearchDebounceId)
     }
@@ -184,6 +247,25 @@ export default {
     }
   },
   methods: {
+    onTituloInput() {
+      this.tituloSuggestionsOpen = true
+    },
+    onTituloFocus() {
+      this.tituloSuggestionsOpen = true
+    },
+    onTituloBlur() {
+      if (this.tituloBlurTimeoutId) {
+        clearTimeout(this.tituloBlurTimeoutId)
+      }
+      this.tituloBlurTimeoutId = setTimeout(() => {
+        this.tituloSuggestionsOpen = false
+        this.tituloBlurTimeoutId = null
+      }, 200)
+    },
+    selectTituloSuggestion(s) {
+      this.taskForm.titulo = s
+      this.tituloSuggestionsOpen = false
+    },
     applyOpenState() {
       const task = this.taskForEdit
       if (task && task.id) {
@@ -390,6 +472,39 @@ export default {
   border-radius: 6px;
   font-size: 1rem;
   transition: border-color 0.2s;
+}
+
+.titulo-autocomplete {
+  position: relative;
+}
+
+.titulo-suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  margin-top: 4px;
+}
+
+.titulo-suggestion-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+}
+
+.titulo-suggestion-item:hover {
+  background: #f1f5f9;
 }
 
 .form-group-processo .processo-row {
