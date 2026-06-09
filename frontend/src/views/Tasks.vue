@@ -57,6 +57,13 @@
           <div class="column-header" :style="{ backgroundColor: column.color }">
             <h2>{{ column.title }}</h2>
             <div class="column-header-right">
+              <button
+                v-if="column.status === 'COMPLETA' && getArchivedTasksCount() > 0"
+                @click.stop="showArchivedCompleta = !showArchivedCompleta"
+                class="btn-archive-toggle"
+              >
+                {{ showArchivedCompleta ? 'Ocultar arquivadas' : `Ver arquivadas (${getArchivedTasksCount()})` }}
+              </button>
               <span class="task-count">{{ getTasksByStatus(column.status).length }}</span>
               <button 
                 v-if="isMobile" 
@@ -79,7 +86,7 @@
               v-for="task in getVisibleTasksByStatus(column.status)"
               :key="task.id"
               class="task-card"
-              :class="getTaskColorClass(task.tipoTarefa)"
+              :class="[getTaskColorClass(task.tipoTarefa), { 'task-card-archived': isArchivedTask(task) }]"
               :draggable="true"
               @dragstart="onDragStart($event, task)"
               @click="openEditTaskModal(task)"
@@ -94,6 +101,7 @@
                     :style="{ backgroundColor: getResponsavelColor(task.responsavel) }"
                   >{{ task.responsavel }}</span>
                   <span v-if="formatPrazoParaCard(task.prazoFinal)" class="task-prazo-inline">{{ formatPrazoParaCard(task.prazoFinal) }}</span>
+                  <span v-if="isArchivedTask(task)" class="task-archived-badge">Arquivada</span>
                 </div>
                 <button @click.stop="deleteTask(task.id)" class="task-delete-btn" title="Excluir tarefa">
                   ×
@@ -199,7 +207,8 @@ export default {
         COMPLETA: 0
       },
       collapsedColumns: new Set(),
-      isMobile: false
+      isMobile: false,
+      showArchivedCompleta: false
     }
   },
   async mounted() {
@@ -244,15 +253,43 @@ export default {
         this.$nextTick(() => this.clampAllColumnPages())
       }
     },
+    isArchivedTask(task) {
+      if (!task.completedOn) return false
+      const completedDate = new Date(task.completedOn)
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      return completedDate < thirtyDaysAgo
+    },
+    getArchivedTasksCount() {
+      return this.tasks.filter(
+        task => task.status === 'COMPLETA' && this.isArchivedTask(task)
+      ).length
+    },
     getTasksByStatus(status) {
+      const TIPO_PRIORITY = {
+        PRAZO: 0,
+        ESCRITA_PECA: 1,
+        PRESENCIAL: 2,
+        COMUNICAR_CLIENTE: 3,
+        ADMINISTRATIVO: 4
+      }
       return this.tasks
         .filter(task => {
           const matchesStatus = task.status === status
           const matchesResponsavel = !this.filterResponsavel || task.responsavel === this.filterResponsavel
           const matchesTipoTarefa = !this.filterTipoTarefa || task.tipoTarefa === this.filterTipoTarefa
-          return matchesStatus && matchesResponsavel && matchesTipoTarefa
+          if (!matchesStatus || !matchesResponsavel || !matchesTipoTarefa) return false
+          if (status === 'COMPLETA' && !this.showArchivedCompleta && this.isArchivedTask(task)) return false
+          return true
         })
-        .sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+        .sort((a, b) => {
+          const pa = TIPO_PRIORITY[a.tipoTarefa] ?? 99
+          const pb = TIPO_PRIORITY[b.tipoTarefa] ?? 99
+          if (pa !== pb) return pa - pb
+          const da = a.createdOn ? new Date(a.createdOn) : new Date(0)
+          const db = b.createdOn ? new Date(b.createdOn) : new Date(0)
+          return da - db
+        })
     },
     getDisplayLimitForStatus(status) {
       const raw = this.columnDisplayLimit[status]
@@ -825,6 +862,38 @@ export default {
   .column-toggle-btn {
     display: none;
   }
+}
+
+.btn-archive-toggle {
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-archive-toggle:hover {
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.task-card-archived {
+  opacity: 0.55;
+}
+
+.task-archived-badge {
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: #e5e7eb;
+  border: 1px solid #d1d5db;
 }
 </style>
 

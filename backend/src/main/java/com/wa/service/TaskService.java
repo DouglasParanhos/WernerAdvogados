@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -72,7 +73,16 @@ public class TaskService {
         if (request.getTitulo() != null) task.setTitulo(request.getTitulo());
         if (request.getDescricao() != null) task.setDescricao(request.getDescricao());
         if (request.getTipoTarefa() != null) task.setTipoTarefa(request.getTipoTarefa());
-        if (request.getStatus() != null) task.setStatus(request.getStatus());
+        if (request.getStatus() != null) {
+            String newStatus = request.getStatus();
+            String oldStatus = task.getStatus();
+            task.setStatus(newStatus);
+            if ("COMPLETA".equals(newStatus) && !"COMPLETA".equals(oldStatus)) {
+                task.setCompletedOn(LocalDateTime.now());
+            } else if (!"COMPLETA".equals(newStatus) && "COMPLETA".equals(oldStatus)) {
+                task.setCompletedOn(null);
+            }
+        }
         if (request.getResponsavel() != null) task.setResponsavel(request.getResponsavel());
         if (request.getOrdem() != null) task.setOrdem(request.getOrdem());
         resolveProcessId(task, request.getProcessId());
@@ -128,6 +138,7 @@ public class TaskService {
         }
         dto.setPrazoFinal(task.getPrazoFinal());
         dto.setOrdem(task.getOrdem());
+        dto.setCompletedOn(task.getCompletedOn());
         dto.setCreatedOn(task.getCreatedOn());
         dto.setModifiedOn(task.getModifiedOn());
         return dto;

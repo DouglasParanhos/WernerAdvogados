@@ -43,6 +43,9 @@ public class Task {
     @Column(name = "ordem")
     private Integer ordem;
     
+    @Column(name = "completed_on")
+    private LocalDateTime completedOn;
+
     @Column(name = "created_on", nullable = false)
     private LocalDateTime createdOn = LocalDateTime.now();
     
