@@ -10,11 +10,12 @@ import java.util.List;
 
 @Repository
 public interface MovimentRepository extends JpaRepository<Moviment, Long> {
-    @Query("SELECT m FROM Moviment m WHERE m.process.id = :processId ORDER BY m.date DESC")
+    @Query("SELECT m FROM Moviment m LEFT JOIN FETCH m.recurso WHERE m.process.id = :processId ORDER BY m.date DESC")
     List<Moviment> findByProcessId(@Param("processId") Long processId);
 
     @Query("SELECT m FROM Moviment m " +
             "JOIN FETCH m.process p " +
+            "LEFT JOIN FETCH m.recurso " +
             "JOIN p.matriculation mat " +
             "JOIN mat.person per " +
             "WHERE per.id = :personId " +

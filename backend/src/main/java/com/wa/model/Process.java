@@ -58,6 +58,9 @@ public class Process {
     
     @OneToMany(mappedBy = "process", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Moviment> moviments;
+
+    @OneToMany(mappedBy = "process", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Recurso> recursos;
     
     @Column(name = "created_on", nullable = false)
     private LocalDateTime createdOn = LocalDateTime.now();

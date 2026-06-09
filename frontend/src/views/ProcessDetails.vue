@@ -130,6 +130,69 @@
           </div>
         </div>
         
+        <!-- Recursos de Segunda Instância -->
+        <div class="section">
+          <div
+            class="section-header section-header--collapsible"
+            :class="{ 'section-header--collapsed': !recursosSectionExpanded }"
+            @click="toggleRecursosSection"
+          >
+            <div class="section-header-left">
+              <button
+                type="button"
+                class="section-toggle-btn"
+                :title="recursosSectionExpanded ? 'Recolher seção' : 'Expandir seção'"
+                @click.stop="toggleRecursosSection"
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" :class="{ 'rotated': recursosSectionExpanded }">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <h2>Recursos de 2ª Instância</h2>
+              <span v-if="!recursosSectionExpanded && recursosSummary" class="section-summary">{{ recursosSummary }}</span>
+            </div>
+            <button type="button" @click.stop="addRecurso" class="btn-icon-add" title="Adicionar Recurso">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <div v-show="recursosSectionExpanded" class="section-body">
+            <div v-if="recursosAtivos.length > 0 || recursosBaixados.length > 0">
+              <!-- Recursos ativos -->
+              <RecursoCard
+                v-for="r in recursosAtivos"
+                :key="r.id"
+                :recurso="r"
+                :process-id="process.id"
+                @updated="onRecursoUpdated"
+                @deleted="onRecursoDeleted"
+              />
+              <!-- Recursos baixados (colapsados) -->
+              <RecursoCard
+                v-for="r in recursosBaixados"
+                :key="r.id"
+                :recurso="r"
+                :process-id="process.id"
+                @updated="onRecursoUpdated"
+                @deleted="onRecursoDeleted"
+              />
+            </div>
+            <div v-else class="no-moviments">Nenhum recurso cadastrado</div>
+
+            <!-- Novo recurso (sem ID ainda) renderizado via card -->
+            <RecursoCard
+              v-if="addingRecurso"
+              :recurso="newRecursoPlaceholder"
+              :is-new="true"
+              :process-id="process.id"
+              @updated="onNewRecursoSaved"
+              @deleted="cancelAddRecurso"
+            />
+          </div>
+        </div>
+
         <!-- Movimentações -->
         <div class="section">
           <div class="section-header">
@@ -172,6 +235,15 @@
               <label>Descrição:</label>
               <textarea v-model="newMoviment.descricao" class="form-control" rows="3"></textarea>
             </div>
+            <div class="form-group" v-if="recursos.length > 0">
+              <label>Vincular ao Recurso (opcional):</label>
+              <select v-model="newMoviment.recursoId" class="form-control">
+                <option :value="null">— 1ª instância —</option>
+                <option v-for="r in recursosAtivos" :key="r.id" :value="r.id">
+                  {{ classeLabel(r.classe) }}{{ r.desembargadorRelator ? ' — ' + r.desembargadorRelator : '' }}
+                </option>
+              </select>
+            </div>
             <div class="form-group checkbox-group">
               <label class="checkbox-label">
                 <input type="checkbox" v-model="newMoviment.visibleToClient" class="checkbox-input" />
@@ -191,7 +263,8 @@
               v-for="moviment in movimentsForDisplay"
               :key="moviment.isPending ? moviment.tempId : moviment.id"
               class="moviment-card"
-              :class="{ 'moviment-card--pending': moviment.isPending }"
+              :class="movimentCardClasses(moviment)"
+              :style="movimentCardStyle(moviment)"
             >
               <div v-if="!moviment.isPending && editingMovimentId === moviment.id" class="moviment-edit-form">
                 <div class="form-group">
@@ -221,6 +294,15 @@
                 <div class="form-group">
                   <label>Descrição:</label>
                   <textarea v-model="editingMoviment.descricao" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group" v-if="recursos.length > 0">
+                  <label>Vincular ao Recurso (opcional):</label>
+                  <select v-model="editingMoviment.recursoId" class="form-control">
+                    <option :value="null">— 1ª instância —</option>
+                    <option v-for="r in recursosAtivos" :key="r.id" :value="r.id">
+                      {{ classeLabel(r.classe) }}{{ r.desembargadorRelator ? ' — ' + r.desembargadorRelator : '' }}
+                    </option>
+                  </select>
                 </div>
                 <div class="form-group checkbox-group">
                   <label class="checkbox-label">
@@ -312,7 +394,9 @@ import { processService } from '../services/processService'
 import { movimentService } from '../services/movimentService'
 import { matriculationService } from '../services/matriculationService'
 import { datajudService } from '../services/datajudService'
+import { recursoService } from '../services/recursoService'
 import TaskFormModal from '../components/TaskFormModal.vue'
+import RecursoCard from '../components/RecursoCard.vue'
 
 function yyyyMmDdDaysAgo(days) {
   const d = new Date()
@@ -367,11 +451,12 @@ function resolveSistemaPortalLink(sistema) {
 
 export default {
   name: 'ProcessDetails',
-  components: { TaskFormModal },
+  components: { TaskFormModal, RecursoCard },
   data() {
     return {
       process: null,
       moviments: [],
+      recursos: [],
       pendingDatajud: [],
       loading: false,
       error: null,
@@ -382,15 +467,36 @@ export default {
       editingMovimentId: null,
       editingMoviment: null,
       saving: false,
+      addingRecurso: false,
+      recursosSectionExpanded: true,
       newMoviment: {
         descricao: '',
         date: '',
         processId: null,
-        visibleToClient: false
+        visibleToClient: false,
+        recursoId: null
       }
     }
   },
   computed: {
+    recursosAtivos() {
+      return (this.recursos || []).filter(r => !r.baixado)
+    },
+    recursosBaixados() {
+      return (this.recursos || []).filter(r => r.baixado)
+    },
+    recursosSummary() {
+      const ativos = this.recursosAtivos.length
+      const baixados = this.recursosBaixados.length
+      if (ativos + baixados === 0) return ''
+      const parts = []
+      if (ativos > 0) parts.push(`${ativos} ${ativos === 1 ? 'ativo' : 'ativos'}`)
+      if (baixados > 0) parts.push(`${baixados} ${baixados === 1 ? 'baixado' : 'baixados'}`)
+      return parts.join(' · ')
+    },
+    newRecursoPlaceholder() {
+      return { processId: this.process?.id, classe: '', historicoRelator: 'NA', historicoCamara: 'NA', resp: false, rext: false, baixado: false }
+    },
     isTjrjNumero() {
       const n = this.process?.numero
       return typeof n === 'string' && n.toLowerCase().includes('.8.19.')
@@ -418,7 +524,7 @@ export default {
   },
   async mounted() {
     await this.loadProcess()
-    await this.loadMoviments()
+    await Promise.all([this.loadMoviments(), this.loadRecursos()])
   },
   methods: {
     async loadProcess() {
@@ -442,6 +548,55 @@ export default {
       } catch (err) {
         console.error('Erro ao carregar movimentações:', err)
       }
+    },
+    async loadRecursos() {
+      try {
+        const processId = this.$route.params.id
+        this.recursos = await recursoService.getByProcessId(processId)
+      } catch (err) {
+        console.error('Erro ao carregar recursos:', err)
+      }
+    },
+    toggleRecursosSection() {
+      this.recursosSectionExpanded = !this.recursosSectionExpanded
+    },
+    addRecurso() {
+      this.recursosSectionExpanded = true
+      this.addingRecurso = true
+    },
+    cancelAddRecurso() {
+      this.addingRecurso = false
+    },
+    onNewRecursoSaved(saved) {
+      this.recursos.push(saved)
+      this.addingRecurso = false
+    },
+    onRecursoUpdated(updated) {
+      const idx = this.recursos.findIndex(r => r.id === updated.id)
+      if (idx >= 0) {
+        this.recursos.splice(idx, 1, updated)
+      } else {
+        this.recursos.push(updated)
+      }
+    },
+    onRecursoDeleted(id) {
+      this.recursos = this.recursos.filter(r => r.id !== id)
+    },
+    classeLabel(classe) {
+      if (classe === 'APELACAO') return 'Apelação'
+      if (classe === 'AGRAVO_DE_INSTRUMENTO') return 'Agravo de Instrumento'
+      return classe || '—'
+    },
+    movimentCardClasses(moviment) {
+      return {
+        'moviment-card--pending': moviment.isPending,
+        'moviment-card--apelacao': !moviment.isPending && moviment.recursoClasse === 'APELACAO',
+        'moviment-card--agravo': !moviment.isPending && moviment.recursoClasse === 'AGRAVO_DE_INSTRUMENTO',
+        'moviment-card--visible-client': !moviment.isPending && moviment.visibleToClient === true
+      }
+    },
+    movimentCardStyle() {
+      return {}
     },
     normalizeMovementDesc(s) {
       if (s == null) return ''
@@ -623,7 +778,8 @@ export default {
         descricao: '',
         date: todayAt0001Local(),
         processId: pid,
-        visibleToClient: false
+        visibleToClient: false,
+        recursoId: null
       }
       this.showNewMovimentForm = true
     },
@@ -676,7 +832,8 @@ export default {
         descricao: '',
         date: '',
         processId: this.process.id,
-        visibleToClient: false
+        visibleToClient: false,
+        recursoId: null
       }
     },
     startEditMoviment(moviment) {
@@ -693,7 +850,8 @@ export default {
         descricao: moviment.descricao,
         date: `${year}-${month}-${day}T${hours}:${minutes}`,
         processId: moviment.processId,
-        visibleToClient: moviment.visibleToClient !== undefined ? moviment.visibleToClient : true
+        visibleToClient: moviment.visibleToClient !== undefined ? moviment.visibleToClient : true,
+        recursoId: moviment.recursoId || null
       }
     },
     async saveEditMoviment() {
@@ -916,6 +1074,57 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+}
+
+.section-header--collapsible {
+  cursor: pointer;
+  user-select: none;
+}
+
+.section-header--collapsed {
+  margin-bottom: 0;
+}
+
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.section-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.section-toggle-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.section-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s;
+}
+
+.section-toggle-btn svg.rotated {
+  transform: rotate(180deg);
+}
+
+.section-summary {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
 }
 
 .section h2 {
@@ -1156,6 +1365,28 @@ export default {
   border-color: #17a2b8;
   background: linear-gradient(135deg, #f0fbfc 0%, #f8f9fa 100%);
   box-shadow: 0 0 0 1px rgba(23, 162, 184, 0.15);
+}
+
+.moviment-card--apelacao {
+  background: #e8f4fd;
+  border-color: #90caf9;
+}
+
+.moviment-card--agravo {
+  background: #fff3e0;
+  border-color: #ffcc80;
+}
+
+.moviment-card--visible-client {
+  border-left: 4px solid #4caf50;
+}
+
+.moviment-card--apelacao.moviment-card--visible-client {
+  border-left: 4px solid #4caf50;
+}
+
+.moviment-card--agravo.moviment-card--visible-client {
+  border-left: 4px solid #4caf50;
 }
 
 .moviment-header--pending {

@@ -21,7 +21,8 @@ public interface ProcessRepository extends JpaRepository<Process, Long> {
        @Query("SELECT DISTINCT p FROM Process p " +
                      "LEFT JOIN FETCH p.matriculation m " +
                      "LEFT JOIN FETCH m.person " +
-                     "LEFT JOIN FETCH p.moviments " +
+                     "LEFT JOIN FETCH p.moviments mov " +
+                     "LEFT JOIN FETCH mov.recurso " +
                      "WHERE p.id = :id")
        Optional<Process> findByIdWithMoviments(@Param("id") Long id);
 
