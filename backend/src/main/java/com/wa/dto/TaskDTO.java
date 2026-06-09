@@ -21,6 +21,7 @@ public class TaskDTO {
     private String processNumero;
     private LocalDate prazoFinal;
     private Integer ordem;
+    private LocalDateTime completedOn;
     private LocalDateTime createdOn;
     private LocalDateTime modifiedOn;
 }
