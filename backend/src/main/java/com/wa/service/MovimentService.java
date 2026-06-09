@@ -4,8 +4,10 @@ import com.wa.dto.MovimentDTO;
 import com.wa.dto.MovimentRequestDTO;
 import com.wa.model.Moviment;
 import com.wa.model.Process;
+import com.wa.model.Recurso;
 import com.wa.repository.MovimentRepository;
 import com.wa.repository.ProcessRepository;
+import com.wa.repository.RecursoRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ public class MovimentService {
 
     private final MovimentRepository movimentRepository;
     private final ProcessRepository processRepository;
+    private final RecursoRepository recursoRepository;
 
     public List<MovimentDTO> findAll() {
         return movimentRepository.findAll().stream()
@@ -55,6 +58,12 @@ public class MovimentService {
         moviment.setProcess(process);
         moviment.setVisibleToClient(request.getVisibleToClient() != null ? request.getVisibleToClient() : true);
 
+        if (request.getRecursoId() != null) {
+            Recurso recurso = recursoRepository.findById(request.getRecursoId())
+                    .orElseThrow(() -> new RuntimeException("Recurso não encontrado com ID: " + request.getRecursoId()));
+            moviment.setRecurso(recurso);
+        }
+
         moviment = movimentRepository.save(moviment);
         return convertToDTO(moviment);
     }
@@ -72,6 +81,14 @@ public class MovimentService {
         moviment.setProcess(process);
         if (request.getVisibleToClient() != null) {
             moviment.setVisibleToClient(request.getVisibleToClient());
+        }
+
+        if (request.getRecursoId() != null) {
+            Recurso recurso = recursoRepository.findById(request.getRecursoId())
+                    .orElseThrow(() -> new RuntimeException("Recurso não encontrado com ID: " + request.getRecursoId()));
+            moviment.setRecurso(recurso);
+        } else {
+            moviment.setRecurso(null);
         }
 
         moviment = movimentRepository.save(moviment);
@@ -92,17 +109,19 @@ public class MovimentService {
         dto.setDate(moviment.getDate());
         dto.setProcessId(moviment.getProcess().getId());
         dto.setVisibleToClient(moviment.getVisibleToClient());
-        // Incluir informações do processo se disponível
         if (moviment.getProcess() != null) {
             dto.setProcessNumero(moviment.getProcess().getNumero());
             dto.setProcessComarca(moviment.getProcess().getComarca());
             dto.setProcessVara(moviment.getProcess().getVara());
             dto.setProcessTipoProcesso(moviment.getProcess().getTipoProcesso());
             dto.setProcessStatus(moviment.getProcess().getStatus());
-            // Incluir informações da matrícula se disponível
             if (moviment.getProcess().getMatriculation() != null) {
                 dto.setProcessMatriculationNumero(moviment.getProcess().getMatriculation().getNumero());
             }
+        }
+        if (moviment.getRecurso() != null) {
+            dto.setRecursoId(moviment.getRecurso().getId());
+            dto.setRecursoClasse(moviment.getRecurso().getClasse());
         }
         return dto;
     }

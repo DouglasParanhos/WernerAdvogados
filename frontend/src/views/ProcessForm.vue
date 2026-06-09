@@ -145,7 +145,8 @@ export default {
       error: null,
       showSuccessModal: false,
       successMessage: '',
-      processPersonId: null
+      processPersonId: null,
+      createdProcessId: null
     }
   },
   computed: {
@@ -259,7 +260,8 @@ export default {
           await processService.update(this.processId, data)
           this.successMessage = 'Processo atualizado com sucesso!'
         } else {
-          await processService.create(data)
+          const created = await processService.create(data)
+          this.createdProcessId = created.id
           this.successMessage = 'Processo cadastrado com sucesso!'
         }
         
@@ -296,21 +298,21 @@ export default {
     closeSuccessModal() {
       console.log('Fechando modal, processPersonId:', this.processPersonId, 'personId:', this.personId)
       this.showSuccessModal = false
-      // Após fechar o modal, voltar para a página do cliente se tiver personId
-      const personId = this.personId || this.processPersonId
-      if (personId) {
-        this.$router.push(`/clients/${personId}`)
+      if (this.isEdit) {
+        this.$router.push(`/processes/${this.processId}`)
+        return
+      }
+      if (this.createdProcessId) {
+        this.$router.push(`/processes/${this.createdProcessId}`)
       } else {
-        // Se não tiver personId, tentar pegar da matrícula selecionada
-        const selectedMat = this.matriculations.find(m => m.id === this.form.matriculationId)
-        if (selectedMat && selectedMat.personId) {
-          this.$router.push(`/clients/${selectedMat.personId}`)
-        } else {
-          this.$router.push('/processes')
-        }
+        this.$router.push('/processes')
       }
     },
     goBack() {
+      if (this.isEdit) {
+        this.$router.push(`/processes/${this.processId}`)
+        return
+      }
       if (this.personId) {
         this.$router.push(`/clients/${this.personId}`)
       } else {
