@@ -83,7 +83,34 @@
         <div class="form-group form-group-processo">
           <label for="task-form-modal-processo-input">Processo</label>
           <div class="processo-row">
+            <div v-if="!processoEmModoEdicao && taskForm.processId" class="processo-display">
+              <button
+                type="button"
+                class="icon-btn open-tab-btn"
+                title="Abrir processo em nova aba"
+                @click="openProcessInNewTab"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <span class="processo-numero-label">{{ processoConfirmadoNumero }}</span>
+              <button
+                type="button"
+                class="icon-btn edit-btn"
+                title="Alterar processo"
+                @click="editProcesso"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
             <div
+              v-else
               class="processo-autocomplete"
               @keydown.escape.stop="closeProcessoSuggestions"
             >
@@ -215,6 +242,7 @@ export default {
       processoSearchDebounceId: null,
       processoBlurTimeoutId: null,
       semProcessoRelacionado: false,
+      processoEmModoEdicao: true,
       taskForm: emptyTaskForm()
     }
   },
@@ -284,11 +312,13 @@ export default {
         this.processoConfirmadoNumero = task.processNumero || null
         this.processoSuggestions = []
         this.processoSuggestionsOpen = false
+        this.processoEmModoEdicao = !task.processId
         return
       }
 
       this.semProcessoRelacionado = false
       this.resetProcessoAutocomplete()
+      this.processoEmModoEdicao = true
       this.taskForm = emptyTaskForm()
       const pp = this.presetProcess
       if (pp && pp.id != null) {
@@ -296,6 +326,7 @@ export default {
         const num = pp.numero != null ? String(pp.numero) : ''
         this.processoInputDisplay = num
         this.processoConfirmadoNumero = num || null
+        this.processoEmModoEdicao = false
       }
     },
     resetProcessoAutocomplete() {
@@ -364,16 +395,33 @@ export default {
       this.processoInputDisplay = p.numero
       this.processoSuggestions = []
       this.processoSuggestionsOpen = false
+      this.processoEmModoEdicao = false
     },
     onSemProcessoRelacionadoChange() {
       if (this.semProcessoRelacionado) {
         this.taskForm.processId = null
         this.resetProcessoAutocomplete()
+        this.processoEmModoEdicao = true
       }
+    },
+    editProcesso() {
+      this.taskForm.processId = null
+      this.processoConfirmadoNumero = null
+      this.processoInputDisplay = ''
+      this.processoEmModoEdicao = true
+    },
+    openProcessInNewTab() {
+      if (!this.taskForm.processId) return
+      const { href } = this.$router.resolve({
+        name: 'ProcessDetails',
+        params: { id: String(this.taskForm.processId) }
+      })
+      window.open(href, '_blank', 'noopener,noreferrer')
     },
     closeModal() {
       this.$emit('update:modelValue', false)
       this.semProcessoRelacionado = false
+      this.processoEmModoEdicao = true
       this.resetProcessoAutocomplete()
       this.taskForm = emptyTaskForm()
     },
@@ -582,6 +630,50 @@ export default {
 .form-group select:focus {
   outline: none;
   border-color: #003d7a;
+}
+
+.processo-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  flex: 1;
+}
+
+.processo-numero-label {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 1rem;
+  flex: 1;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: #f1f5f9;
+}
+
+.open-tab-btn {
+  color: #003d7a;
+}
+
+.open-tab-btn:hover {
+  background-color: #e6f2ff;
+  color: #002855;
+}
+
+.edit-btn {
+  color: #64748b;
 }
 
 .modal-actions {
