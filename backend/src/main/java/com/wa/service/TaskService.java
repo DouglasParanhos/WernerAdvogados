@@ -29,6 +29,13 @@ public class TaskService {
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
+
+    public List<TaskDTO> getByProcessId(Long processId) {
+        return taskRepository.findByProcessIdOrderByStatusAscOrdemAsc(processId)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
     
     public TaskDTO getById(Long id) {
         Task task = taskRepository.findById(id)

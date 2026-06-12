@@ -10,6 +10,11 @@ export const taskService = {
     const response = await api.get(`/tasks/${id}`)
     return response.data
   },
+
+  async getByProcessId(processId) {
+    const response = await api.get(`/tasks/process/${processId}`)
+    return response.data
+  },
   
   async create(task) {
     const response = await api.post('/tasks', task)
