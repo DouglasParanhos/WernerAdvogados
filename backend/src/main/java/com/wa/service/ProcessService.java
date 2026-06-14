@@ -4,11 +4,13 @@ import com.wa.dto.MovimentDTO;
 import com.wa.dto.ProcessDTO;
 import com.wa.dto.ProcessFilterOptionsDTO;
 import com.wa.dto.ProcessRequestDTO;
+import com.wa.dto.RecursoDTO;
 import com.wa.model.Matriculation;
 import com.wa.model.Moviment;
 import com.wa.model.Process;
 import com.wa.repository.MatriculationRepository;
 import com.wa.repository.ProcessRepository;
+import com.wa.repository.RecursoRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +27,7 @@ public class ProcessService {
     
     private final ProcessRepository processRepository;
     private final MatriculationRepository matriculationRepository;
+    private final RecursoRepository recursoRepository;
     
     /**
      * Retorna o valor efetivo do request: valorCorrigido se disponível, caso contrário valorOriginal
@@ -217,7 +220,29 @@ public class ProcessService {
                     .map(this::convertMovimentToDTO)
                     .collect(Collectors.toList()));
         }
-        
+
+        dto.setRecursos(recursoRepository.findByProcessId(process.getId()).stream()
+                .map(r -> {
+                    RecursoDTO rdto = new RecursoDTO();
+                    rdto.setId(r.getId());
+                    rdto.setProcessId(r.getProcess().getId());
+                    rdto.setClasse(r.getClasse());
+                    rdto.setNumero(r.getNumero());
+                    rdto.setDesembargadorRelator(r.getDesembargadorRelator());
+                    rdto.setCamara(r.getCamara());
+                    rdto.setSistema(r.getSistema());
+                    rdto.setStatusRecurso(r.getStatusRecurso());
+                    rdto.setHistoricoRelator(r.getHistoricoRelator());
+                    rdto.setHistoricoCamara(r.getHistoricoCamara());
+                    rdto.setResp(r.getResp());
+                    rdto.setRext(r.getRext());
+                    rdto.setBaixado(r.getBaixado());
+                    rdto.setCreatedOn(r.getCreatedOn());
+                    rdto.setModifiedOn(r.getModifiedOn());
+                    return rdto;
+                })
+                .collect(Collectors.toList()));
+
         return dto;
     }
     
@@ -227,16 +252,19 @@ public class ProcessService {
         dto.setDescricao(moviment.getDescricao());
         dto.setDate(moviment.getDate());
         dto.setProcessId(moviment.getProcess().getId());
-        // Incluir informações do processo se disponível
+        dto.setVisibleToClient(moviment.getVisibleToClient());
         if (moviment.getProcess() != null) {
             dto.setProcessNumero(moviment.getProcess().getNumero());
             dto.setProcessComarca(moviment.getProcess().getComarca());
             dto.setProcessVara(moviment.getProcess().getVara());
             dto.setProcessTipoProcesso(moviment.getProcess().getTipoProcesso());
-            // Incluir informações da matrícula se disponível
             if (moviment.getProcess().getMatriculation() != null) {
                 dto.setProcessMatriculationNumero(moviment.getProcess().getMatriculation().getNumero());
             }
+        }
+        if (moviment.getRecurso() != null) {
+            dto.setRecursoId(moviment.getRecurso().getId());
+            dto.setRecursoClasse(moviment.getRecurso().getClasse());
         }
         return dto;
     }

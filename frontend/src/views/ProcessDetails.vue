@@ -187,6 +187,15 @@
               <label>Descrição:</label>
               <textarea v-model="newMoviment.descricao" class="form-control" rows="3"></textarea>
             </div>
+            <div class="form-group" v-if="recursos.length > 0">
+              <label>Vincular ao Recurso (opcional):</label>
+              <select v-model="newMoviment.recursoId" class="form-control">
+                <option :value="null">— 1ª instância —</option>
+                <option v-for="r in recursosAtivos" :key="r.id" :value="r.id">
+                  {{ classeLabel(r.classe) }}{{ r.desembargadorRelator ? ' — ' + r.desembargadorRelator : '' }}
+                </option>
+              </select>
+            </div>
             <div class="form-group checkbox-group">
               <label class="checkbox-label">
                 <input type="checkbox" v-model="newMoviment.visibleToClient" class="checkbox-input" />
@@ -200,13 +209,28 @@
             </div>
           </div>
           
+          <!-- Paginação: barra superior -->
+          <div v-if="movimentsForDisplay.length > 0" class="pagination-controls-top moviment-pagination-top">
+            <div class="pagination-info">
+              <span>Exibindo {{ movimentRangeLabel }}</span>
+              <select v-model.number="movimentPageSize" class="page-size-select" @change="onMovimentPageSizeChange">
+                <option :value="10">10</option>
+                <option :value="20">20</option>
+                <option :value="50">50</option>
+                <option :value="0">Todos</option>
+              </select>
+              <span>por página</span>
+            </div>
+          </div>
+
           <!-- Lista de Movimentações -->
           <div v-if="movimentsForDisplay.length > 0" class="moviments-list">
             <div
-              v-for="moviment in movimentsForDisplay"
+              v-for="moviment in paginatedMoviments"
               :key="moviment.isPending ? moviment.tempId : moviment.id"
               class="moviment-card"
-              :class="{ 'moviment-card--pending': moviment.isPending }"
+              :class="movimentCardClasses(moviment)"
+              :style="movimentCardStyle(moviment)"
             >
               <div v-if="!moviment.isPending && editingMovimentId === moviment.id" class="moviment-edit-form">
                 <div class="form-group">
@@ -236,6 +260,15 @@
                 <div class="form-group">
                   <label>Descrição:</label>
                   <textarea v-model="editingMoviment.descricao" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group" v-if="recursos.length > 0">
+                  <label>Vincular ao Recurso (opcional):</label>
+                  <select v-model="editingMoviment.recursoId" class="form-control">
+                    <option :value="null">— 1ª instância —</option>
+                    <option v-for="r in recursosAtivos" :key="r.id" :value="r.id">
+                      {{ classeLabel(r.classe) }}{{ r.desembargadorRelator ? ' — ' + r.desembargadorRelator : '' }}
+                    </option>
+                  </select>
                 </div>
                 <div class="form-group checkbox-group">
                   <label class="checkbox-label">
@@ -308,7 +341,17 @@
               </div>
             </div>
           </div>
-          <div v-else class="no-moviments">
+
+          <!-- Paginação: navegação inferior -->
+          <div v-if="movimentsForDisplay.length > 0 && movimentTotalPages > 1" class="pagination-controls">
+            <button class="pagination-btn" :disabled="movimentPage === 0" @click="movimentGoToPage(0)">Primeira</button>
+            <button class="pagination-btn" :disabled="movimentPage === 0" @click="movimentGoToPage(movimentPage - 1)">‹ Anterior</button>
+            <span class="pagination-page-info">{{ movimentPage + 1 }} / {{ movimentTotalPages }}</span>
+            <button class="pagination-btn" :disabled="movimentPage >= movimentTotalPages - 1" @click="movimentGoToPage(movimentPage + 1)">Próxima ›</button>
+            <button class="pagination-btn" :disabled="movimentPage >= movimentTotalPages - 1" @click="movimentGoToPage(movimentTotalPages - 1)">Última</button>
+          </div>
+
+          <div v-else-if="movimentsForDisplay.length === 0" class="no-moviments">
             Nenhuma movimentação cadastrada
           </div>
         </div>
@@ -334,6 +377,8 @@ import { processService } from '../services/processService'
 import { movimentService } from '../services/movimentService'
 import { matriculationService } from '../services/matriculationService'
 import { datajudService } from '../services/datajudService'
+import { recursoService } from '../services/recursoService'
+import { taskService } from '../services/taskService'
 import TaskFormModal from '../components/TaskFormModal.vue'
 import DocumentGeneratorModal from '../components/DocumentGeneratorModal.vue'
 
@@ -395,6 +440,7 @@ export default {
     return {
       process: null,
       moviments: [],
+      recursos: [],
       pendingDatajud: [],
       loading: false,
       error: null,
@@ -406,15 +452,44 @@ export default {
       editingMovimentId: null,
       editingMoviment: null,
       saving: false,
+      addingRecurso: false,
+      recursosSectionExpanded: false,
       newMoviment: {
         descricao: '',
         date: '',
         processId: null,
-        visibleToClient: false
-      }
+        visibleToClient: false,
+        recursoId: null
+      },
+      movimentPage: 0,
+      movimentPageSize: 20,
+      processTasks: [],
+      processTasksError: false,
+      taskPage: { PARA_INICIAR: 0, EM_ANDAMENTO: 0, COMPLETA: 0 },
+      taskPageSize: { PARA_INICIAR: 5, EM_ANDAMENTO: 5, COMPLETA: 5 },
+      taskGroupExpanded: { PARA_INICIAR: true, EM_ANDAMENTO: true, COMPLETA: true },
+      tasksSectionExpanded: false
     }
   },
   computed: {
+    recursosAtivos() {
+      return (this.recursos || []).filter(r => !r.baixado)
+    },
+    recursosBaixados() {
+      return (this.recursos || []).filter(r => r.baixado)
+    },
+    recursosSummary() {
+      const ativos = this.recursosAtivos.length
+      const baixados = this.recursosBaixados.length
+      if (ativos + baixados === 0) return ''
+      const parts = []
+      if (ativos > 0) parts.push(`${ativos} ${ativos === 1 ? 'ativo' : 'ativos'}`)
+      if (baixados > 0) parts.push(`${baixados} ${baixados === 1 ? 'baixado' : 'baixados'}`)
+      return parts.join(' · ')
+    },
+    newRecursoPlaceholder() {
+      return { processId: this.process?.id, classe: '', historicoRelator: 'NA', historicoCamara: 'NA', resp: false, rext: false, baixado: false }
+    },
     isTjrjNumero() {
       const n = this.process?.numero
       return typeof n === 'string' && n.toLowerCase().includes('.8.19.')
@@ -436,15 +511,158 @@ export default {
       }))
       return [...dbRows, ...pendRows].sort((a, b) => b.sortKey - a.sortKey)
     },
+    paginatedMoviments() {
+      if (this.movimentPageSize === 0) return this.movimentsForDisplay
+      const start = this.movimentPage * this.movimentPageSize
+      return this.movimentsForDisplay.slice(start, start + this.movimentPageSize)
+    },
+    movimentTotalPages() {
+      if (this.movimentPageSize === 0) return 1
+      return Math.ceil(this.movimentsForDisplay.length / this.movimentPageSize)
+    },
+    movimentRangeLabel() {
+      const total = this.movimentsForDisplay.length
+      if (total === 0) return '0 movimentações'
+      if (this.movimentPageSize === 0) return `todos os ${total}`
+      const start = this.movimentPage * this.movimentPageSize + 1
+      const end = Math.min(start + this.movimentPageSize - 1, total)
+      return `${start}–${end} de ${total}`
+    },
+    tasksByStatus() {
+      return {
+        PARA_INICIAR: this.processTasks.filter(t => t.status === 'PARA_INICIAR'),
+        EM_ANDAMENTO: this.processTasks.filter(t => t.status === 'EM_ANDAMENTO'),
+        COMPLETA:     this.processTasks.filter(t => t.status === 'COMPLETA'),
+      }
+    },
+    paginatedTasks() {
+      return Object.fromEntries(
+        ['PARA_INICIAR', 'EM_ANDAMENTO', 'COMPLETA'].map(s => {
+          const size = this.taskPageSize[s]
+          if (size === 0) return [s, this.tasksByStatus[s]]
+          const page = this.taskPage[s]
+          return [s, this.tasksByStatus[s].slice(page * size, (page + 1) * size)]
+        })
+      )
+    },
+    taskTotalPages() {
+      return Object.fromEntries(
+        ['PARA_INICIAR', 'EM_ANDAMENTO', 'COMPLETA'].map(s => {
+          const size = this.taskPageSize[s]
+          if (size === 0) return [s, 1]
+          return [s, Math.ceil(this.tasksByStatus[s].length / size) || 1]
+        })
+      )
+    },
+    tasksSummary() {
+      const total = this.processTasks.length
+      if (total === 0) return ''
+      const pendentes = this.tasksByStatus.PARA_INICIAR.length + this.tasksByStatus.EM_ANDAMENTO.length
+      const concluidas = this.tasksByStatus.COMPLETA.length
+      const parts = []
+      if (pendentes > 0) parts.push(`${pendentes} ${pendentes === 1 ? 'pendente' : 'pendentes'}`)
+      if (concluidas > 0) parts.push(`${concluidas} ${concluidas === 1 ? 'concluída' : 'concluídas'}`)
+      return parts.join(' · ')
+    },
     sistemaPortalLink() {
       return resolveSistemaPortalLink(this.process?.sistema)
     }
   },
+  watch: {
+    movimentsForDisplay() {
+      this.movimentPage = 0
+    }
+  },
   async mounted() {
     await this.loadProcess()
-    await this.loadMoviments()
+    await Promise.all([this.loadMoviments(), this.loadRecursos(), this.loadProcessTasks()])
   },
   methods: {
+    onMovimentPageSizeChange() {
+      this.movimentPage = 0
+    },
+    movimentGoToPage(page) {
+      this.movimentPage = page
+    },
+    async loadProcessTasks() {
+      this.processTasksError = false
+      try {
+        const processId = Number(this.$route.params.id)
+        const allTasks = await taskService.getAll()
+        this.processTasks = allTasks.filter(t => t.processId === processId)
+      } catch (e) {
+        console.error('Erro ao carregar tarefas do processo:', e)
+        this.processTasksError = true
+      }
+    },
+    taskGoToPage(status, page) {
+      this.taskPage[status] = page
+    },
+    onTaskPageSizeChange(status) {
+      this.taskPage[status] = 0
+    },
+    toggleTasksSection() {
+      this.tasksSectionExpanded = !this.tasksSectionExpanded
+    },
+    toggleTaskGroup(status) {
+      this.taskGroupExpanded[status] = !this.taskGroupExpanded[status]
+    },
+    taskNextStatus(status) {
+      const map = { PARA_INICIAR: 'EM_ANDAMENTO', EM_ANDAMENTO: 'COMPLETA' }
+      return map[status] || null
+    },
+    async advanceTaskStatus(task) {
+      const next = this.taskNextStatus(task.status)
+      if (!next) return
+      try {
+        await taskService.update(task.id, { ...task, status: next })
+        await this.loadProcessTasks()
+      } catch (e) {
+        console.error('Erro ao avançar status da tarefa:', e)
+      }
+    },
+    async deleteProcessTask(id) {
+      if (!confirm('Deseja excluir esta tarefa?')) return
+      try {
+        await taskService.delete(id)
+        await this.loadProcessTasks()
+      } catch (e) {
+        console.error('Erro ao excluir tarefa:', e)
+      }
+    },
+    taskTipoLabel(tipo) {
+      const map = {
+        PRESENCIAL: 'Presencial',
+        COMUNICAR_CLIENTE: 'Comunicar cliente',
+        ESCRITA_PECA: 'Peça',
+        PRAZO: 'Prazo',
+        ADMINISTRATIVO: 'Administrativo',
+      }
+      return map[tipo] || tipo
+    },
+    taskTipoClass(tipo) {
+      const map = {
+        PRESENCIAL: 'tipo-presencial',
+        COMUNICAR_CLIENTE: 'tipo-comunicar',
+        ESCRITA_PECA: 'tipo-peca',
+        PRAZO: 'tipo-prazo',
+        ADMINISTRATIVO: 'tipo-admin',
+      }
+      return map[tipo] || ''
+    },
+    taskResponsavelClass(resp) {
+      const map = { Liz: 'resp-liz', Angelo: 'resp-angelo', Thiago: 'resp-thiago' }
+      return map[resp] || ''
+    },
+    formatTaskPrazo(date) {
+      if (!date) return null
+      const [y, m, d] = date.split('-')
+      return `${d}/${m}/${y}`
+    },
+    isTaskOverdue(task) {
+      if (!task.prazoFinal || task.status === 'COMPLETA') return false
+      return new Date(task.prazoFinal) < new Date()
+    },
     async loadProcess() {
       this.loading = true
       this.error = null
@@ -466,6 +684,56 @@ export default {
       } catch (err) {
         console.error('Erro ao carregar movimentações:', err)
       }
+    },
+    async loadRecursos() {
+      try {
+        const processId = this.$route.params.id
+        this.recursos = await recursoService.getByProcessId(processId)
+        this.recursosSectionExpanded = this.recursosAtivos.length > 0
+      } catch (err) {
+        console.error('Erro ao carregar recursos:', err)
+      }
+    },
+    toggleRecursosSection() {
+      this.recursosSectionExpanded = !this.recursosSectionExpanded
+    },
+    addRecurso() {
+      this.recursosSectionExpanded = true
+      this.addingRecurso = true
+    },
+    cancelAddRecurso() {
+      this.addingRecurso = false
+    },
+    onNewRecursoSaved(saved) {
+      this.recursos.push(saved)
+      this.addingRecurso = false
+    },
+    onRecursoUpdated(updated) {
+      const idx = this.recursos.findIndex(r => r.id === updated.id)
+      if (idx >= 0) {
+        this.recursos.splice(idx, 1, updated)
+      } else {
+        this.recursos.push(updated)
+      }
+    },
+    onRecursoDeleted(id) {
+      this.recursos = this.recursos.filter(r => r.id !== id)
+    },
+    classeLabel(classe) {
+      if (classe === 'APELACAO') return 'Apelação'
+      if (classe === 'AGRAVO_DE_INSTRUMENTO') return 'Agravo de Instrumento'
+      return classe || '—'
+    },
+    movimentCardClasses(moviment) {
+      return {
+        'moviment-card--pending': moviment.isPending,
+        'moviment-card--apelacao': !moviment.isPending && moviment.recursoClasse === 'APELACAO',
+        'moviment-card--agravo': !moviment.isPending && moviment.recursoClasse === 'AGRAVO_DE_INSTRUMENTO',
+        'moviment-card--visible-client': !moviment.isPending && moviment.visibleToClient === true
+      }
+    },
+    movimentCardStyle() {
+      return {}
     },
     normalizeMovementDesc(s) {
       if (s == null) return ''
@@ -653,7 +921,8 @@ export default {
         descricao: '',
         date: todayAt0001Local(),
         processId: pid,
-        visibleToClient: false
+        visibleToClient: false,
+        recursoId: null
       }
       this.showNewMovimentForm = true
     },
@@ -706,7 +975,8 @@ export default {
         descricao: '',
         date: '',
         processId: this.process.id,
-        visibleToClient: false
+        visibleToClient: false,
+        recursoId: null
       }
     },
     startEditMoviment(moviment) {
@@ -723,7 +993,8 @@ export default {
         descricao: moviment.descricao,
         date: `${year}-${month}-${day}T${hours}:${minutes}`,
         processId: moviment.processId,
-        visibleToClient: moviment.visibleToClient !== undefined ? moviment.visibleToClient : true
+        visibleToClient: moviment.visibleToClient !== undefined ? moviment.visibleToClient : true,
+        recursoId: moviment.recursoId || null
       }
     },
     async saveEditMoviment() {
@@ -835,6 +1106,57 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+}
+
+.section-header--collapsible {
+  cursor: pointer;
+  user-select: none;
+}
+
+.section-header--collapsed {
+  margin-bottom: 0;
+}
+
+.section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.section-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.section-toggle-btn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.section-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s;
+}
+
+.section-toggle-btn svg.rotated {
+  transform: rotate(180deg);
+}
+
+.section-summary {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-weight: 500;
 }
 
 .section h2 {
@@ -1058,6 +1380,259 @@ export default {
   gap: 0.5rem;
 }
 
+/* ── Tarefas do Processo ── */
+.process-tasks-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-group {
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.task-group--andamento {
+  border-color: #ffe082;
+}
+
+.task-group--completa {
+  border-color: #a5d6a7;
+}
+
+.task-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: #f8f9fa;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #343a40;
+  text-align: left;
+}
+
+.task-group--andamento .task-group-header {
+  background: #fffde7;
+}
+
+.task-group--completa .task-group-header {
+  background: #f1f8f2;
+}
+
+.task-group-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.task-group-count {
+  background: #dee2e6;
+  color: #495057;
+  border-radius: 10px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.task-group--andamento .task-group-count {
+  background: #ffe082;
+  color: #7c5c00;
+}
+
+.task-group--completa .task-group-count {
+  background: #a5d6a7;
+  color: #1b5e20;
+}
+
+.task-group-chevron {
+  font-size: 1rem;
+  transition: transform 0.2s;
+}
+
+.task-group-chevron.rotated {
+  transform: rotate(-90deg);
+}
+
+.task-group-body {
+  padding: 0.5rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.task-empty {
+  font-size: 0.85rem;
+  color: #adb5bd;
+  padding: 0.25rem 0.25rem;
+}
+
+.task-row {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.task-row--completa {
+  opacity: 0.75;
+}
+
+.task-row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.task-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #212529;
+}
+
+.task-titulo--completa {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+
+.task-tipo-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  background: #e9ecef;
+  color: #495057;
+}
+
+.task-tipo-badge.tipo-presencial  { background: #e3f2fd; color: #0d47a1; }
+.task-tipo-badge.tipo-comunicar   { background: #fce4ec; color: #880e4f; }
+.task-tipo-badge.tipo-peca        { background: #ede7f6; color: #4527a0; }
+.task-tipo-badge.tipo-prazo       { background: #fff3e0; color: #e65100; }
+.task-tipo-badge.tipo-admin       { background: #f3e5f5; color: #6a1b9a; }
+
+.task-resp-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  background: #dee2e6;
+  color: #343a40;
+}
+
+.task-resp-badge.resp-liz     { background: #fce4ec; color: #880e4f; }
+.task-resp-badge.resp-angelo  { background: #e8f5e9; color: #1b5e20; }
+.task-resp-badge.resp-thiago  { background: #e3f2fd; color: #0d47a1; }
+
+.task-prazo {
+  font-size: 0.78rem;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.task-prazo--overdue {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.task-row-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.task-btn-advance,
+.task-btn-delete {
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid #dee2e6;
+  border-radius: 5px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.task-btn-advance {
+  color: #28a745;
+  border-color: #c3e6cb;
+}
+
+.task-btn-advance:hover {
+  background: #d4edda;
+  border-color: #28a745;
+}
+
+.task-btn-delete {
+  color: #dc3545;
+  border-color: #f5c6cb;
+}
+
+.task-btn-delete:hover {
+  background: #f8d7da;
+  border-color: #dc3545;
+}
+
+.task-descricao {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+  padding-left: 0.1rem;
+}
+
+.task-descricao--completa {
+  text-decoration: line-through;
+}
+
+.task-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e9ecef;
+  flex-wrap: wrap;
+}
+
+.task-page-size {
+  margin-left: auto;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.task-pagination .pagination-btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.82rem;
+  min-height: unset;
+}
+
+.task-pagination .pagination-page-info {
+  font-size: 0.82rem;
+  padding: 0 0.25rem;
+}
+
+/* ── End Tarefas do Processo ── */
+
+.moviment-pagination-top {
+  box-shadow: none;
+  background: transparent;
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+}
+
 .moviments-list {
   display: flex;
   flex-direction: column;
@@ -1075,6 +1650,28 @@ export default {
   border-color: #17a2b8;
   background: linear-gradient(135deg, #f0fbfc 0%, #f8f9fa 100%);
   box-shadow: 0 0 0 1px rgba(23, 162, 184, 0.15);
+}
+
+.moviment-card--apelacao {
+  background: #e8f4fd;
+  border-color: #90caf9;
+}
+
+.moviment-card--agravo {
+  background: #fff3e0;
+  border-color: #ffcc80;
+}
+
+.moviment-card--visible-client {
+  border-left: 4px solid #4caf50;
+}
+
+.moviment-card--apelacao.moviment-card--visible-client {
+  border-left: 4px solid #4caf50;
+}
+
+.moviment-card--agravo.moviment-card--visible-client {
+  border-left: 4px solid #4caf50;
 }
 
 .moviment-header--pending {
@@ -1159,6 +1756,10 @@ export default {
   text-align: center;
   padding: 2rem;
   color: #6c757d;
+}
+
+.task-load-error {
+  color: #dc3545;
 }
 
 .btn {

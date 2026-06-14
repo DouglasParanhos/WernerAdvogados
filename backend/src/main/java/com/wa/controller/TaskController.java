@@ -25,6 +25,12 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getAll());
     }
     
+    @GetMapping("/process/{processId}")
+    @RequiresNonClient
+    public ResponseEntity<List<TaskDTO>> getByProcess(@PathVariable Long processId) {
+        return ResponseEntity.ok(taskService.getByProcessId(processId));
+    }
+
     @GetMapping("/{id}")
     @RequiresNonClient
     public ResponseEntity<TaskDTO> getById(@PathVariable Long id) {

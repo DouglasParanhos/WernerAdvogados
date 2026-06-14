@@ -21,4 +21,6 @@ public class MovimentDTO {
     private String processMatriculationNumero;
     private String processStatus;
     private Boolean visibleToClient;
+    private Long recursoId;
+    private String recursoClasse;
 }

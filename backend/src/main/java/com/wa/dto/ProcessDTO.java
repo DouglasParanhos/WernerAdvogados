@@ -27,5 +27,6 @@ public class ProcessDTO {
     private Long matriculationId;
     private MatriculationDTO matriculation;
     private List<MovimentDTO> moviments;
+    private List<RecursoDTO> recursos;
 }
 

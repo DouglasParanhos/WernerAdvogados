@@ -5,7 +5,30 @@
       <form @submit.prevent="saveTask">
         <div class="form-group">
           <label>Título *</label>
-          <input v-model="taskForm.titulo" type="text" required />
+          <div class="titulo-autocomplete" @keydown.escape.stop="tituloSuggestionsOpen = false">
+            <input
+              v-model="taskForm.titulo"
+              type="text"
+              required
+              autocomplete="off"
+              @input="onTituloInput"
+              @focus="onTituloFocus"
+              @blur="onTituloBlur"
+            />
+            <ul
+              v-show="tituloSuggestionsOpen && tituloFilteredSuggestions.length"
+              class="titulo-suggestions"
+              role="listbox"
+            >
+              <li
+                v-for="s in tituloFilteredSuggestions"
+                :key="s"
+                class="titulo-suggestion-item"
+                role="option"
+                @mousedown.prevent="selectTituloSuggestion(s)"
+              >{{ s }}</li>
+            </ul>
+          </div>
         </div>
 
         <div class="form-group">
@@ -60,7 +83,34 @@
         <div class="form-group form-group-processo">
           <label for="task-form-modal-processo-input">Processo</label>
           <div class="processo-row">
+            <div v-if="!processoEmModoEdicao && taskForm.processId" class="processo-display">
+              <button
+                type="button"
+                class="icon-btn open-tab-btn"
+                title="Abrir processo em nova aba"
+                @click="openProcessInNewTab"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M10 14L21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <span class="processo-numero-label">{{ processoConfirmadoNumero }}</span>
+              <button
+                type="button"
+                class="icon-btn edit-btn"
+                title="Alterar processo"
+                @click="editProcesso"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
             <div
+              v-else
               class="processo-autocomplete"
               @keydown.escape.stop="closeProcessoSuggestions"
             >
@@ -122,6 +172,36 @@
 import { taskService } from '../services/taskService'
 import { processService } from '../services/processService'
 
+const TITULO_SUGGESTIONS = [
+  'Apresentar contrarrazões ao RESP e REXT',
+  'Apresentar contrarrazões à apelação',
+  'Opor embargos de declaração (ED)',
+  'Responder ao agravo interno',
+  'Apresentar apelação',
+  'Apresentar agravo',
+  'Apresentar petição de provas',
+  'Apresentar réplica',
+  'Apresentar quesitos',
+  'Requerer levantamento de valores',
+  'Peticionar pedido de homologação + RPV',
+  'Peticionar pedido de envio de RPV',
+  'Peticionar sobre correção monetária',
+  'Peticionar com cálculos',
+  'Peticionar concordando com cálculos e pedindo homologação',
+  'Reembolso de custas',
+  'Responder impugnação (ERJ)',
+  'Reiterar pedido de reembolso de custas',
+  'Verificar comprovante de pagamento',
+  'Pedir conclusão ao juiz',
+  'Pedir conclusão para homologação',
+  'Pedir envio dos autos para o TJRJ',
+  'Pedir envio da conclusão para sentença',
+  'Pedir julgamento dos EDs',
+  'Pedir citação',
+  'Pedir para Expedir mandado de pagamento',
+  'Despachar',
+]
+
 const emptyTaskForm = () => ({
   id: null,
   titulo: '',
@@ -152,6 +232,8 @@ export default {
   emits: ['update:modelValue', 'saved'],
   data() {
     return {
+      tituloSuggestionsOpen: false,
+      tituloBlurTimeoutId: null,
       processoInputDisplay: '',
       processoConfirmadoNumero: null,
       processoSuggestions: [],
@@ -160,12 +242,18 @@ export default {
       processoSearchDebounceId: null,
       processoBlurTimeoutId: null,
       semProcessoRelacionado: false,
+      processoEmModoEdicao: true,
       taskForm: emptyTaskForm()
     }
   },
   computed: {
     isEditMode() {
       return !!(this.taskForEdit && this.taskForEdit.id)
+    },
+    tituloFilteredSuggestions() {
+      const q = (this.taskForm.titulo || '').trim().toLowerCase()
+      if (!q) return TITULO_SUGGESTIONS
+      return TITULO_SUGGESTIONS.filter(s => s.toLowerCase().includes(q))
     }
   },
   watch: {
@@ -176,6 +264,9 @@ export default {
     }
   },
   beforeUnmount() {
+    if (this.tituloBlurTimeoutId) {
+      clearTimeout(this.tituloBlurTimeoutId)
+    }
     if (this.processoSearchDebounceId) {
       clearTimeout(this.processoSearchDebounceId)
     }
@@ -184,6 +275,25 @@ export default {
     }
   },
   methods: {
+    onTituloInput() {
+      this.tituloSuggestionsOpen = true
+    },
+    onTituloFocus() {
+      this.tituloSuggestionsOpen = true
+    },
+    onTituloBlur() {
+      if (this.tituloBlurTimeoutId) {
+        clearTimeout(this.tituloBlurTimeoutId)
+      }
+      this.tituloBlurTimeoutId = setTimeout(() => {
+        this.tituloSuggestionsOpen = false
+        this.tituloBlurTimeoutId = null
+      }, 200)
+    },
+    selectTituloSuggestion(s) {
+      this.taskForm.titulo = s
+      this.tituloSuggestionsOpen = false
+    },
     applyOpenState() {
       const task = this.taskForEdit
       if (task && task.id) {
@@ -202,11 +312,13 @@ export default {
         this.processoConfirmadoNumero = task.processNumero || null
         this.processoSuggestions = []
         this.processoSuggestionsOpen = false
+        this.processoEmModoEdicao = !task.processId
         return
       }
 
       this.semProcessoRelacionado = false
       this.resetProcessoAutocomplete()
+      this.processoEmModoEdicao = true
       this.taskForm = emptyTaskForm()
       const pp = this.presetProcess
       if (pp && pp.id != null) {
@@ -214,6 +326,7 @@ export default {
         const num = pp.numero != null ? String(pp.numero) : ''
         this.processoInputDisplay = num
         this.processoConfirmadoNumero = num || null
+        this.processoEmModoEdicao = false
       }
     },
     resetProcessoAutocomplete() {
@@ -282,16 +395,33 @@ export default {
       this.processoInputDisplay = p.numero
       this.processoSuggestions = []
       this.processoSuggestionsOpen = false
+      this.processoEmModoEdicao = false
     },
     onSemProcessoRelacionadoChange() {
       if (this.semProcessoRelacionado) {
         this.taskForm.processId = null
         this.resetProcessoAutocomplete()
+        this.processoEmModoEdicao = true
       }
+    },
+    editProcesso() {
+      this.taskForm.processId = null
+      this.processoConfirmadoNumero = null
+      this.processoInputDisplay = ''
+      this.processoEmModoEdicao = true
+    },
+    openProcessInNewTab() {
+      if (!this.taskForm.processId) return
+      const { href } = this.$router.resolve({
+        name: 'ProcessDetails',
+        params: { id: String(this.taskForm.processId) }
+      })
+      window.open(href, '_blank', 'noopener,noreferrer')
     },
     closeModal() {
       this.$emit('update:modelValue', false)
       this.semProcessoRelacionado = false
+      this.processoEmModoEdicao = true
       this.resetProcessoAutocomplete()
       this.taskForm = emptyTaskForm()
     },
@@ -392,6 +522,39 @@ export default {
   transition: border-color 0.2s;
 }
 
+.titulo-autocomplete {
+  position: relative;
+}
+
+.titulo-suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  margin-top: 4px;
+}
+
+.titulo-suggestion-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+}
+
+.titulo-suggestion-item:hover {
+  background: #f1f5f9;
+}
+
 .form-group-processo .processo-row {
   display: flex;
   flex-wrap: wrap;
@@ -467,6 +630,50 @@ export default {
 .form-group select:focus {
   outline: none;
   border-color: #003d7a;
+}
+
+.processo-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  flex: 1;
+}
+
+.processo-numero-label {
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 1rem;
+  flex: 1;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: #f1f5f9;
+}
+
+.open-tab-btn {
+  color: #003d7a;
+}
+
+.open-tab-btn:hover {
+  background-color: #e6f2ff;
+  color: #002855;
+}
+
+.edit-btn {
+  color: #64748b;
 }
 
 .modal-actions {

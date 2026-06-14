@@ -22,5 +22,6 @@ public class MovimentRequestDTO {
     private Long processId;
     
     private Boolean visibleToClient;
+    private Long recursoId;
 }
 

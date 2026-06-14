@@ -27,7 +27,11 @@ public class Moviment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_id", referencedColumnName = "process_id", nullable = false)
     private Process process;
-    
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recurso_id", nullable = true)
+    private Recurso recurso;
+
     @Column(name = "visible_to_client", nullable = false)
     private Boolean visibleToClient = true;
     
