@@ -16,7 +16,6 @@
             type="button"
             @click="refreshDatajudMovimentos"
             class="toolbar-btn toolbar-btn--refresh"
-            class="toolbar-btn toolbar-btn--refresh"
             title="Atualizar movimentos DataJud"
             aria-label="Atualizar movimentos DataJud"
             :disabled="loading || !process || !isTjrjNumero || refreshingDatajud"
@@ -36,7 +35,6 @@
           <button
             type="button"
             @click="showTaskModal = true"
-            class="toolbar-btn toolbar-btn--add"
             class="toolbar-btn toolbar-btn--add"
             title="Adicionar tarefa"
             aria-label="Adicionar tarefa"
@@ -151,7 +149,6 @@
         <div class="section">
           <div class="section-header">
             <h2>Movimentações</h2>
-            <button type="button" @click="openNewMovimentForm" class="toolbar-btn toolbar-btn--add" title="Nova Movimentação">
             <button type="button" @click="openNewMovimentForm" class="toolbar-btn toolbar-btn--add" title="Nova Movimentação">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
